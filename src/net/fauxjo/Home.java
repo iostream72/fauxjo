@@ -27,7 +27,7 @@ import java.sql.*;
 import java.util.*;
 import net.fauxjo.coercer.*;
 
-public class Home < T extends Fauxjo >
+public class Home <T extends Fauxjo>
 {
     // ============================================================
     // Fields
