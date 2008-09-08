@@ -133,7 +133,6 @@ public class Coercer
         // use default coercer if none is found
         if ( coercer == null )
         {
-            Log.info( "No coercer for class " + value.getClass() + "." );
             coercer = ( TypeCoercer<T> ) _coercerMap.get( Object.class );
         }
 
