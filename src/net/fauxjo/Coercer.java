@@ -25,7 +25,6 @@ package net.fauxjo;
 
 import java.util.*;
 import net.fauxjo.coercer.*;
-import net.jextra.log.*;
 
 /**
  * Coerces one value type to another value type.
