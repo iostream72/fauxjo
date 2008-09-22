@@ -39,5 +39,8 @@ public @interface FauxjoPrimaryKey
 {
     // This is the sequence name to get new unique value.
     String value() default "";
+    
+    // This is the ordered sequence the primary key contributes to a compound key, if necessary
+    int sequence() default 0;
 }
 

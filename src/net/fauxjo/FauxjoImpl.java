@@ -108,18 +108,23 @@ public abstract class FauxjoImpl implements Fauxjo
     }
 
     /**
-     * The schema is passed in because there is no guarentee that the schema was set on the
+     * The schema is passed in because there is no guarantee that the schema was set on the
      * fauxjo object.
      */
     public boolean isInDatabase( Schema schema )
         throws FauxjoException
-    {
+    {    	
         try
         {
+        	if ( !isNew( schema ) )
+	        {
+	        	return false;
+	        }
+        
             Home<?> home = schema.getHome( getClass() );
-            Method method = schema.findPrimaryFinder( home );
-            Object key = schema.findPrimaryKey( this );
-            Object val = method.invoke( home, key );
+            Method pkMethod = schema.findPrimaryFinder( home );
+            Object[] pkValues = schema.findPrimaryKey( this );
+            Object val = pkMethod.invoke( home, pkValues );
 
             if ( val == null )
             {
@@ -135,32 +140,42 @@ public abstract class FauxjoImpl implements Fauxjo
     }
 
     /**
-     * The schema is passed in because there is no guarentee that the schema was set on the
+     * The schema is passed in because there is no guarantee that the schema was set on the
      * fauxjo object.
      */
     public boolean isNew( Schema schema )
         throws FauxjoException
     {
-        try
-        {
-            // If no schema, obviously new.
-            if ( schema == null )
-            {
-                return true;
-            }
-
-            Object key = schema.findPrimaryKey( this );
-            if ( key == null )
-            {
-                return true;
-            }
-
-            return false;
-        }
-        catch ( Throwable ex )
-        {
-            throw new FauxjoException( ex );
-        }
+    	if ( schema == null )
+    	{
+    		return false;
+    	}
+    	
+    	try
+    	{
+	    	Object[] pkValues = schema.findPrimaryKey( this );
+	    	
+	    	// if no values, not valid
+	        if ( pkValues == null )
+	        {
+	            return false;
+	        }
+	        
+	        // if any values null, not valid
+	        for ( Object key : pkValues )
+	        {
+	        	if ( key == null )
+	        	{
+	        		return false;
+	        	}
+	        }
+	        
+	        return true;
+    	} 
+    	catch ( Throwable ex )
+    	{
+    		throw new FauxjoException( ex );
+    	}
     }
 
     public int hashCode()
