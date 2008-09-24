@@ -116,7 +116,7 @@ public abstract class FauxjoImpl implements Fauxjo
     {    	
         try
         {
-        	if ( !isNew( schema ) )
+        	if ( isNew( schema ) )
 	        {
 	        	return false;
 	        }
@@ -155,22 +155,22 @@ public abstract class FauxjoImpl implements Fauxjo
     	{
 	    	Object[] pkValues = schema.findPrimaryKey( this );
 	    	
-	    	// if no values, not valid
-	        if ( pkValues == null )
+	    	// if no values, new
+	        if ( pkValues == null || pkValues.length == 0 )
 	        {
-	            return false;
+	            return true;
 	        }
 	        
-	        // if any values null, not valid
+	        // if any values null, new
 	        for ( Object key : pkValues )
 	        {
 	        	if ( key == null )
 	        	{
-	        		return false;
+	        		return true;
 	        	}
 	        }
 	        
-	        return true;
+	        return false;
     	} 
     	catch ( Throwable ex )
     	{
