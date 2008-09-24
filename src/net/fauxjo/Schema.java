@@ -139,14 +139,14 @@ public abstract class Schema
     {
     	List<Object> returnval = new ArrayList<Object>( 5 );
     	
-        for ( Class<?> cls = bean.getClass(); cls != null; cls.getSuperclass() )
+        for ( Class<?> cls = bean.getClass(); cls != null; cls = cls.getSuperclass() )
         {
             for ( Method method : cls.getMethods() )
             {
                 if ( method.isAnnotationPresent( FauxjoPrimaryKey.class ) )
                 {
                 	FauxjoPrimaryKey fpk = method.getAnnotation( FauxjoPrimaryKey.class );
-                    returnval.add( fpk.sequence(),  method.invoke( bean, new Object[0] ) );
+                    returnval.add( fpk.sequence(), method.invoke( bean, new Object[0] ) );
                 }
             }
         }
