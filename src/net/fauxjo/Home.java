@@ -79,7 +79,7 @@ public class Home<T extends Fauxjo>
         }
 
         PreparedStatement statement = map.get( statementId );
-        if ( statement == null )
+        if ( statement == null || statement.isClosed() )
         {
             statement = getConnection().prepareStatement( _sqls.get( statementId ) );
             map.put( statementId, statement );
