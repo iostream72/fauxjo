@@ -26,7 +26,7 @@ package net.fauxjo;
 import java.sql.*;
 import java.util.*;
 
-public class ResultSetIterator <T extends Fauxjo> implements Iterator<T>, Iterable<T>
+public class ResultSetIterator < T extends Fauxjo > implements Iterator<T>, Iterable<T>
 {
     // ============================================================
     // Fields
@@ -41,11 +41,17 @@ public class ResultSetIterator <T extends Fauxjo> implements Iterator<T>, Iterab
     // ============================================================
 
     public ResultSetIterator( SQLProcessor<T> sqlProcessor, ResultSet resultSet )
-        throws SQLException
     {
-        _sqlProcessor = sqlProcessor;
-        _resultSet = resultSet;
-        _hasNext = _resultSet.next();
+        try
+        {
+            _sqlProcessor = sqlProcessor;
+            _resultSet = resultSet;
+            _hasNext = _resultSet.next();
+        }
+        catch ( Throwable ex )
+        {
+            throw new FauxjoException( ex );
+        }
     }
 
     // ============================================================
@@ -92,12 +98,18 @@ public class ResultSetIterator <T extends Fauxjo> implements Iterator<T>, Iterab
     }
 
     public void close()
-        throws SQLException
     {
-        if ( _resultSet != null )
+        try
         {
-            _resultSet.close();
-            _resultSet = null;
+            if ( _resultSet != null )
+            {
+                _resultSet.close();
+                _resultSet = null;
+            }
+        }
+        catch ( Throwable ex )
+        {
+            throw new FauxjoException( ex );
         }
     }
 

@@ -33,7 +33,6 @@ public class DepartmentHome extends Home<Department>
     // ============================================================
 
     public DepartmentHome( Schema schema )
-        throws SQLException
     {
         super( schema, Department.class, "Department" );
     }
@@ -48,22 +47,34 @@ public class DepartmentHome extends Home<Department>
 
     @FauxjoPrimaryFinder
     public Department findByDepartmentId( long departmentId )
-        throws SQLException
     {
-        PreparedStatement statement = getConnection().prepareStatement( buildBasicSelect(
-            "where departmentId=?" ) );
-        statement.setLong( 1, departmentId );
+        try
+        {
+            PreparedStatement statement = getConnection().prepareStatement( buildBasicSelect(
+                "where departmentId=?" ) );
+            statement.setLong( 1, departmentId );
 
-        return getOne( statement.executeQuery() );
+            return getOne( statement.executeQuery() );
+        }
+        catch ( Throwable ex )
+        {
+            throw new FauxjoException( ex );
+        }
     }
 
     public Department findByDepartmentIdNotPrepared( long departmentId )
-        throws SQLException
     {
-        Statement statement = getConnection().createStatement();
+        try
+        {
+            Statement statement = getConnection().createStatement();
 
-        return getOne( statement.executeQuery( "select * from Department where departmentId=" +
-            departmentId ) );
+            return getOne( statement.executeQuery( "select * from Department where departmentId=" +
+                departmentId ) );
+        }
+        catch ( Throwable ex )
+        {
+            throw new FauxjoException( ex );
+        }
     }
 }
 

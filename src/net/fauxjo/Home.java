@@ -27,7 +27,7 @@ import java.sql.*;
 import java.util.*;
 import net.fauxjo.coercer.*;
 
-public class Home<T extends Fauxjo>
+public class Home < T extends Fauxjo > 
 {
     // ============================================================
     // Fields
@@ -45,7 +45,6 @@ public class Home<T extends Fauxjo>
     // ============================================================
 
     public Home( Schema schema, Class<T> beanClass, String tableName )
-        throws SQLException
     {
         _schema = schema;
         _beanClass = beanClass;
@@ -69,23 +68,30 @@ public class Home<T extends Fauxjo>
     }
 
     public PreparedStatement getPreparedStatement( String statementId )
-        throws SQLException
     {
-        HashMap<String,PreparedStatement> map = _preparedStatements.get( Thread.currentThread() );
-        if ( map == null )
+        try
         {
-            map = new HashMap<String,PreparedStatement>();
-            _preparedStatements.put( Thread.currentThread(), map );
-        }
+            HashMap<String,PreparedStatement> map = _preparedStatements.get(
+                Thread.currentThread() );
+            if ( map == null )
+            {
+                map = new HashMap<String,PreparedStatement>();
+                _preparedStatements.put( Thread.currentThread(), map );
+            }
 
-        PreparedStatement statement = map.get( statementId );
-        if ( statement == null || statement.isClosed() )
+            PreparedStatement statement = map.get( statementId );
+            if ( statement == null || statement.isClosed() || statement.getConnection().isClosed() )
+            {
+                statement = getConnection().prepareStatement( _sqls.get( statementId ) );
+                map.put( statementId, statement );
+            }
+
+            return statement;
+        }
+        catch ( Throwable ex )
         {
-            statement = getConnection().prepareStatement( _sqls.get( statementId ) );
-            map.put( statementId, statement );
+            throw new FauxjoException( ex );
         }
-
-        return statement;
     }
 
     public String getTableName()
@@ -109,31 +115,26 @@ public class Home<T extends Fauxjo>
     }
 
     public long getNextKey( String sequenceName )
-        throws Exception
     {
         return _sqlProcessor.getNextKey( sequenceName );
     }
 
     public boolean insert( T bean )
-        throws Exception
     {
         return _sqlProcessor.insert( bean );
     }
 
     public boolean update( T bean )
-        throws Exception
     {
         return _sqlProcessor.update( bean );
     }
 
     public boolean delete( T bean )
-        throws Exception
     {
         return _sqlProcessor.delete( bean );
     }
 
     public boolean save( T bean )
-        throws Exception
     {
         if ( bean.isNew( _schema ) )
         {
@@ -155,49 +156,41 @@ public class Home<T extends Fauxjo>
     }
 
     protected Connection getConnection()
-        throws SQLException
     {
         return _schema.getConnection();
     }
 
     protected T getOne( ResultSet rs )
-        throws SQLException
     {
         return _sqlProcessor.getOne( rs );
     }
 
     protected T getOnlyOne( ResultSet rs )
-        throws SQLException
     {
         return _sqlProcessor.getOnlyOne( rs );
     }
 
     protected T getFirst( ResultSet rs )
-        throws SQLException
     {
         return _sqlProcessor.getFirst( rs );
     }
 
     protected T getOnlyFirst( ResultSet rs )
-        throws SQLException
     {
         return _sqlProcessor.getOnlyFirst( rs );
     }
 
     protected List<T> getList( ResultSet rs )
-        throws SQLException
     {
         return _sqlProcessor.getList( rs );
     }
 
     protected List<T> getList( ResultSet rs, int maxNumRows )
-        throws SQLException
     {
         return _sqlProcessor.getList( rs, maxNumRows );
     }
 
     protected ResultSetIterator<T> getIterator( ResultSet rs )
-        throws SQLException
     {
         return _sqlProcessor.getIterator( rs );
     }

@@ -41,8 +41,7 @@ public interface Fauxjo
      */
     public void setSchema( Schema schema );
 
-    public boolean isInDatabase( Schema schema )
-        throws FauxjoException;
+    public boolean isInDatabase( Schema schema );
 
     /**
      * <p>
@@ -51,7 +50,6 @@ public interface Fauxjo
      * in the database (auto-generated).
      * </p>
      */
-    public boolean isNew( Schema schema )
-        throws FauxjoException;
+    public boolean isNew( Schema schema );
 }
 

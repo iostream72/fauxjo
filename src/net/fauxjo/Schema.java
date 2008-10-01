@@ -53,8 +53,7 @@ public abstract class Schema
     // public
     // ----------
 
-    public abstract Connection getConnection()
-        throws SQLException;
+    public abstract Connection getConnection();
 
 
     public void addHome( Class<?> beanType, Home<?> home )
@@ -93,9 +92,8 @@ public abstract class Schema
      * Given a bean class, a potentially null bean, and an array of foreign keys find the
      * bean, set it and return it.
      */
-    @SuppressWarnings("unchecked")
-    public <T> T getForeignBean( Class<T> foreignBeanClass, Object ... foreignKeys )
-        throws FauxjoException
+    @SuppressWarnings( "unchecked" )
+    public < T > T getForeignBean( Class<T> foreignBeanClass, Object ...foreignKeys )
     {
         try
         {
@@ -108,7 +106,7 @@ public abstract class Schema
                 return null;
             }
 
-            return (T) finderMethod.invoke( home, foreignKeys );
+            return (T)finderMethod.invoke( home, foreignKeys );
         }
         catch ( Throwable ex )
         {
@@ -135,28 +133,34 @@ public abstract class Schema
     }
 
     protected Object[] findPrimaryKey( Object bean )
-        throws IllegalArgumentException, IllegalAccessException, InvocationTargetException
     {
-        List<Object> returnval = new ArrayList<Object>( 5 );
-
-        for ( Class<?> cls = bean.getClass(); cls != null; cls = cls.getSuperclass() )
+        try
         {
-            for ( Method method : cls.getMethods() )
+            List<Object> returnval = new ArrayList<Object>( 5 );
+
+            for ( Class<?> cls = bean.getClass(); cls != null; cls = cls.getSuperclass() )
             {
-                if ( method.isAnnotationPresent( FauxjoPrimaryKey.class ) )
+                for ( Method method : cls.getMethods() )
                 {
-                    FauxjoPrimaryKey fpk = method.getAnnotation( FauxjoPrimaryKey.class );
-                    returnval.add( fpk.sequence(), method.invoke( bean, new Object[0] ) );
+                    if ( method.isAnnotationPresent( FauxjoPrimaryKey.class ) )
+                    {
+                        FauxjoPrimaryKey fpk = method.getAnnotation( FauxjoPrimaryKey.class );
+                        returnval.add( fpk.sequence(), method.invoke( bean, new Object[0] ) );
+                    }
                 }
             }
-        }
 
-        if ( returnval.size() == 0 )
+            if ( returnval.size() == 0 )
+            {
+                return null;
+            }
+
+            return returnval.toArray();
+        }
+        catch ( Throwable ex )
         {
-            return null;
+            throw new FauxjoException( ex );
         }
-
-        return returnval.toArray();
     }
 }
 

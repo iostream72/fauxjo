@@ -32,7 +32,7 @@ import java.util.*;
 /**
  * Business logic for interacting with an SQL database.
  */
-public class SQLProcessor < T extends Fauxjo >
+public class SQLProcessor < T extends Fauxjo > 
 {
     // ============================================================
     // Fields
@@ -60,7 +60,6 @@ public class SQLProcessor < T extends Fauxjo >
     // ============================================================
 
     public SQLProcessor( Schema schema, Class<T> beanClass, String tableName )
-        throws SQLException
     {
         _schema = schema;
         _tableName = tableName;
@@ -81,7 +80,6 @@ public class SQLProcessor < T extends Fauxjo >
      * Get first item from result set and not zero. It will never return null.
      */
     public T getOne( ResultSet rs )
-        throws SQLException
     {
         T bean = getFirst( rs );
         assert bean != null : "Resultset is improperly empty.";
@@ -93,7 +91,6 @@ public class SQLProcessor < T extends Fauxjo >
      * Get only item from result set (resultset must contain 1 item).
      */
     public T getOnlyOne( ResultSet rs )
-        throws SQLException
     {
         T bean = getOnlyFirst( rs );
         assert bean != null : "Resultset is improperly empty.";
@@ -105,7 +102,6 @@ public class SQLProcessor < T extends Fauxjo >
      * Create an item from the first row in the result set.
      */
     public T getFirst( ResultSet rs )
-        throws SQLException
     {
         List<T> beans = processResultSet( rs, 1 );
         if ( beans == null || beans.isEmpty() )
@@ -122,7 +118,6 @@ public class SQLProcessor < T extends Fauxjo >
      * Get only item from result or null (resultset must contain 0 or 1 items).
      */
     public T getOnlyFirst( ResultSet rs )
-        throws SQLException
     {
         List<T> beans = processResultSet( rs, 2 );
         if ( beans == null || beans.isEmpty() )
@@ -139,19 +134,16 @@ public class SQLProcessor < T extends Fauxjo >
      * Convert each row in the result set to an item.
      */
     public List<T> getList( ResultSet rs )
-        throws SQLException
     {
         return getList( rs, Integer.MAX_VALUE );
     }
 
     public List<T> getList( ResultSet rs, int maxNumItems )
-        throws SQLException
     {
         return processResultSet( rs, maxNumItems );
     }
 
     public ResultSetIterator<T> getIterator( ResultSet rs )
-        throws SQLException
     {
         ResultSetIterator<T> iterator = new ResultSetIterator<T>( this, rs );
 
@@ -162,7 +154,6 @@ public class SQLProcessor < T extends Fauxjo >
      * Convert the bean into an insert statement and execute it.
      */
     public boolean insert( Fauxjo bean )
-        throws FauxjoException
     {
         try
         {
@@ -215,8 +206,7 @@ public class SQLProcessor < T extends Fauxjo >
                 // If this is a TS Vector text search column, add the TS Vector column.
                 if ( readMethod.isAnnotationPresent( TextIndexedColumn.class ) )
                 {
-                    TextIndexedColumn ann = readMethod.getAnnotation(
-                        TextIndexedColumn.class );
+                    TextIndexedColumn ann = readMethod.getAnnotation( TextIndexedColumn.class );
                     String tsVectorColumn = null;
                     if ( ann != null )
                     {
@@ -289,7 +279,6 @@ public class SQLProcessor < T extends Fauxjo >
      * Convert the bean into an update statement and execute it.
      */
     public boolean update( Fauxjo bean )
-        throws FauxjoException
     {
         try
         {
@@ -337,8 +326,7 @@ public class SQLProcessor < T extends Fauxjo >
 
                     if ( readMethod.isAnnotationPresent( TextIndexedColumn.class ) )
                     {
-                        TextIndexedColumn ann = readMethod.getAnnotation(
-                            TextIndexedColumn.class );
+                        TextIndexedColumn ann = readMethod.getAnnotation( TextIndexedColumn.class );
                         String tsVectorColumn = null;
                         if ( ann != null )
                         {
@@ -353,7 +341,7 @@ public class SQLProcessor < T extends Fauxjo >
                             tsVectorColumn = realColumnName + "TsVector";
                         }
 
-                        setterClause.append( "," + tsVectorColumn +"=to_tsvector(?)" );
+                        setterClause.append( "," + tsVectorColumn + "=to_tsvector(?)" );
                         values.add( new DataValue( val, type ) );
                     }
                 }
@@ -388,7 +376,6 @@ public class SQLProcessor < T extends Fauxjo >
      * Convert the bean into an delete statement and execute it.
      */
     public boolean delete( Fauxjo bean )
-        throws FauxjoException
     {
         try
         {
@@ -448,86 +435,122 @@ public class SQLProcessor < T extends Fauxjo >
      * Get the next value from a sequence.
      */
     public Long getNextKey( String sequenceName )
-        throws SQLException
     {
         assert sequenceName != null;
 
-        String name = sequenceName;
-        if ( _schema.getSchemaName() != null && !_schema.getSchemaName().equals( "" ) )
+        try
         {
-            name = _schema.getSchemaName() + "." + sequenceName;
+            String name = sequenceName;
+            if ( _schema.getSchemaName() != null && !_schema.getSchemaName().equals( "" ) )
+            {
+                name = _schema.getSchemaName() + "." + sequenceName;
+            }
+
+            PreparedStatement getKey = getConnection().prepareStatement( "select nextval('" + name +
+                "')" );
+
+            ResultSet rs = getKey.executeQuery();
+            rs.next();
+            return rs.getLong( 1 );
         }
-
-        PreparedStatement getKey = getConnection().prepareStatement( "select nextval('" + name +
-            "')" );
-
-        ResultSet rs = getKey.executeQuery();
-        rs.next();
-        return rs.getLong( 1 );
+        catch ( Throwable ex )
+        {
+            throw new FauxjoException( ex );
+        }
     }
 
     public void setLong( PreparedStatement statement, int index, Long value )
-        throws SQLException
     {
-        if ( value == null )
+        try
         {
-            statement.setNull( index, Types.NUMERIC );
+            if ( value == null )
+            {
+                statement.setNull( index, Types.NUMERIC );
+            }
+            else
+            {
+                statement.setLong( index, value );
+            }
         }
-        else
+        catch ( Throwable ex )
         {
-            statement.setLong( index, value );
+            throw new FauxjoException( ex );
         }
     }
 
     public void setString( PreparedStatement statement, int index, String value )
-        throws SQLException
     {
-        if ( value == null )
+        try
         {
-            statement.setNull( index, Types.VARCHAR );
+            if ( value == null )
+            {
+                statement.setNull( index, Types.VARCHAR );
+            }
+            else
+            {
+                statement.setString( index, value );
+            }
         }
-        else
+        catch ( Throwable ex )
         {
-            statement.setString( index, value );
+            throw new FauxjoException( ex );
         }
     }
 
     public void setDouble( PreparedStatement statement, int index, Double value )
-        throws SQLException
     {
-        if ( value == null )
+        try
         {
-            statement.setNull( index, Types.DOUBLE );
+            if ( value == null )
+            {
+                statement.setNull( index, Types.DOUBLE );
+            }
+            else
+            {
+                statement.setDouble( index, value );
+            }
         }
-        else
+        catch ( Throwable ex )
         {
-            statement.setDouble( index, value );
+            throw new FauxjoException( ex );
         }
     }
 
     public void setInt( PreparedStatement statement, int index, Integer value )
-        throws SQLException
     {
-        if ( value == null )
+        try
         {
-            statement.setNull( index, Types.INTEGER );
+            if ( value == null )
+            {
+                statement.setNull( index, Types.INTEGER );
+            }
+            else
+            {
+                statement.setInt( index, value );
+            }
         }
-        else
+        catch ( Throwable ex )
         {
-            statement.setInt( index, value );
+            throw new FauxjoException( ex );
         }
     }
 
     public void setShort( PreparedStatement statement, int index, Short value )
-        throws SQLException
     {
-        if ( value == null )
+        try
         {
-            statement.setNull( index, Types.SMALLINT );
+            if ( value == null )
+            {
+                statement.setNull( index, Types.SMALLINT );
+            }
+            else
+            {
+                statement.setInt( index, value );
+            }
         }
-        else
+        catch ( Throwable ex )
         {
-            statement.setInt( index, value );
+            throw new FauxjoException( ex );
         }
     }
 
@@ -541,7 +564,6 @@ public class SQLProcessor < T extends Fauxjo >
     }
 
     protected Connection getConnection()
-        throws SQLException
     {
         return _schema.getConnection();
     }
@@ -552,39 +574,50 @@ public class SQLProcessor < T extends Fauxjo >
     }
 
     protected List<T> processResultSet( ResultSet rs, int numRows )
-        throws SQLException
     {
-        List<T> list = new ArrayList<T>();
-
-        int counter = 0;
-        while ( rs.next() && ( counter < numRows ) )
+        try
         {
-            list.add( convertResultSetRow( rs ) );
-            counter++;
-        }
-        rs.close();
+            List<T> list = new ArrayList<T>();
 
-        return list;
+            int counter = 0;
+            while ( rs.next() && ( counter < numRows ) )
+            {
+                list.add( convertResultSetRow( rs ) );
+                counter++;
+            }
+            rs.close();
+
+            return list;
+        }
+        catch ( Throwable ex )
+        {
+            throw new FauxjoException( ex );
+        }
     }
 
     protected T convertResultSetRow( ResultSet rs )
-        throws SQLException
     {
-        ResultSetMetaData meta = rs.getMetaData();
-        int columnCount = meta.getColumnCount();
-
-        Map<String,Object> record = new HashMap<String,Object>();
-        for ( int i = 1; i <= columnCount; i++ )
+        try
         {
-            record.put( _columnToPropMap.get( meta.getColumnName( i ).toLowerCase() ),
-                rs.getObject( i ) );
-        }
+            ResultSetMetaData meta = rs.getMetaData();
+            int columnCount = meta.getColumnCount();
 
-        return processRecord( record );
+            Map<String,Object> record = new HashMap<String,Object>();
+            for ( int i = 1; i <= columnCount; i++ )
+            {
+                record.put( _columnToPropMap.get( meta.getColumnName( i ).toLowerCase() ),
+                    rs.getObject( i ) );
+            }
+
+            return processRecord( record );
+        }
+        catch ( Throwable ex )
+        {
+            throw new FauxjoException( ex );
+        }
     }
 
     protected T processRecord( Map<String,Object> record )
-        throws FauxjoException
     {
         try
         {
@@ -625,45 +658,57 @@ public class SQLProcessor < T extends Fauxjo >
     // ----------
 
     private void init()
-        throws SQLException
     {
-        _propToColumnMap = new HashMap<String,String>();
-        _propToDataTypeMap = new HashMap<String,Integer>();
-        _columnToPropMap = new HashMap<String,String>();
-
-        ResultSet rs = getConnection().getMetaData().getColumns( null, _schema.getSchemaName(),
-            getRealTableName( _tableName ), null );
-        while ( rs.next() )
+        try
         {
-            String rawName = rs.getString( COLUMN_NAME );
-            Integer type = rs.getInt( DATA_TYPE );
-            String name = rs.getString( REMARKS );
-            if ( name == null )
-            {
-                name = rawName.toLowerCase();
-            }
+            _propToColumnMap = new HashMap<String,String>();
+            _propToDataTypeMap = new HashMap<String,Integer>();
+            _columnToPropMap = new HashMap<String,String>();
 
-            _propToColumnMap.put( name.toLowerCase(), rawName );
-            _propToDataTypeMap.put( name.toLowerCase(), type );
-            _columnToPropMap.put( rawName.toLowerCase(), name );
+            ResultSet rs = getConnection().getMetaData().getColumns( null, _schema.getSchemaName(),
+                getRealTableName( _tableName ), null );
+            while ( rs.next() )
+            {
+                String rawName = rs.getString( COLUMN_NAME );
+                Integer type = rs.getInt( DATA_TYPE );
+                String name = rs.getString( REMARKS );
+                if ( name == null )
+                {
+                    name = rawName.toLowerCase();
+                }
+
+                _propToColumnMap.put( name.toLowerCase(), rawName );
+                _propToDataTypeMap.put( name.toLowerCase(), type );
+                _columnToPropMap.put( rawName.toLowerCase(), name );
+            }
+            rs.close();
         }
-        rs.close();
+        catch ( Throwable ex )
+        {
+            throw new FauxjoException( ex );
+        }
     }
 
     private String getRealTableName( String tableName )
-        throws SQLException
     {
-        ResultSet rs = getConnection().getMetaData().getTables( null, _schema.getSchemaName(), null,
-            new String[]
+        try
         {
-            TABLE
-        } );
-        while ( rs.next() )
-        {
-            if ( rs.getString( TABLE_NAME ).equalsIgnoreCase( tableName ) )
+            ResultSet rs = getConnection().getMetaData().getTables( null, _schema.getSchemaName(),
+                null, new String[]
             {
-                return rs.getString( TABLE_NAME );
+                TABLE
+            } );
+            while ( rs.next() )
+            {
+                if ( rs.getString( TABLE_NAME ).equalsIgnoreCase( tableName ) )
+                {
+                    return rs.getString( TABLE_NAME );
+                }
             }
+        }
+        catch ( Throwable ex )
+        {
+            throw new FauxjoException( ex );
         }
 
         return null;

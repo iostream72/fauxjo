@@ -112,7 +112,6 @@ public abstract class FauxjoImpl implements Fauxjo
      * fauxjo object.
      */
     public boolean isInDatabase( Schema schema )
-        throws FauxjoException
     {    	
         try
         {
@@ -144,7 +143,6 @@ public abstract class FauxjoImpl implements Fauxjo
      * fauxjo object.
      */
     public boolean isNew( Schema schema )
-        throws FauxjoException
     {
     	if ( schema == null )
     	{

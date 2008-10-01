@@ -40,7 +40,6 @@ public class SingletonPersonSchema extends Schema
     // ============================================================
 
     public SingletonPersonSchema()
-        throws SQLException
     {
         addHome( Person.class, new PersonHome( this ) );
         addHome( Department.class, new DepartmentHome( this ) );
@@ -55,7 +54,6 @@ public class SingletonPersonSchema extends Schema
     // ----------
 
     public static SingletonPersonSchema getInstance()
-        throws SQLException
     {
         if ( _instance == null )
         {
@@ -66,31 +64,40 @@ public class SingletonPersonSchema extends Schema
     }
 
     public static void commit()
-        throws SQLException
     {
-        getInstance().getConnection().commit();
+        try
+        {
+            getInstance().getConnection().commit();
+        }
+        catch ( SQLException ex )
+        {
+            throw new FauxjoException( ex );
+        }
     }
 
     public static void rollback()
-        throws SQLException
     {
-        getInstance().getConnection().rollback();
+        try
+        {
+            getInstance().getConnection().rollback();
+        }
+        catch ( SQLException ex )
+        {
+            throw new FauxjoException( ex );
+        }
     }
 
     public static PersonHome getPersonHome()
-        throws SQLException
     {
         return (PersonHome)getInstance().getHome( Person.class );
     }
 
     public static DepartmentHome getDepartmentHome()
-        throws SQLException
     {
         return (DepartmentHome)getInstance().getHome( Department.class );
     }
 
     public Connection getConnection()
-        throws SQLException
     {
         return DB.getConnection( "person" );
     }

@@ -23,14 +23,12 @@
 
 package net.fauxjo;
 
-import java.sql.*;
-
 /**
  * <p>
  * An Exception that is specific to the Fauxjo component.
  * </p>
  */
-public class FauxjoException extends SQLException
+public class FauxjoException extends RuntimeException
 {
     // ============================================================
     // Constructors
@@ -44,12 +42,6 @@ public class FauxjoException extends SQLException
     public FauxjoException( String message, Throwable ex )
     {
         super( message, ex );
-    }
-
-    public FauxjoException( SQLException ex )
-    {
-        super( ex.getMessage(), ex.getSQLState(), ex.getErrorCode() );
-        setNextException( ex );
     }
 
     public FauxjoException( Throwable ex )
