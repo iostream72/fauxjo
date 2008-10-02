@@ -23,6 +23,7 @@
 
 package net.fauxjo.coercer;
 
+import net.fauxjo.*;
 
 public class ByteCoercer implements TypeCoercer<Byte>
 {
@@ -35,6 +36,7 @@ public class ByteCoercer implements TypeCoercer<Byte>
     // ----------
 
     public Object coerce( Byte value, Class<?> destClass )
+        throws FauxjoException
     {
         if ( destClass.equals( Short.class ) )
         {
@@ -49,7 +51,7 @@ public class ByteCoercer implements TypeCoercer<Byte>
             return value.longValue();
         }
 
-        throw new RuntimeException( "The ByteCoercer does not know how to convert to type " +
+        throw new FauxjoException( "The ByteCoercer does not know how to convert to type " +
             destClass.getCanonicalName() );
     }
 

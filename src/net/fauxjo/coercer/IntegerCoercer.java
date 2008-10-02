@@ -23,6 +23,8 @@
 
 package net.fauxjo.coercer;
 
+import net.fauxjo.*;
+
 public class IntegerCoercer implements TypeCoercer<Integer>
 {
     // ============================================================
@@ -34,6 +36,7 @@ public class IntegerCoercer implements TypeCoercer<Integer>
     // ----------
 
     public Object coerce( Integer value, Class<?> destClass )
+        throws FauxjoException
     {
         if ( destClass.equals( Byte.class ) )
         {
@@ -50,7 +53,7 @@ public class IntegerCoercer implements TypeCoercer<Integer>
             return value.longValue();
         }
 
-        throw new RuntimeException( "The IntegerCoercer does not know how to convert to type " +
+        throw new FauxjoException( "The IntegerCoercer does not know how to convert to type " +
             destClass );
     }
 

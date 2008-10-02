@@ -32,16 +32,19 @@ package net.fauxjo;
  */
 public interface Fauxjo
 {
-    public Schema getSchema();
+    public Schema getSchema()
+        throws Exception;
 
     /**
      * This is called by the home object as a "paper-trail" back to the schema that this fauxjo
      * object came from. The schema is most often used to lookup foreign objects that are within
      * the same schema.
      */
-    public void setSchema( Schema schema );
+    public void setSchema( Schema schema )
+        throws Exception;
 
-    public boolean isInDatabase( Schema schema );
+    public boolean isInDatabase( Schema schema )
+        throws Exception;
 
     /**
      * <p>
@@ -50,6 +53,7 @@ public interface Fauxjo
      * in the database (auto-generated).
      * </p>
      */
-    public boolean isNew( Schema schema );
+    public boolean isNew( Schema schema )
+        throws Exception;
 }
 

@@ -23,6 +23,7 @@ public class PersonSchema extends Schema
     // ============================================================
 
     public PersonSchema( Connection connection )
+        throws SQLException
     {
         _connection = connection;
         addHome( Person.class, new PersonHome( this ) );
@@ -38,6 +39,7 @@ public class PersonSchema extends Schema
     // ----------
 
     public static PersonSchema getInstance( Connection connection )
+        throws SQLException
     {
         if ( _instances == null )
         {

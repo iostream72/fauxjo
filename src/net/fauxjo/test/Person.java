@@ -119,6 +119,7 @@ public class Person extends FauxjoImpl
     }
 
     public Department getDepartment()
+        throws Exception
     {
         return getSchema().getForeignBean( Department.class, _departmentId );
     }

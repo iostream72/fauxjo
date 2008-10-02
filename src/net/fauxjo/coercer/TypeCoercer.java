@@ -23,6 +23,8 @@
 
 package net.fauxjo.coercer;
 
+import net.fauxjo.*;
+
 /**
  * <p>
  * Coerces one value type to another value type. These are used when the column type from the
@@ -39,6 +41,7 @@ public interface TypeCoercer<T>
     // public
     // ----------
 
-    public Object coerce( T value, Class<?> destClass );
+    public Object coerce( T value, Class<?> destClass )
+        throws FauxjoException;
 }
 

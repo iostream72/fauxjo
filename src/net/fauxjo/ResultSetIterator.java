@@ -41,17 +41,11 @@ public class ResultSetIterator < T extends Fauxjo > implements Iterator<T>, Iter
     // ============================================================
 
     public ResultSetIterator( SQLProcessor<T> sqlProcessor, ResultSet resultSet )
+        throws SQLException
     {
-        try
-        {
-            _sqlProcessor = sqlProcessor;
-            _resultSet = resultSet;
-            _hasNext = _resultSet.next();
-        }
-        catch ( Throwable ex )
-        {
-            throw new FauxjoException( ex );
-        }
+        _sqlProcessor = sqlProcessor;
+        _resultSet = resultSet;
+        _hasNext = _resultSet.next();
     }
 
     // ============================================================
@@ -69,13 +63,13 @@ public class ResultSetIterator < T extends Fauxjo > implements Iterator<T>, Iter
 
     public T next()
     {
+        if ( !_hasNext )
+        {
+            return null;
+        }
+
         try
         {
-            if ( !_hasNext )
-            {
-                return null;
-            }
-
             T object = _sqlProcessor.convertResultSetRow( _resultSet );
             _hasNext = _resultSet.next();
             if ( !_hasNext )
@@ -85,7 +79,7 @@ public class ResultSetIterator < T extends Fauxjo > implements Iterator<T>, Iter
 
             return object;
         }
-        catch ( SQLException ex )
+        catch ( Exception ex )
         {
             throw new RuntimeException( ex );
         }
@@ -98,18 +92,12 @@ public class ResultSetIterator < T extends Fauxjo > implements Iterator<T>, Iter
     }
 
     public void close()
+        throws SQLException
     {
-        try
+        if ( _resultSet != null )
         {
-            if ( _resultSet != null )
-            {
-                _resultSet.close();
-                _resultSet = null;
-            }
-        }
-        catch ( Throwable ex )
-        {
-            throw new FauxjoException( ex );
+            _resultSet.close();
+            _resultSet = null;
         }
     }
 

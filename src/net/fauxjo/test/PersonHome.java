@@ -42,6 +42,7 @@ public class PersonHome extends Home<Person>
     // ============================================================
 
     public PersonHome( Schema schema )
+        throws SQLException
     {
         super( schema, Person.class, "Person" );
 
@@ -59,65 +60,40 @@ public class PersonHome extends Home<Person>
 
     @FauxjoPrimaryFinder
     public Person findByPersonId( String personId )
+        throws Exception
     {
-        try
-        {
-            PreparedStatement statement = getPreparedStatement( StatementId.findByPersonId.name() );
-            statement.setString( 1, personId );
+        PreparedStatement statement = getPreparedStatement( StatementId.findByPersonId.name() );
+        statement.setString( 1, personId );
 
-            return getOne( statement.executeQuery() );
-        }
-        catch ( Throwable ex )
-        {
-            throw new FauxjoException( ex );
-        }
+        return getOne( statement.executeQuery() );
     }
 
     public List<Person> findAll()
+        throws Exception
     {
-        try
-        {
-            PreparedStatement statement = getConnection().prepareStatement( buildBasicSelect(
-                "" ) );
+        PreparedStatement statement = getConnection().prepareStatement( buildBasicSelect( "" ) );
 
-            return getList( statement.executeQuery() );
-        }
-        catch ( Throwable ex )
-        {
-            throw new FauxjoException( ex );
-        }
+        return getList( statement.executeQuery() );
     }
 
     public Person findByFirstName( String firstName )
+        throws Exception
     {
-        try
-        {
-            PreparedStatement statement = getConnection().prepareStatement( buildBasicSelect(
-                "where firstName=?" ) );
-            statement.setString( 1, firstName );
+        PreparedStatement statement = getConnection().prepareStatement( buildBasicSelect(
+            "where firstName=?" ) );
+        statement.setString( 1, firstName );
 
-            return getOne( statement.executeQuery() );
-        }
-        catch ( Throwable ex )
-        {
-            throw new FauxjoException( ex );
-        }
+        return getOne( statement.executeQuery() );
     }
 
     public List<Person> findByDepartment( Department department )
+        throws Exception
     {
-        try
-        {
-            PreparedStatement statement = getConnection().prepareStatement( buildBasicSelect(
-                "where departmentId=?" ) );
-            statement.setLong( 1, department.getDepartmentId() );
+        PreparedStatement statement = getConnection().prepareStatement( buildBasicSelect(
+            "where departmentId=?" ) );
+        statement.setLong( 1, department.getDepartmentId() );
 
-            return getList( statement.executeQuery() );
-        }
-        catch ( Throwable ex )
-        {
-            throw new FauxjoException( ex );
-        }
+        return getList( statement.executeQuery() );
     }
 }
 

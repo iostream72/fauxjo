@@ -24,6 +24,7 @@
 package net.fauxjo.coercer;
 
 import java.sql.*;
+import net.fauxjo.*;
 
 public class SQLTimestampCoercer implements TypeCoercer<Timestamp>
 {
@@ -36,6 +37,7 @@ public class SQLTimestampCoercer implements TypeCoercer<Timestamp>
     // ----------
 
     public Object coerce( Timestamp value, Class<?> destClass )
+        throws FauxjoException
     {
         if ( destClass.equals( java.util.Date.class ) )
         {
@@ -46,8 +48,8 @@ public class SQLTimestampCoercer implements TypeCoercer<Timestamp>
             return new java.sql.Date( value.getTime() );
         }
 
-        throw new RuntimeException( "The SQLTimestampCoercer does not know how to convert to " +
-            "type " + destClass.getCanonicalName() );
+        throw new FauxjoException( "The SQLTimestampCoercer does not know how to convert to type " +
+            destClass.getCanonicalName() );
     }
 }
 

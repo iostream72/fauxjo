@@ -28,7 +28,7 @@ package net.fauxjo;
  * An Exception that is specific to the Fauxjo component.
  * </p>
  */
-public class FauxjoException extends RuntimeException
+public class FauxjoException extends Exception
 {
     // ============================================================
     // Constructors

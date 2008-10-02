@@ -78,6 +78,7 @@ public class Coercer
 
     @SuppressWarnings( "unchecked" )
     public < T > Object coerce( T value, Class<?> destClass )
+        throws FauxjoException
     {
         // Null values are just null values.
         if ( value == null )

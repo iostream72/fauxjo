@@ -23,6 +23,8 @@
 
 package net.fauxjo.coercer;
 
+import net.fauxjo.*;
+
 public class DoubleCoercer implements TypeCoercer<Float>
 {
     // ============================================================
@@ -33,14 +35,14 @@ public class DoubleCoercer implements TypeCoercer<Float>
     // public
     // ----------
 
-    public Object coerce( Float value, Class<?> destClass )
+    public Object coerce( Float value, Class<?> destClass ) throws FauxjoException
     {
         if ( destClass.equals( Float.class ) )
         {
             return value.floatValue();
         }
 
-        throw new RuntimeException( "The DoubleCoercer does not know how to convert to type " +
+        throw new FauxjoException( "The DoubleCoercer does not know how to convert to type " +
             destClass );
     }
 

@@ -24,6 +24,7 @@
 package net.fauxjo.coercer;
 
 import java.sql.*;
+import net.fauxjo.*;
 
 public class StringCoercer implements TypeCoercer<String>
 {
@@ -36,6 +37,7 @@ public class StringCoercer implements TypeCoercer<String>
     // ----------
 
     public Object coerce( String value, Class<?> destClass )
+        throws FauxjoException
     {
         if ( destClass.equals( Boolean.class ) )
         {
@@ -66,7 +68,7 @@ public class StringCoercer implements TypeCoercer<String>
             return Timestamp.valueOf( value );
         }
 
-        throw new RuntimeException( "The StringCoercer does not know how to convert to type " +
+        throw new FauxjoException( "The StringCoercer does not know how to convert to type " +
             destClass.getCanonicalName() );
     }
 }

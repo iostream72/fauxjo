@@ -50,51 +50,45 @@ public abstract class FauxjoImpl implements Fauxjo
      * This should return a single object that is unique for this object.
      */
     public Object getPrimaryKey()
+        throws Exception
     {
-        try
+        BeanInfo info = Introspector.getBeanInfo( getClass() );
+        ArrayList<Object> values = new ArrayList<Object>();
+        for ( PropertyDescriptor prop : info.getPropertyDescriptors() )
         {
-            BeanInfo info = Introspector.getBeanInfo( getClass() );
-            ArrayList<Object> values = new ArrayList<Object>();
-            for ( PropertyDescriptor prop : info.getPropertyDescriptors() )
+            Method readMethod = prop.getReadMethod();
+            if ( readMethod == null )
             {
-                Method readMethod = prop.getReadMethod();
-                if ( readMethod == null )
-                {
-                    continue;
-                }
-                else if ( !readMethod.isAnnotationPresent( FauxjoPrimaryKey.class ) )
-                {
-                    continue;
-                }
-
-                Object value = readMethod.invoke( this, new Object[]
-                {
-                } );
-                values.add( value );
+                continue;
+            }
+            else if ( !readMethod.isAnnotationPresent( FauxjoPrimaryKey.class ) )
+            {
+                continue;
             }
 
-            if ( values.size() == 0 )
+            Object value = readMethod.invoke( this, new Object[]
             {
-                return null;
-            }
-            else if ( values.size() == 1 )
-            {
-                return values.get( 0 );
-            }
+            } );
+            values.add( value );
+        }
+
+        if ( values.size() == 0 )
+        {
+            return null;
+        }
+        else if ( values.size() == 1 )
+        {
+            return values.get( 0 );
+        }
 
             // Convert all the objects to a single concatenated String
-            StringBuilder builder = new StringBuilder();
-            for ( Object value : values )
-            {
-                builder.append( value );
-                builder.append( "~" );
-            }
-            return builder.toString();
-        }
-        catch ( Exception ex )
+        StringBuilder builder = new StringBuilder();
+        for ( Object value : values )
         {
-            throw new RuntimeException( ex );
+            builder.append( value );
+            builder.append( "~" );
         }
+        return builder.toString();
     }
 
     public Schema getSchema()
@@ -110,84 +104,89 @@ public abstract class FauxjoImpl implements Fauxjo
     /**
      * The schema is passed in because there is no guarantee that the schema was set on the
      * fauxjo object.
+     * @throws Exception 
      */
     public boolean isInDatabase( Schema schema )
-    {    	
-        try
+        throws Exception
+    {
+        if ( isNew( schema ) )
         {
-        	if ( isNew( schema ) )
-	        {
-	        	return false;
-	        }
-        
-            Home<?> home = schema.getHome( getClass() );
-            Method pkMethod = schema.findPrimaryFinder( home );
-            Object[] pkValues = schema.findPrimaryKey( this );
-            Object val = pkMethod.invoke( home, pkValues );
-
-            if ( val == null )
-            {
-                return false;
-            }
-
-            return true;
+            return false;
         }
-        catch ( Throwable ex )
+
+        Home<?> home = schema.getHome( getClass() );
+        Method pkMethod = schema.findPrimaryFinder( home );
+        Object[] pkValues = schema.findPrimaryKey( this );
+        Object val = pkMethod.invoke( home, pkValues );
+
+        if ( val == null )
         {
-            throw new FauxjoException( ex );
+            return false;
         }
+
+        return true;
     }
 
     /**
      * The schema is passed in because there is no guarantee that the schema was set on the
      * fauxjo object.
+     * @throws Exception 
      */
     public boolean isNew( Schema schema )
+        throws Exception
     {
-    	if ( schema == null )
-    	{
-    		return false;
-    	}
-    	
-    	try
-    	{
-	    	Object[] pkValues = schema.findPrimaryKey( this );
-	    	
-	    	// if no values, new
-	        if ( pkValues == null || pkValues.length == 0 )
-	        {
-	            return true;
-	        }
-	        
-	        // if any values null, new
-	        for ( Object key : pkValues )
-	        {
-	        	if ( key == null )
-	        	{
-	        		return true;
-	        	}
-	        }
-	        
-	        return false;
-    	} 
-    	catch ( Throwable ex )
-    	{
-    		throw new FauxjoException( ex );
-    	}
+        if ( schema == null )
+        {
+            return false;
+        }
+
+        Object[] pkValues = schema.findPrimaryKey( this );
+
+                // if no values, new
+        if ( pkValues == null || pkValues.length == 0 )
+        {
+            return true;
+        }
+
+                // if any values null, new
+        for ( Object key : pkValues )
+        {
+            if ( key == null )
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public int hashCode()
     {
-        // Any nulled hash keys equate to default of zero.
-        return getPrimaryKey() == null ? 0 : getPrimaryKey().hashCode();
+        try
+        {
+            // Any nulled hash keys equate to default of zero.
+            return getPrimaryKey() == null ? 0 : getPrimaryKey().hashCode();
+        }
+        catch ( Exception ex )
+        {
+            throw new RuntimeException( ex );
+        }
     }
 
     public boolean equals( Object other )
     {
-        if ( getPrimaryKey() != null && other != null && other.getClass().equals( getClass() ) )
+        try
         {
-            return getPrimaryKey().equals( ( (FauxjoImpl)other ).getPrimaryKey() );
+            if ( getPrimaryKey() != null && other != null && other.getClass().equals( getClass() ) )
+            {
+                return getPrimaryKey().equals( ( (FauxjoImpl)other ).getPrimaryKey() );
+            }
         }
+        catch ( Exception ex )
+        {
+            throw new RuntimeException( ex );
+        }
+
         return super.equals( other );
     }
 }

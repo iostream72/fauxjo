@@ -91,27 +91,25 @@ public abstract class Schema
     /**
      * Given a bean class, a potentially null bean, and an array of foreign keys find the
      * bean, set it and return it.
+     * @throws FauxjoException 
+     * @throws InvocationTargetException 
+     * @throws IllegalAccessException 
+     * @throws IllegalArgumentException 
      */
     @SuppressWarnings( "unchecked" )
     public < T > T getForeignBean( Class<T> foreignBeanClass, Object ...foreignKeys )
+        throws Exception
     {
-        try
+        Home<?> home = _homes.get( foreignBeanClass );
+
+        Method finderMethod = findPrimaryFinder( home );
+
+        if ( foreignKeys == null )
         {
-            Home<?> home = _homes.get( foreignBeanClass );
-
-            Method finderMethod = findPrimaryFinder( home );
-
-            if ( foreignKeys == null )
-            {
-                return null;
-            }
-
-            return (T)finderMethod.invoke( home, foreignKeys );
+            return null;
         }
-        catch ( Throwable ex )
-        {
-            throw new FauxjoException( ex );
-        }
+
+        return (T)finderMethod.invoke( home, foreignKeys );
     }
 
     // ----------
@@ -119,6 +117,7 @@ public abstract class Schema
     // ----------
 
     protected Method findPrimaryFinder( Home<?> home )
+        throws FauxjoException
     {
         for ( Method method : home.getClass().getMethods() )
         {
@@ -128,39 +127,33 @@ public abstract class Schema
             }
         }
 
-        throw new RuntimeException( "The home object " + home.getClass().getCanonicalName() +
+        throw new FauxjoException( "The home object " + home.getClass().getCanonicalName() +
             " does not have an annotated FJOPrimaryFinder method" );
     }
 
     protected Object[] findPrimaryKey( Object bean )
+        throws Exception
     {
-        try
-        {
-            List<Object> returnval = new ArrayList<Object>( 5 );
+        List<Object> returnval = new ArrayList<Object>( 5 );
 
-            for ( Class<?> cls = bean.getClass(); cls != null; cls = cls.getSuperclass() )
+        for ( Class<?> cls = bean.getClass(); cls != null; cls = cls.getSuperclass() )
+        {
+            for ( Method method : cls.getMethods() )
             {
-                for ( Method method : cls.getMethods() )
+                if ( method.isAnnotationPresent( FauxjoPrimaryKey.class ) )
                 {
-                    if ( method.isAnnotationPresent( FauxjoPrimaryKey.class ) )
-                    {
-                        FauxjoPrimaryKey fpk = method.getAnnotation( FauxjoPrimaryKey.class );
-                        returnval.add( fpk.sequence(), method.invoke( bean, new Object[0] ) );
-                    }
+                    FauxjoPrimaryKey fpk = method.getAnnotation( FauxjoPrimaryKey.class );
+                    returnval.add( fpk.sequence(), method.invoke( bean, new Object[0] ) );
                 }
             }
-
-            if ( returnval.size() == 0 )
-            {
-                return null;
-            }
-
-            return returnval.toArray();
         }
-        catch ( Throwable ex )
+
+        if ( returnval.size() == 0 )
         {
-            throw new FauxjoException( ex );
+            return null;
         }
+
+        return returnval.toArray();
     }
 }
 
