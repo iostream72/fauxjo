@@ -155,6 +155,7 @@ public class Home < T extends Fauxjo >
     }
 
     protected Connection getConnection()
+        throws SQLException
     {
         return _schema.getConnection();
     }

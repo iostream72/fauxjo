@@ -53,8 +53,9 @@ public abstract class Schema
     // public
     // ----------
 
-    public abstract Connection getConnection();
-
+    public abstract Connection getConnection()
+        throws SQLException;
+    
 
     public void addHome( Class<?> beanType, Home<?> home )
     {

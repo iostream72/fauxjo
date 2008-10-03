@@ -535,6 +535,7 @@ public class SQLProcessor < T extends Fauxjo >
     }
 
     protected Connection getConnection()
+        throws SQLException
     {
         return _schema.getConnection();
     }
