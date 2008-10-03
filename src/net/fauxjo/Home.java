@@ -120,7 +120,7 @@ public class Home < T extends Fauxjo >
         return _sqlProcessor.insert( bean );
     }
 
-    public boolean update( T bean )
+    public int update( T bean )
         throws SQLException
     {
         return _sqlProcessor.update( bean );
@@ -135,14 +135,24 @@ public class Home < T extends Fauxjo >
     public boolean save( T bean )
         throws SQLException
     {
-        if ( bean.isNew( _schema ) )
+        // If has empty PK, assumed to be new.
+        if ( bean.hasEmptyPrimaryKey( _schema ) )
         {
             return insert( bean );
         }
         else
         {
-            return update( bean );
+            // Attempt to do an update
+            int numRowsUpdated = update( bean );
+            
+            // If no rows were actually updated, assume must actually be new.
+            if ( numRowsUpdated == 0 )
+            {
+                return insert( bean );
+            }
         }
+        
+        return true;
     }
 
     // ----------

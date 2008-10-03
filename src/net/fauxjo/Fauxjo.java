@@ -55,7 +55,7 @@ public interface Fauxjo
      * in the database (auto-generated).
      * </p>
      */
-    public boolean isNew( Schema schema )
+    public boolean hasEmptyPrimaryKey( Schema schema )
         throws SQLException;
 }
 

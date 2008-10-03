@@ -282,12 +282,8 @@ public class SQLProcessor < T extends Fauxjo >
 
     /**
      * Convert the bean into an update statement and execute it.
-     * @throws IntrospectionException 
-     * @throws InvocationTargetException 
-     * @throws IllegalAccessException 
-     * @throws IllegalArgumentException 
      */
-    public boolean update( Fauxjo bean )
+    public int update( Fauxjo bean )
         throws SQLException
     {
         try
@@ -369,7 +365,8 @@ public class SQLProcessor < T extends Fauxjo >
                 statement.setObject( propIndex, value.getValue(), value.getSqlType() );
                 propIndex++;
             }
-            return statement.execute();
+            
+            return statement.executeUpdate();
         }
         catch ( Exception ex )
         {

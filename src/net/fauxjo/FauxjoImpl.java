@@ -116,10 +116,12 @@ public abstract class FauxjoImpl implements Fauxjo
     {
         try
         {
-            if ( isNew( schema ) )
+            // If the item has a null PK, then it obviously can not be in the database
+            if ( hasEmptyPrimaryKey( schema ) )
             {
                 return false;
             }
+            
             Home<?> home = schema.getHome( getClass() );
             Method pkMethod = schema.findPrimaryFinder( home );
             Object[] pkValues = schema.findPrimaryKey( this );
@@ -140,7 +142,7 @@ public abstract class FauxjoImpl implements Fauxjo
      * The schema is passed in because there is no guarantee that the schema was set on the
      * fauxjo object.
      */
-    public boolean isNew( Schema schema )
+    public boolean hasEmptyPrimaryKey( Schema schema )
         throws SQLException
     {
         if ( schema == null )
