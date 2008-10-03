@@ -35,7 +35,8 @@ public class DoubleCoercer implements TypeCoercer<Float>
     // public
     // ----------
 
-    public Object coerce( Float value, Class<?> destClass ) throws FauxjoException
+    public Object coerce( Float value, Class<?> destClass )
+        throws FauxjoException
     {
         if ( destClass.equals( Float.class ) )
         {

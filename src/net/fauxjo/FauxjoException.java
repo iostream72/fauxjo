@@ -23,12 +23,15 @@
 
 package net.fauxjo;
 
+import java.sql.*;
+
 /**
  * <p>
- * An Exception that is specific to the Fauxjo component.
+ * An Exception that is specific to the Fauxjo component. The reason it extends SQLException is
+ * that a FauxjoException is essentially a database exception.
  * </p>
  */
-public class FauxjoException extends Exception
+public class FauxjoException extends SQLException
 {
     // ============================================================
     // Constructors

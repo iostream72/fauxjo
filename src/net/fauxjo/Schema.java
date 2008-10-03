@@ -98,18 +98,23 @@ public abstract class Schema
      */
     @SuppressWarnings( "unchecked" )
     public < T > T getForeignBean( Class<T> foreignBeanClass, Object ...foreignKeys )
-        throws Exception
+        throws SQLException
     {
         Home<?> home = _homes.get( foreignBeanClass );
-
         Method finderMethod = findPrimaryFinder( home );
-
         if ( foreignKeys == null )
         {
             return null;
         }
 
-        return (T)finderMethod.invoke( home, foreignKeys );
+        try
+        {
+            return (T)finderMethod.invoke( home, foreignKeys );
+        }
+        catch ( Exception ex )
+        {
+            throw new FauxjoException( ex );
+        }
     }
 
     // ----------
@@ -132,28 +137,32 @@ public abstract class Schema
     }
 
     protected Object[] findPrimaryKey( Object bean )
-        throws Exception
+        throws SQLException
     {
-        List<Object> returnval = new ArrayList<Object>( 5 );
-
-        for ( Class<?> cls = bean.getClass(); cls != null; cls = cls.getSuperclass() )
+        try
         {
-            for ( Method method : cls.getMethods() )
+            List<Object> returnval = new ArrayList<Object>( 5 );
+            for ( Class<?> cls = bean.getClass(); cls != null; cls = cls.getSuperclass() )
             {
-                if ( method.isAnnotationPresent( FauxjoPrimaryKey.class ) )
+                for ( Method method : cls.getMethods() )
                 {
-                    FauxjoPrimaryKey fpk = method.getAnnotation( FauxjoPrimaryKey.class );
-                    returnval.add( fpk.sequence(), method.invoke( bean, new Object[0] ) );
+                    if ( method.isAnnotationPresent( FauxjoPrimaryKey.class ) )
+                    {
+                        FauxjoPrimaryKey fpk = method.getAnnotation( FauxjoPrimaryKey.class );
+                        returnval.add( fpk.sequence(), method.invoke( bean, new Object[0] ) );
+                    }
                 }
             }
+            if ( returnval.size() == 0 )
+            {
+                return null;
+            }
+            return returnval.toArray();
         }
-
-        if ( returnval.size() == 0 )
+        catch ( Exception ex )
         {
-            return null;
+            throw new FauxjoException( ex );
         }
-
-        return returnval.toArray();
     }
 }
 

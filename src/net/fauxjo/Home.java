@@ -109,31 +109,31 @@ public class Home < T extends Fauxjo >
     }
 
     public long getNextKey( String sequenceName )
-        throws Exception
+        throws SQLException
     {
         return _sqlProcessor.getNextKey( sequenceName );
     }
 
     public boolean insert( T bean )
-        throws Exception
+        throws SQLException
     {
         return _sqlProcessor.insert( bean );
     }
 
     public boolean update( T bean )
-        throws Exception
+        throws SQLException
     {
         return _sqlProcessor.update( bean );
     }
 
     public boolean delete( T bean )
-        throws Exception
+        throws SQLException
     {
         return _sqlProcessor.delete( bean );
     }
 
     public boolean save( T bean )
-        throws Exception
+        throws SQLException
     {
         if ( bean.isNew( _schema ) )
         {
@@ -160,43 +160,43 @@ public class Home < T extends Fauxjo >
     }
 
     protected T getOne( ResultSet rs )
-        throws Exception
+        throws SQLException
     {
         return _sqlProcessor.getOne( rs );
     }
 
     protected T getOnlyOne( ResultSet rs )
-        throws Exception
+        throws SQLException
     {
         return _sqlProcessor.getOnlyOne( rs );
     }
 
     protected T getFirst( ResultSet rs )
-        throws Exception
+        throws SQLException
     {
         return _sqlProcessor.getFirst( rs );
     }
 
     protected T getOnlyFirst( ResultSet rs )
-        throws Exception
+        throws SQLException
     {
         return _sqlProcessor.getOnlyFirst( rs );
     }
 
     protected List<T> getList( ResultSet rs )
-        throws Exception
+        throws SQLException
     {
         return _sqlProcessor.getList( rs );
     }
 
     protected List<T> getList( ResultSet rs, int maxNumRows )
-        throws Exception
+        throws SQLException
     {
         return _sqlProcessor.getList( rs, maxNumRows );
     }
 
     protected ResultSetIterator<T> getIterator( ResultSet rs )
-        throws Exception
+        throws SQLException
     {
         return _sqlProcessor.getIterator( rs );
     }

@@ -60,7 +60,7 @@ public class PersonHome extends Home<Person>
 
     @FauxjoPrimaryFinder
     public Person findByPersonId( String personId )
-        throws Exception
+        throws SQLException
     {
         PreparedStatement statement = getPreparedStatement( StatementId.findByPersonId.name() );
         statement.setString( 1, personId );
@@ -69,7 +69,7 @@ public class PersonHome extends Home<Person>
     }
 
     public List<Person> findAll()
-        throws Exception
+        throws SQLException
     {
         PreparedStatement statement = getConnection().prepareStatement( buildBasicSelect( "" ) );
 
@@ -77,7 +77,7 @@ public class PersonHome extends Home<Person>
     }
 
     public Person findByFirstName( String firstName )
-        throws Exception
+        throws SQLException
     {
         PreparedStatement statement = getConnection().prepareStatement( buildBasicSelect(
             "where firstName=?" ) );
@@ -87,7 +87,7 @@ public class PersonHome extends Home<Person>
     }
 
     public List<Person> findByDepartment( Department department )
-        throws Exception
+        throws SQLException
     {
         PreparedStatement statement = getConnection().prepareStatement( buildBasicSelect(
             "where departmentId=?" ) );

@@ -23,6 +23,8 @@
 
 package net.fauxjo;
 
+import java.sql.*;
+
 /**
  * Absolute minimum required representation of a Fauxjo bean. A fauxjo bean is a class that
  * represents a row within a specific database table.
@@ -33,7 +35,7 @@ package net.fauxjo;
 public interface Fauxjo
 {
     public Schema getSchema()
-        throws Exception;
+        throws SQLException;
 
     /**
      * This is called by the home object as a "paper-trail" back to the schema that this fauxjo
@@ -41,10 +43,10 @@ public interface Fauxjo
      * the same schema.
      */
     public void setSchema( Schema schema )
-        throws Exception;
+        throws SQLException;
 
     public boolean isInDatabase( Schema schema )
-        throws Exception;
+        throws SQLException;
 
     /**
      * <p>
@@ -54,6 +56,6 @@ public interface Fauxjo
      * </p>
      */
     public boolean isNew( Schema schema )
-        throws Exception;
+        throws SQLException;
 }
 

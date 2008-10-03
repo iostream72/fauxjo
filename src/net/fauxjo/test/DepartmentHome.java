@@ -48,7 +48,7 @@ public class DepartmentHome extends Home<Department>
 
     @FauxjoPrimaryFinder
     public Department findByDepartmentId( long departmentId )
-        throws Exception
+        throws SQLException
     {
         PreparedStatement statement = getConnection().prepareStatement( buildBasicSelect(
             "where departmentId=?" ) );
@@ -58,7 +58,7 @@ public class DepartmentHome extends Home<Department>
     }
 
     public Department findByDepartmentIdNotPrepared( long departmentId )
-        throws Exception
+        throws SQLException
     {
         Statement statement = getConnection().createStatement();
 

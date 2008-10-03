@@ -25,6 +25,7 @@ package net.fauxjo;
 
 import java.beans.*;
 import java.lang.reflect.*;
+import java.sql.*;
 import java.util.*;
 
 /**
@@ -50,45 +51,50 @@ public abstract class FauxjoImpl implements Fauxjo
      * This should return a single object that is unique for this object.
      */
     public Object getPrimaryKey()
-        throws Exception
+        throws SQLException
     {
-        BeanInfo info = Introspector.getBeanInfo( getClass() );
-        ArrayList<Object> values = new ArrayList<Object>();
-        for ( PropertyDescriptor prop : info.getPropertyDescriptors() )
+        try
         {
-            Method readMethod = prop.getReadMethod();
-            if ( readMethod == null )
+            BeanInfo info = Introspector.getBeanInfo( getClass() );
+            ArrayList<Object> values = new ArrayList<Object>();
+            for ( PropertyDescriptor prop : info.getPropertyDescriptors() )
             {
-                continue;
+                Method readMethod = prop.getReadMethod();
+                if ( readMethod == null )
+                {
+                    continue;
+                }
+                else if ( !readMethod.isAnnotationPresent( FauxjoPrimaryKey.class ) )
+                {
+                    continue;
+                }
+
+                Object value = readMethod.invoke( this, new Object[]
+                {
+                } );
+                values.add( value );
             }
-            else if ( !readMethod.isAnnotationPresent( FauxjoPrimaryKey.class ) )
+            if ( values.size() == 0 )
             {
-                continue;
+                return null;
             }
-
-            Object value = readMethod.invoke( this, new Object[]
+            else if ( values.size() == 1 )
             {
-            } );
-            values.add( value );
-        }
-
-        if ( values.size() == 0 )
-        {
-            return null;
-        }
-        else if ( values.size() == 1 )
-        {
-            return values.get( 0 );
-        }
-
+                return values.get( 0 );
+            }
             // Convert all the objects to a single concatenated String
-        StringBuilder builder = new StringBuilder();
-        for ( Object value : values )
-        {
-            builder.append( value );
-            builder.append( "~" );
+            StringBuilder builder = new StringBuilder();
+            for ( Object value : values )
+            {
+                builder.append( value );
+                builder.append( "~" );
+            }
+            return builder.toString();
         }
-        return builder.toString();
+        catch ( Exception ex )
+        {
+            throw new FauxjoException( ex );
+        }
     }
 
     public Schema getSchema()
@@ -104,36 +110,38 @@ public abstract class FauxjoImpl implements Fauxjo
     /**
      * The schema is passed in because there is no guarantee that the schema was set on the
      * fauxjo object.
-     * @throws Exception 
      */
     public boolean isInDatabase( Schema schema )
-        throws Exception
+        throws SQLException
     {
-        if ( isNew( schema ) )
+        try
         {
-            return false;
+            if ( isNew( schema ) )
+            {
+                return false;
+            }
+            Home<?> home = schema.getHome( getClass() );
+            Method pkMethod = schema.findPrimaryFinder( home );
+            Object[] pkValues = schema.findPrimaryKey( this );
+            Object val = pkMethod.invoke( home, pkValues );
+            if ( val == null )
+            {
+                return false;
+            }
+            return true;
         }
-
-        Home<?> home = schema.getHome( getClass() );
-        Method pkMethod = schema.findPrimaryFinder( home );
-        Object[] pkValues = schema.findPrimaryKey( this );
-        Object val = pkMethod.invoke( home, pkValues );
-
-        if ( val == null )
+        catch ( Exception ex )
         {
-            return false;
+            throw new FauxjoException( ex );
         }
-
-        return true;
     }
 
     /**
      * The schema is passed in because there is no guarantee that the schema was set on the
      * fauxjo object.
-     * @throws Exception 
      */
     public boolean isNew( Schema schema )
-        throws Exception
+        throws SQLException
     {
         if ( schema == null )
         {

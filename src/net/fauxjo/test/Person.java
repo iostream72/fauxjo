@@ -23,6 +23,7 @@
 
 package net.fauxjo.test;
 
+import java.sql.*;
 import net.fauxjo.*;
 
 public class Person extends FauxjoImpl
@@ -119,7 +120,7 @@ public class Person extends FauxjoImpl
     }
 
     public Department getDepartment()
-        throws Exception
+        throws SQLException
     {
         return getSchema().getForeignBean( Department.class, _departmentId );
     }
