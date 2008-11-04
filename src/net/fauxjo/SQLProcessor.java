@@ -365,7 +365,7 @@ public class SQLProcessor < T extends Fauxjo >
                 statement.setObject( propIndex, value.getValue(), value.getSqlType() );
                 propIndex++;
             }
-            
+
             return statement.executeUpdate();
         }
         catch ( Exception ex )
@@ -376,10 +376,6 @@ public class SQLProcessor < T extends Fauxjo >
 
     /**
      * Convert the bean into an delete statement and execute it.
-     * @throws IntrospectionException 
-     * @throws InvocationTargetException 
-     * @throws IllegalAccessException 
-     * @throws IllegalArgumentException 
      */
     public boolean delete( Fauxjo bean )
         throws SQLException
@@ -546,11 +542,12 @@ public class SQLProcessor < T extends Fauxjo >
         throws SQLException
     {
         List<T> list = new ArrayList<T>();
+        HashMap<String,Method> writeMethods = getWriteMethods( rs );
 
         int counter = 0;
         while ( rs.next() && ( counter < numRows ) )
         {
-            list.add( convertResultSetRow( rs ) );
+            list.add( convertResultSetRow( writeMethods, rs ) );
             counter++;
         }
         rs.close();
@@ -558,46 +555,97 @@ public class SQLProcessor < T extends Fauxjo >
         return list;
     }
 
-    protected T convertResultSetRow( ResultSet rs )
+    protected T convertResultSetRow( Map<String,Method> writeMethods, ResultSet rs )
         throws SQLException
     {
-        ResultSetMetaData meta = rs.getMetaData();
-        int columnCount = meta.getColumnCount();
-
-        Map<String,Object> record = new HashMap<String,Object>();
-        for ( int i = 1; i <= columnCount; i++ )
+        try
         {
-            record.put( _columnToPropMap.get( meta.getColumnName( i ).toLowerCase() ),
-                rs.getObject( i ) );
-        }
+            ResultSetMetaData meta = rs.getMetaData();
+            int columnCount = meta.getColumnCount();
 
-        return processRecord( record );
+            Map<String,Object> record = new HashMap<String,Object>();
+            for ( int i = 1; i <= columnCount; i++ )
+            {
+                String key = _columnToPropMap.get( meta.getColumnName( i ).toLowerCase() );
+                record.put( key, rs.getObject( i ) );
+            }
+
+            return processRecord( writeMethods, record );
+        }
+        catch ( Exception ex )
+        {
+            throw new FauxjoException( ex );
+        }
     }
 
-    protected T processRecord( Map<String,Object> record )
+    protected HashMap<String,Method> getWriteMethods( ResultSet rs )
+        throws SQLException
+    {
+        try
+        {
+            ResultSetMetaData meta = rs.getMetaData();
+            int columnCount = meta.getColumnCount();
+            BeanInfo info = Introspector.getBeanInfo( _beanClass );
+            HashMap<String,Method> methods = new HashMap<String,Method>();
+
+            for ( int i = 1; i <= columnCount; i++ )
+            {
+                String key = _columnToPropMap.get( meta.getColumnName( i ).toLowerCase() );
+
+                for ( PropertyDescriptor prop : info.getPropertyDescriptors() )
+                {
+                    if ( prop.getName().toLowerCase().equalsIgnoreCase(
+                        key ) && prop.getWriteMethod() != null )
+                    {
+                        methods.put( key, prop.getWriteMethod() );
+                    }
+                }
+            }
+
+            return methods;
+        }
+        catch ( Exception ex )
+        {
+            throw new FauxjoException( ex );
+        }
+    }
+
+    protected T processRecord( Map<String,Method> writeMethods, Map<String,Object> record )
         throws SQLException
     {
         try
         {
             T bean = (T)_beanClass.newInstance();
             bean.setSchema( _schema );
-            BeanInfo info = Introspector.getBeanInfo( bean.getClass() );
+
             for ( String key : record.keySet() )
             {
-                for ( PropertyDescriptor prop : info.getPropertyDescriptors() )
+                Method method = writeMethods.get( key );
+                if ( method != null )
                 {
-                    if ( prop.getName().toLowerCase().equalsIgnoreCase(
-                        key ) && prop.getWriteMethod() != null )
+                    Object value = record.get( key );
+                    if ( value != null )
                     {
-                        Object value = record.get( key );
-                        if ( value != null )
-                        {
-                            // Assume one argument to the write method.
-                            Class<?> destClass = prop.getWriteMethod().getParameterTypes()[0];
-                            value = _coercer.coerce( value, destClass );
-                        }
+                        // Assume one argument to the write method.
+                        Class<?> destClass = method.getParameterTypes()[0];
+                        value = _coercer.coerce( value, destClass );
+                    }
 
-                        prop.getWriteMethod().invoke( bean, value );
+                    try
+                    {
+                        method.invoke( bean, value );
+                    }
+                    catch ( IllegalAccessException ex )
+                    {
+                        throw new FauxjoException( "Unable to get value: " + key, ex );
+                    }
+                    catch ( IllegalArgumentException ex )
+                    {
+                        throw new FauxjoException( "Unable to get value: " + key, ex );
+                    }
+                    catch ( InvocationTargetException ex )
+                    {
+                        throw new FauxjoException( "Unable to get value: " + key, ex );
                     }
                 }
             }

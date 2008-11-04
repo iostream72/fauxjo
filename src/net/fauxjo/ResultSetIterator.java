@@ -23,6 +23,7 @@
 
 package net.fauxjo;
 
+import java.lang.reflect.*;
 import java.sql.*;
 import java.util.*;
 
@@ -34,6 +35,7 @@ public class ResultSetIterator < T extends Fauxjo > implements Iterator<T>, Iter
 
     private SQLProcessor<T> _sqlProcessor;
     private ResultSet _resultSet;
+    private HashMap<String,Method> _writeMethods;
     private boolean _hasNext;
 
     // ============================================================
@@ -46,6 +48,7 @@ public class ResultSetIterator < T extends Fauxjo > implements Iterator<T>, Iter
         _sqlProcessor = sqlProcessor;
         _resultSet = resultSet;
         _hasNext = _resultSet.next();
+        _writeMethods = _sqlProcessor.getWriteMethods( _resultSet );
     }
 
     // ============================================================
@@ -70,7 +73,7 @@ public class ResultSetIterator < T extends Fauxjo > implements Iterator<T>, Iter
 
         try
         {
-            T object = _sqlProcessor.convertResultSetRow( _resultSet );
+            T object = _sqlProcessor.convertResultSetRow( _writeMethods, _resultSet );
             _hasNext = _resultSet.next();
             if ( !_hasNext )
             {
