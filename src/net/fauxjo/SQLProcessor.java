@@ -44,8 +44,7 @@ public class SQLProcessor < T extends Fauxjo >
     private static final String REMARKS = "REMARKS";
     private static final String DATA_TYPE = "DATA_TYPE";
 
-    private Schema _schema;
-    private String _tableName;
+    private Home<T> _home;
     private Class<T> _beanClass;
     // Lower property name, real column name
     private HashMap<String,String> _propToColumnMap;
@@ -59,11 +58,10 @@ public class SQLProcessor < T extends Fauxjo >
     // Constructors
     // ============================================================
 
-    public SQLProcessor( Schema schema, Class<T> beanClass, String tableName )
+    public SQLProcessor( Home<T> home, Class<T> beanClass )
         throws SQLException
     {
-        _schema = schema;
-        _tableName = tableName;
+        _home = home;
         _beanClass = beanClass;
         _coercer = new Coercer();
         init();
@@ -238,7 +236,7 @@ public class SQLProcessor < T extends Fauxjo >
                     values.add( new DataValue( val, type ) );
                 }
             }
-            String sql = "insert into " + _schema.getQualifiedName( _tableName ) + " (" + columns +
+            String sql = "insert into " + _home.getQualifiedTableName() + " (" + columns +
                 ") values (" + questionMarks + ")";
             PreparedStatement statement = getConnection().prepareStatement( sql );
             int propIndex = 1;
@@ -248,10 +246,12 @@ public class SQLProcessor < T extends Fauxjo >
                 propIndex++;
             }
             boolean retVal = statement.execute();
+
             //
             // Now get generated keys
             //
-            String prefix = _schema.getSchemaName() == null ? "" : _schema.getSchemaName() + ".";
+            String prefix = _home.getSchema().getSchemaName() == null ? "" :
+                _home.getSchema().getSchemaName() + ".";
             for ( PropertyDescriptor prop : generatedKeys.keySet() )
             {
                 Statement gkStatement = getConnection().createStatement();
@@ -271,7 +271,7 @@ public class SQLProcessor < T extends Fauxjo >
             //
             // Fill in the schema value since it is a new object.
             //
-            bean.setSchema( _schema );
+            bean.setSchema( _home.getSchema() );
             return retVal;
         }
         catch ( Exception ex )
@@ -351,8 +351,8 @@ public class SQLProcessor < T extends Fauxjo >
                     }
                 }
             }
-            String sql = "update " + _schema.getQualifiedName( _tableName ) + " set " +
-                setterClause + " where " + whereClause;
+            String sql = "update " + _home.getQualifiedTableName() + " set " + setterClause +
+                " where " + whereClause;
             PreparedStatement statement = getConnection().prepareStatement( sql );
             int propIndex = 1;
             for ( DataValue value : values )
@@ -413,8 +413,7 @@ public class SQLProcessor < T extends Fauxjo >
                     keyValues.add( new DataValue( val, type ) );
                 }
             }
-            String sql = "delete from " + _schema.getQualifiedName( _tableName ) + " where " +
-                whereClause;
+            String sql = "delete from " + _home.getQualifiedTableName() + " where " + whereClause;
             PreparedStatement statement = getConnection().prepareStatement( sql );
             int propIndex = 1;
             for ( DataValue value : keyValues )
@@ -440,9 +439,10 @@ public class SQLProcessor < T extends Fauxjo >
         assert sequenceName != null;
 
         String name = sequenceName;
-        if ( _schema.getSchemaName() != null && !_schema.getSchemaName().equals( "" ) )
+        if ( _home.getSchema().getSchemaName() != null && !_home.getSchema().getSchemaName().equals(
+            "" ) )
         {
-            name = _schema.getSchemaName() + "." + sequenceName;
+            name = _home.getSchema().getSchemaName() + "." + sequenceName;
         }
 
         PreparedStatement getKey = getConnection().prepareStatement( "select nextval('" + name +
@@ -530,7 +530,7 @@ public class SQLProcessor < T extends Fauxjo >
     protected Connection getConnection()
         throws SQLException
     {
-        return _schema.getConnection();
+        return _home.getSchema().getConnection();
     }
 
     protected Map<String,String> getColumnToPropMap()
@@ -616,7 +616,7 @@ public class SQLProcessor < T extends Fauxjo >
         try
         {
             T bean = (T)_beanClass.newInstance();
-            bean.setSchema( _schema );
+            bean.setSchema( _home.getSchema() );
 
             for ( String key : record.keySet() )
             {
@@ -668,8 +668,8 @@ public class SQLProcessor < T extends Fauxjo >
         _propToDataTypeMap = new HashMap<String,Integer>();
         _columnToPropMap = new HashMap<String,String>();
 
-        ResultSet rs = getConnection().getMetaData().getColumns( null, _schema.getSchemaName(),
-            getRealTableName( _tableName ), null );
+        ResultSet rs = getConnection().getMetaData().getColumns( null,
+            _home.getSchema().getSchemaName(), getRealTableName( _home.getTableName() ), null );
         while ( rs.next() )
         {
             String rawName = rs.getString( COLUMN_NAME );
@@ -690,8 +690,8 @@ public class SQLProcessor < T extends Fauxjo >
     private String getRealTableName( String tableName )
         throws SQLException
     {
-        ResultSet rs = getConnection().getMetaData().getTables( null, _schema.getSchemaName(), null,
-            new String[]
+        ResultSet rs = getConnection().getMetaData().getTables( null,
+            _home.getSchema().getSchemaName(), null, new String[]
         {
             TABLE
         } );

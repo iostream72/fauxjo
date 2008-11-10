@@ -51,7 +51,7 @@ public class Home < T extends Fauxjo >
         _schema = schema;
         _beanClass = beanClass;
         _tableName = tableName;
-        _sqlProcessor = new SQLProcessor<T>( _schema, _beanClass, _tableName );
+        _sqlProcessor = new SQLProcessor<T>( this, _beanClass );
         _sqls = new HashMap<String,String>();
         _preparedStatements = new WeakHashMap<Thread,HashMap<String,PreparedStatement>>();
     }
