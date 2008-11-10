@@ -80,8 +80,6 @@ public class SQLTypeMapper extends HashMap<Integer,Class<?>>
         put( java.sql.Types.TINYINT, Short.class );
         put( java.sql.Types.VARBINARY, String.class );
         put( java.sql.Types.VARCHAR, String.class );
-
-
     }
 
     // ============================================================

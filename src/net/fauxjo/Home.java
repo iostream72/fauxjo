@@ -34,6 +34,7 @@ public class Home < T extends Fauxjo >
     // ============================================================
 
     private Schema _schema;
+    private String _overrideQualifiedTableName;
     private Class<T> _beanClass;
     private String _tableName;
     private SQLProcessor<T> _sqlProcessor;
@@ -100,12 +101,18 @@ public class Home < T extends Fauxjo >
 
     public String getQualifiedTableName()
     {
-        return getQualifiedName( _tableName );
+        return _overrideQualifiedTableName == null ? getQualifiedName( _tableName ) :
+            _overrideQualifiedTableName;
     }
 
     public String getQualifiedName( String name )
     {
         return _schema.getQualifiedName( name );
+    }
+
+    public void setQualifiedTableName( String tableName )
+    {
+        _overrideQualifiedTableName = tableName;
     }
 
     public long getNextKey( String sequenceName )
@@ -144,14 +151,14 @@ public class Home < T extends Fauxjo >
         {
             // Attempt to do an update
             int numRowsUpdated = update( bean );
-            
+
             // If no rows were actually updated, assume must actually be new.
             if ( numRowsUpdated == 0 )
             {
                 return insert( bean );
             }
         }
-        
+
         return true;
     }
 
