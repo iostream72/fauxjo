@@ -557,7 +557,6 @@ public class SQLProcessor < T extends Fauxjo >
     protected T convertResultSetRow( ResultSet rs )
         throws SQLException
     {
-        System.out.println( "convertResultSetRow" );
         try
         {
             ResultSetMetaData meta = rs.getMetaData();
@@ -566,8 +565,7 @@ public class SQLProcessor < T extends Fauxjo >
             Map<String,Object> record = new HashMap<String,Object>();
             for ( int i = 1; i <= columnCount; i++ )
             {
-                String key = _columnToPropMap.get( meta.getColumnName( i ).toLowerCase() );
-                record.put( key, rs.getObject( i ) );
+                record.put( meta.getColumnName( i ).toLowerCase(), rs.getObject( i ) );
             }
 
             return processRecord( record );
@@ -588,7 +586,6 @@ public class SQLProcessor < T extends Fauxjo >
 
             for ( String key : record.keySet() )
             {
-                System.out.println( "key=" + key );
                 Method method = _writeMethods.get( key );
                 if ( method != null )
                 {
