@@ -34,7 +34,8 @@ public class Home < T extends Fauxjo >
     // ============================================================
 
     private Schema _schema;
-    private String _overrideQualifiedTableName;
+    private boolean _overrideSchemaName;
+    private String _schemaName;
     private Class<T> _beanClass;
     private String _tableName;
     private SQLProcessor<T> _sqlProcessor;
@@ -54,6 +55,8 @@ public class Home < T extends Fauxjo >
         _sqlProcessor = new SQLProcessor<T>( this, _beanClass );
         _sqls = new HashMap<String,String>();
         _preparedStatements = new WeakHashMap<Thread,HashMap<String,PreparedStatement>>();
+        _overrideSchemaName = false;
+        _schemaName = null;
     }
 
     // ============================================================
@@ -101,18 +104,39 @@ public class Home < T extends Fauxjo >
 
     public String getQualifiedTableName()
     {
-        return _overrideQualifiedTableName == null ? getQualifiedName( _tableName ) :
-            _overrideQualifiedTableName;
+        return getQualifiedName( getTableName() );
     }
 
     public String getQualifiedName( String name )
     {
+        if ( _overrideSchemaName )
+        {
+            return _schemaName == null ? name : _schemaName + "." + name;
+        }
+
         return _schema.getQualifiedName( name );
     }
 
-    public void setQualifiedTableName( String tableName )
+    public String getSchemaName()
     {
-        _overrideQualifiedTableName = tableName;
+        return _overrideSchemaName ? _schemaName : _schema.getSchemaName();
+    }
+
+    public void setSchemaName( String schemaName ) throws SQLException
+    {
+        _overrideSchemaName = true;
+        _schemaName = schemaName;
+        
+        // Have to recreate processor because schemaName change.
+        _sqlProcessor = new SQLProcessor<T>( this, _beanClass );
+    }
+    
+    public void clearSchemaNameOverride() throws SQLException
+    {
+        _overrideSchemaName = false;
+        
+        // Have to recreate processor because schemaName change.
+        _sqlProcessor = new SQLProcessor<T>( this, _beanClass );
     }
 
     public long getNextKey( String sequenceName )

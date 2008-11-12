@@ -53,6 +53,8 @@ public class SQLProcessor < T extends Fauxjo >
     // Lower real column name, property name
     private HashMap<String,String> _columnToPropMap;
     private Coercer _coercer;
+    private HashMap<String,Method> _writeMethods;
+    private HashMap<String,Method> _readMethods;
 
     // ============================================================
     // Constructors
@@ -250,8 +252,7 @@ public class SQLProcessor < T extends Fauxjo >
             //
             // Now get generated keys
             //
-            String prefix = _home.getSchema().getSchemaName() == null ? "" :
-                _home.getSchema().getSchemaName() + ".";
+            String prefix = _home.getSchemaName() == null ? "" : _home.getSchemaName() + ".";
             for ( PropertyDescriptor prop : generatedKeys.keySet() )
             {
                 Statement gkStatement = getConnection().createStatement();
@@ -439,10 +440,9 @@ public class SQLProcessor < T extends Fauxjo >
         assert sequenceName != null;
 
         String name = sequenceName;
-        if ( _home.getSchema().getSchemaName() != null && !_home.getSchema().getSchemaName().equals(
-            "" ) )
+        if ( _home.getSchemaName() != null )
         {
-            name = _home.getSchema().getSchemaName() + "." + sequenceName;
+            name = _home.getSchemaName() + "." + sequenceName;
         }
 
         PreparedStatement getKey = getConnection().prepareStatement( "select nextval('" + name +
@@ -542,12 +542,11 @@ public class SQLProcessor < T extends Fauxjo >
         throws SQLException
     {
         List<T> list = new ArrayList<T>();
-        HashMap<String,Method> writeMethods = getWriteMethods( rs );
 
         int counter = 0;
         while ( rs.next() && ( counter < numRows ) )
         {
-            list.add( convertResultSetRow( writeMethods, rs ) );
+            list.add( convertResultSetRow( rs ) );
             counter++;
         }
         rs.close();
@@ -555,9 +554,10 @@ public class SQLProcessor < T extends Fauxjo >
         return list;
     }
 
-    protected T convertResultSetRow( Map<String,Method> writeMethods, ResultSet rs )
+    protected T convertResultSetRow( ResultSet rs )
         throws SQLException
     {
+        System.out.println( "convertResultSetRow" );
         try
         {
             ResultSetMetaData meta = rs.getMetaData();
@@ -570,7 +570,7 @@ public class SQLProcessor < T extends Fauxjo >
                 record.put( key, rs.getObject( i ) );
             }
 
-            return processRecord( writeMethods, record );
+            return processRecord( record );
         }
         catch ( Exception ex )
         {
@@ -578,39 +578,7 @@ public class SQLProcessor < T extends Fauxjo >
         }
     }
 
-    protected HashMap<String,Method> getWriteMethods( ResultSet rs )
-        throws SQLException
-    {
-        try
-        {
-            ResultSetMetaData meta = rs.getMetaData();
-            int columnCount = meta.getColumnCount();
-            BeanInfo info = Introspector.getBeanInfo( _beanClass );
-            HashMap<String,Method> methods = new HashMap<String,Method>();
-
-            for ( int i = 1; i <= columnCount; i++ )
-            {
-                String key = _columnToPropMap.get( meta.getColumnName( i ).toLowerCase() );
-
-                for ( PropertyDescriptor prop : info.getPropertyDescriptors() )
-                {
-                    if ( prop.getName().toLowerCase().equalsIgnoreCase(
-                        key ) && prop.getWriteMethod() != null )
-                    {
-                        methods.put( key, prop.getWriteMethod() );
-                    }
-                }
-            }
-
-            return methods;
-        }
-        catch ( Exception ex )
-        {
-            throw new FauxjoException( ex );
-        }
-    }
-
-    protected T processRecord( Map<String,Method> writeMethods, Map<String,Object> record )
+    protected T processRecord( Map<String,Object> record )
         throws SQLException
     {
         try
@@ -620,7 +588,8 @@ public class SQLProcessor < T extends Fauxjo >
 
             for ( String key : record.keySet() )
             {
-                Method method = writeMethods.get( key );
+                System.out.println( "key=" + key );
+                Method method = _writeMethods.get( key );
                 if ( method != null )
                 {
                     Object value = record.get( key );
@@ -668,8 +637,10 @@ public class SQLProcessor < T extends Fauxjo >
         _propToDataTypeMap = new HashMap<String,Integer>();
         _columnToPropMap = new HashMap<String,String>();
 
-        ResultSet rs = getConnection().getMetaData().getColumns( null,
-            _home.getSchema().getSchemaName(), getRealTableName( _home.getTableName() ), null );
+        getReadAndWriteMethods();
+
+        ResultSet rs = getConnection().getMetaData().getColumns( null, _home.getSchemaName(),
+            getRealTableName( _home.getTableName() ), null );
         while ( rs.next() )
         {
             String rawName = rs.getString( COLUMN_NAME );
@@ -690,8 +661,8 @@ public class SQLProcessor < T extends Fauxjo >
     private String getRealTableName( String tableName )
         throws SQLException
     {
-        ResultSet rs = getConnection().getMetaData().getTables( null,
-            _home.getSchema().getSchemaName(), null, new String[]
+        ResultSet rs = getConnection().getMetaData().getTables( null, _home.getSchemaName(), null,
+            new String[]
         {
             TABLE
         } );
@@ -704,6 +675,34 @@ public class SQLProcessor < T extends Fauxjo >
         }
 
         return null;
+    }
+
+    private void getReadAndWriteMethods()
+        throws SQLException
+    {
+        try
+        {
+            BeanInfo info = Introspector.getBeanInfo( _beanClass );
+            _writeMethods = new HashMap<String,Method>();
+            _readMethods = new HashMap<String,Method>();
+
+            for ( PropertyDescriptor prop : info.getPropertyDescriptors() )
+            {
+                if ( prop.getWriteMethod() != null )
+                {
+                    _writeMethods.put( prop.getName().toLowerCase(), prop.getWriteMethod() );
+                }
+
+                if ( prop.getReadMethod() != null )
+                {
+                    _readMethods.put( prop.getName().toLowerCase(), prop.getReadMethod() );
+                }
+            }
+        }
+        catch ( Exception ex )
+        {
+            throw new FauxjoException( ex );
+        }
     }
 
     // ============================================================
