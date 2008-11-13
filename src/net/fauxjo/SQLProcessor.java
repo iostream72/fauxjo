@@ -53,6 +53,8 @@ public class SQLProcessor < T extends Fauxjo >
     // Lower real column name, property name
     private HashMap<String,String> _columnToPropMap;
     private Coercer _coercer;
+    
+    // Key=lowercase column name.
     private HashMap<String,Method> _writeMethods;
     private HashMap<String,Method> _readMethods;
 
@@ -687,7 +689,21 @@ public class SQLProcessor < T extends Fauxjo >
             {
                 if ( prop.getWriteMethod() != null )
                 {
-                    _writeMethods.put( prop.getName().toLowerCase(), prop.getWriteMethod() );
+                    String name = prop.getName();
+                    
+                    //
+                    // Check for override of column name in database for this write method.
+                    //
+                    FauxjoSetter ann = prop.getWriteMethod().getAnnotation( FauxjoSetter.class );
+                    if ( ann != null )
+                    {
+                        if ( !ann.column().isEmpty() )
+                        {
+                            name = ann.column();
+                        }
+                    }
+                    
+                    _writeMethods.put( name.toLowerCase(), prop.getWriteMethod() );
                 }
 
                 if ( prop.getReadMethod() != null )
