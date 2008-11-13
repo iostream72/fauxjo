@@ -38,25 +38,26 @@ public class SQLProcessor < T extends Fauxjo >
     // Fields
     // ============================================================
 
-    private static final String TABLE = "TABLE";
     private static final String TABLE_NAME = "TABLE_NAME";
     private static final String COLUMN_NAME = "COLUMN_NAME";
-    private static final String REMARKS = "REMARKS";
     private static final String DATA_TYPE = "DATA_TYPE";
 
     private Home<T> _home;
     private Class<T> _beanClass;
-    // Lower property name, real column name
-    private HashMap<String,String> _propToColumnMap;
-    // Lower property name, real column name
-    private HashMap<String,Integer> _propToDataTypeMap;
-    // Lower real column name, property name
-    private HashMap<String,String> _columnToPropMap;
+
     private Coercer _coercer;
-    
-    // Key=lowercase column name.
-    private HashMap<String,Method> _writeMethods;
-    private HashMap<String,Method> _readMethods;
+
+    // Key = Lowercase column name (in code known as the "key").
+    // Value = Name of column used by the database.
+    private Map<String,String> _dbColumnRealNames;
+
+    // Key = Lowercase column name (in code known as the "key").
+    // Value = SQL column type.
+    private Map<String,Integer> _dbColumnTypes;
+
+    // Key = lowercase column name (in code known as the "key").
+    private Map<String,Method> _writeMethods;
+    private Map<String,Method> _readMethods;
 
     // ============================================================
     // Constructors
@@ -162,38 +163,39 @@ public class SQLProcessor < T extends Fauxjo >
 
     /**
      * Convert the bean into an insert statement and execute it.
-     * @throws IntrospectionException 
-     * @throws SQLException 
-     * @throws InvocationTargetException 
-     * @throws IllegalAccessException 
-     * @throws IllegalArgumentException 
      */
     public boolean insert( Fauxjo bean )
         throws SQLException
     {
         try
         {
-            BeanInfo info = Introspector.getBeanInfo( bean.getClass() );
             StringBuilder columns = new StringBuilder();
             StringBuilder questionMarks = new StringBuilder();
             List<DataValue> values = new ArrayList<DataValue>();
-            HashMap<PropertyDescriptor,String> generatedKeys =
-                new HashMap<PropertyDescriptor,String>();
-            for ( PropertyDescriptor prop : info.getPropertyDescriptors() )
+            HashMap<String,String> generatedKeys = new HashMap<String,String>();
+
+            for ( String key : getDBColumnRealNames().keySet() )
             {
-                // If not really a column, forget it.
-                if ( !_propToColumnMap.keySet().contains( prop.getName().toLowerCase() ) )
+                String realColumnName = getDBColumnRealNames().get( key );
+                int type = getDBColumnTypes().get( key );
+                Class<?> destClass = SQLTypeMapper.getInstance().getJavaClass( type );
+
+                Method readMethod = _readMethods.get( key );
+                if ( readMethod == null )
                 {
                     continue;
                 }
 
-                String realColumnName = _propToColumnMap.get( prop.getName().toLowerCase() );
-                int type = _propToDataTypeMap.get( prop.getName().toLowerCase() );
-                Class<?> destClass = SQLTypeMapper.getInstance().getJavaClass( type );
-
-                Method readMethod = prop.getReadMethod();
                 Object val = readMethod.invoke( bean, new Object[0] );
-                val = _coercer.coerce( val, destClass );
+                try
+                {
+                    val = _coercer.coerce( val, destClass );
+                }
+                catch ( FauxjoException ex )
+                {
+                    throw new FauxjoException( "Failed to coerce " + _home.getTableName() + "." +
+                        realColumnName + " for insert: " + key + ":" + realColumnName, ex );
+                }
 
                 // If this is a primary key and it is null, try to get sequence name from
                 // annotation and not include this column in insert statement.
@@ -203,7 +205,7 @@ public class SQLProcessor < T extends Fauxjo >
                         FauxjoPrimaryKey.class );
                     if ( ann.value() != null && !ann.value().trim().isEmpty() )
                     {
-                        generatedKeys.put( prop, ann.value().trim() );
+                        generatedKeys.put( key, ann.value().trim() );
                         continue;
                     }
                 }
@@ -255,22 +257,23 @@ public class SQLProcessor < T extends Fauxjo >
             // Now get generated keys
             //
             String prefix = _home.getSchemaName() == null ? "" : _home.getSchemaName() + ".";
-            for ( PropertyDescriptor prop : generatedKeys.keySet() )
+            for ( String key : generatedKeys.keySet() )
             {
                 Statement gkStatement = getConnection().createStatement();
                 ResultSet rs = gkStatement.executeQuery( "select currval('" + prefix +
-                    generatedKeys.get( prop ) + "')" );
+                    generatedKeys.get( key ) + "')" );
                 rs.next();
                 Object value = rs.getObject( 1 );
                 rs.close();
                 gkStatement.close();
 
-                Method writeMethod = prop.getWriteMethod();
+                Method writeMethod = _writeMethods.get( key );
                 writeMethod.invoke( bean, new Object[]
                 {
                     value
                 } );
             }
+
             //
             // Fill in the schema value since it is a new object.
             //
@@ -299,13 +302,13 @@ public class SQLProcessor < T extends Fauxjo >
             for ( PropertyDescriptor prop : info.getPropertyDescriptors() )
             {
                 // If not really a column, forget it.
-                if ( !_propToColumnMap.keySet().contains( prop.getName().toLowerCase() ) )
+                if ( !getDBColumnRealNames().keySet().contains( prop.getName().toLowerCase() ) )
                 {
                     continue;
                 }
 
-                String realColumnName = _propToColumnMap.get( prop.getName().toLowerCase() );
-                int type = _propToDataTypeMap.get( prop.getName().toLowerCase() );
+                String realColumnName = getDBColumnRealNames().get( prop.getName().toLowerCase() );
+                int type = getDBColumnTypes().get( prop.getName().toLowerCase() );
                 Class<?> destClass = SQLTypeMapper.getInstance().getJavaClass( type );
 
                 Method readMethod = prop.getReadMethod();
@@ -391,13 +394,13 @@ public class SQLProcessor < T extends Fauxjo >
             for ( PropertyDescriptor prop : info.getPropertyDescriptors() )
             {
                 // If not really a column, forget it.
-                if ( !_propToColumnMap.keySet().contains( prop.getName().toLowerCase() ) )
+                if ( !getDBColumnRealNames().keySet().contains( prop.getName().toLowerCase() ) )
                 {
                     continue;
                 }
 
-                String realColumnName = _propToColumnMap.get( prop.getName().toLowerCase() );
-                int type = _propToDataTypeMap.get( prop.getName().toLowerCase() );
+                String realColumnName = getDBColumnRealNames().get( prop.getName().toLowerCase() );
+                int type = getDBColumnTypes().get( prop.getName().toLowerCase() );
                 Class<?> destClass = SQLTypeMapper.getInstance().getJavaClass( type );
 
                 Method readMethod = prop.getReadMethod();
@@ -535,11 +538,6 @@ public class SQLProcessor < T extends Fauxjo >
         return _home.getSchema().getConnection();
     }
 
-    protected Map<String,String> getColumnToPropMap()
-    {
-        return _columnToPropMap;
-    }
-
     protected List<T> processResultSet( ResultSet rs, int numRows )
         throws SQLException
     {
@@ -592,11 +590,19 @@ public class SQLProcessor < T extends Fauxjo >
                 if ( method != null )
                 {
                     Object value = record.get( key );
-                    if ( value != null )
+
+                    try
                     {
-                        // Assume one argument to the write method.
-                        Class<?> destClass = method.getParameterTypes()[0];
-                        value = _coercer.coerce( value, destClass );
+                        if ( value != null )
+                        {
+                            // Assume one argument to the write method.
+                            Class<?> destClass = method.getParameterTypes()[0];
+                            value = _coercer.coerce( value, destClass );
+                        }
+                    }
+                    catch ( FauxjoException ex )
+                    {
+                        throw new FauxjoException( "Failed to coerce " + key, ex );
                     }
 
                     try
@@ -632,48 +638,8 @@ public class SQLProcessor < T extends Fauxjo >
     private void init()
         throws SQLException
     {
-        _propToColumnMap = new HashMap<String,String>();
-        _propToDataTypeMap = new HashMap<String,Integer>();
-        _columnToPropMap = new HashMap<String,String>();
-
         getReadAndWriteMethods();
-
-        ResultSet rs = getConnection().getMetaData().getColumns( null, _home.getSchemaName(),
-            getRealTableName( _home.getTableName() ), null );
-        while ( rs.next() )
-        {
-            String rawName = rs.getString( COLUMN_NAME );
-            Integer type = rs.getInt( DATA_TYPE );
-            String name = rs.getString( REMARKS );
-            if ( name == null )
-            {
-                name = rawName.toLowerCase();
-            }
-
-            _propToColumnMap.put( name.toLowerCase(), rawName );
-            _propToDataTypeMap.put( name.toLowerCase(), type );
-            _columnToPropMap.put( rawName.toLowerCase(), name );
-        }
-        rs.close();
-    }
-
-    private String getRealTableName( String tableName )
-        throws SQLException
-    {
-        ResultSet rs = getConnection().getMetaData().getTables( null, _home.getSchemaName(), null,
-            new String[]
-        {
-            TABLE
-        } );
-        while ( rs.next() )
-        {
-            if ( rs.getString( TABLE_NAME ).equalsIgnoreCase( tableName ) )
-            {
-                return rs.getString( TABLE_NAME );
-            }
-        }
-
-        return null;
+        getColumnInfo( false );
     }
 
     private void getReadAndWriteMethods()
@@ -690,7 +656,7 @@ public class SQLProcessor < T extends Fauxjo >
                 if ( prop.getWriteMethod() != null )
                 {
                     String name = prop.getName();
-                    
+
                     //
                     // Check for override of column name in database for this write method.
                     //
@@ -702,7 +668,7 @@ public class SQLProcessor < T extends Fauxjo >
                             name = ann.column();
                         }
                     }
-                    
+
                     _writeMethods.put( name.toLowerCase(), prop.getWriteMethod() );
                 }
 
@@ -716,6 +682,104 @@ public class SQLProcessor < T extends Fauxjo >
         {
             throw new FauxjoException( ex );
         }
+    }
+
+    private Map<String,String> getDBColumnRealNames()
+        throws SQLException
+    {
+        if ( _dbColumnRealNames == null )
+        {
+            getColumnInfo( true );
+        }
+
+        return _dbColumnRealNames;
+    }
+
+    private Map<String,Integer> getDBColumnTypes()
+        throws SQLException
+    {
+        if ( _dbColumnTypes == null )
+        {
+            getColumnInfo( true );
+        }
+
+        return _dbColumnTypes;
+    }
+
+    /**
+     * This is a really slow method to call when it actually gets the meta data.
+     */
+    private void getColumnInfo( boolean throwException )
+        throws SQLException
+    {
+        String realTableName = getRealTableName( _home.getTableName() );
+
+        //
+        // If the table does not actually exist, assume it will be created later.
+        //
+        if ( realTableName == null )
+        {
+            if ( throwException )
+            {
+                String name = _home.getTableName();
+                name = _home.getSchemaName() == null ? name : _home.getSchemaName() + "." + name;
+                throw new FauxjoException( String.format( "Table %s does not exist.", name ) );
+            }
+            else
+            {
+                return;
+            }
+        }
+
+        _dbColumnRealNames = new HashMap<String,String>();
+        _dbColumnTypes = new HashMap<String,Integer>();
+
+        ResultSet rs = getConnection().getMetaData().getColumns( null, _home.getSchemaName(),
+            realTableName, null );
+        while ( rs.next() )
+        {
+            String realName = rs.getString( COLUMN_NAME );
+            Integer type = rs.getInt( DATA_TYPE );
+
+            _dbColumnRealNames.put( realName.toLowerCase(), realName );
+            _dbColumnTypes.put( realName.toLowerCase(), type );
+        }
+        rs.close();
+    }
+
+    /**
+     * This takes a case insensitive tableName and searches for it in the connection's meta data
+     * to find the connections case sensitive tableName.
+     */
+    private String getRealTableName( String tableName )
+        throws SQLException
+    {
+        ArrayList<String> tableTypes = new ArrayList<String>();
+        
+        ResultSet rs = getConnection().getMetaData().getTableTypes();
+        while ( rs.next() )
+        {
+            if ( rs.getString( 1 ).toLowerCase().contains( "table" ) )
+            {
+                tableTypes.add( rs.getString( 1 ) );
+            }
+        }
+        rs.close();
+        
+        String schema = _home.getSchemaName();
+        
+        rs = getConnection().getMetaData().getTables( null,
+            null, schema, tableTypes.toArray( new String[0] ) );
+
+        while ( rs.next() )
+        {
+            if ( rs.getString( TABLE_NAME ).equalsIgnoreCase( tableName ) )
+            {
+                return rs.getString( TABLE_NAME );
+            }
+        }
+
+        return null;
     }
 
     // ============================================================
