@@ -769,7 +769,7 @@ public class SQLProcessor < T extends Fauxjo >
         String schema = _home.getSchemaName();
         
         rs = getConnection().getMetaData().getTables( null,
-            null, schema, tableTypes.toArray( new String[0] ) );
+            schema, null, tableTypes.toArray( new String[0] ) );
 
         while ( rs.next() )
         {
