@@ -23,8 +23,7 @@
 
 package net.fauxjo;
 
-import java.sql.Time;
-import java.sql.Timestamp;
+import java.sql.*;
 import java.util.*;
 
 /**

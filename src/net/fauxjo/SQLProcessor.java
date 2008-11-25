@@ -658,15 +658,12 @@ public class SQLProcessor < T extends Fauxjo >
                     String name = prop.getName();
 
                     //
-                    // Check for override of column name in database for this write method.
+                    // Check for override of column name in database for this setter method.
                     //
                     FauxjoSetter ann = prop.getWriteMethod().getAnnotation( FauxjoSetter.class );
                     if ( ann != null )
                     {
-                        if ( !ann.column().isEmpty() )
-                        {
-                            name = ann.column();
-                        }
+                        name = ann.column();
                     }
 
                     _writeMethods.put( name.toLowerCase(), prop.getWriteMethod() );
@@ -674,7 +671,18 @@ public class SQLProcessor < T extends Fauxjo >
 
                 if ( prop.getReadMethod() != null )
                 {
-                    _readMethods.put( prop.getName().toLowerCase(), prop.getReadMethod() );
+                    String name = prop.getName();
+
+                    //
+                    // Check for override of column name in database for this getter method.
+                    //
+                    FauxjoGetter ann = prop.getReadMethod().getAnnotation( FauxjoGetter.class );
+                    if ( ann != null )
+                    {
+                        name = ann.column();
+                    }
+
+                    _readMethods.put( name.toLowerCase(), prop.getReadMethod() );
                 }
             }
         }
@@ -755,7 +763,7 @@ public class SQLProcessor < T extends Fauxjo >
         throws SQLException
     {
         ArrayList<String> tableTypes = new ArrayList<String>();
-        
+
         ResultSet rs = getConnection().getMetaData().getTableTypes();
         while ( rs.next() )
         {
@@ -765,11 +773,11 @@ public class SQLProcessor < T extends Fauxjo >
             }
         }
         rs.close();
-        
-        String schema = _home.getSchemaName();
-        
-        rs = getConnection().getMetaData().getTables( null,
-            schema, null, tableTypes.toArray( new String[0] ) );
+
+        String schemaName = _home.getSchemaName();
+
+        rs = getConnection().getMetaData().getTables( null, schemaName, null,
+            tableTypes.toArray( new String[0] ) );
 
         while ( rs.next() )
         {

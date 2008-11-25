@@ -1,5 +1,5 @@
 //
-// FauxjoSetter
+// FauxjoGetter
 //
 // Copyright (C) 2007 Brian Stevens.
 //
@@ -27,9 +27,9 @@ import java.lang.annotation.*;
 
 @Retention( RetentionPolicy.RUNTIME )
 @Target( ElementType.METHOD )
-public @interface FauxjoSetter
+public @interface FauxjoGetter
 {
-    // Column in the database from select statement.
+    // Column in the database for insert,update statements.
     String column();
 }
 
