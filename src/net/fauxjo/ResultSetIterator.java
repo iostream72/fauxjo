@@ -108,7 +108,6 @@ public class ResultSetIterator < T extends Fauxjo > implements Iterator<T>, Iter
         super.finalize();
     }
 
-    @Override
     public Iterator<T> iterator()
     {
         return this;

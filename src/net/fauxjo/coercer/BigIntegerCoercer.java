@@ -1,5 +1,5 @@
 //
-// LongCoercer
+// BigIntegerCoercer
 //
 // Copyright (C) 2007 Brian Stevens.
 //
@@ -23,9 +23,10 @@
 
 package net.fauxjo.coercer;
 
+import java.math.*;
 import net.fauxjo.*;
 
-public class LongCoercer implements TypeCoercer<Long>
+public class BigIntegerCoercer implements TypeCoercer<BigInteger>
 {
     // ============================================================
     // Methods
@@ -35,26 +36,27 @@ public class LongCoercer implements TypeCoercer<Long>
     // public
     // ----------
 
-    public Object coerce( Long value, Class<?> destClass )
+    public Object coerce( BigInteger value, Class<?> destClass )
         throws FauxjoException
     {
         if ( destClass.equals( Byte.class ) )
         {
-            assert value <= Byte.MAX_VALUE && value >= Byte.MIN_VALUE;
             return value.byteValue();
         }
         else if ( destClass.equals( Short.class ) )
         {
-            assert value <= Short.MAX_VALUE && value >= Short.MIN_VALUE;
             return value.shortValue();
         }
         else if ( destClass.equals( Integer.class ) )
         {
-            assert value <= Integer.MAX_VALUE && value >= Integer.MIN_VALUE;
             return value.intValue();
         }
+        else if ( destClass.equals( Long.class ) )
+        {
+            return value.longValue();
+        }
 
-        throw new FauxjoException( "The LongCoercer does not know how to convert to type " +
+        throw new FauxjoException( "The BigInteger does not know how to convert to type " +
             destClass );
     }
 

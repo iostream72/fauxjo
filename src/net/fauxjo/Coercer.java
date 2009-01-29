@@ -23,6 +23,7 @@
 
 package net.fauxjo;
 
+import java.math.*;
 import java.util.*;
 import net.fauxjo.coercer.*;
 
@@ -49,6 +50,7 @@ public class Coercer
         _coercerMap.put( Short.class, new ShortCoercer() );
         _coercerMap.put( Integer.class, new IntegerCoercer() );
         _coercerMap.put( Long.class, new LongCoercer() );
+        _coercerMap.put( BigInteger.class, new BigIntegerCoercer() );
         _coercerMap.put( Float.class, new FloatCoercer() );
         _coercerMap.put( Double.class, new DoubleCoercer() );
         _coercerMap.put( java.util.Date.class, new UtilDateCoercer() );
@@ -70,13 +72,11 @@ public class Coercer
         _coercerMap.put( ( Class<?> ) coercerClass, ( TypeCoercer<?> ) coercer );
     }
 
-    @SuppressWarnings( "unchecked" )
     public < T > TypeCoercer<T> getCoercer( Class<T> coercerClass )
     {
         return( TypeCoercer<T> ) _coercerMap.get( coercerClass );
     }
 
-    @SuppressWarnings( "unchecked" )
     public < T > Object coerce( T value, Class<?> destClass )
         throws FauxjoException
     {
