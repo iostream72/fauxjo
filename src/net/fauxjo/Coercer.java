@@ -72,11 +72,13 @@ public class Coercer
         _coercerMap.put( ( Class<?> ) coercerClass, ( TypeCoercer<?> ) coercer );
     }
 
+    @SuppressWarnings( "unchecked" )
     public < T > TypeCoercer<T> getCoercer( Class<T> coercerClass )
     {
         return( TypeCoercer<T> ) _coercerMap.get( coercerClass );
     }
 
+    @SuppressWarnings( "unchecked" )
     public < T > Object coerce( T value, Class<?> destClass )
         throws FauxjoException
     {

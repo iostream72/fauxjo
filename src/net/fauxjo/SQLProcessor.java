@@ -42,7 +42,7 @@ public class SQLProcessor < T extends Fauxjo >
     private static final String COLUMN_NAME = "COLUMN_NAME";
     private static final String DATA_TYPE = "DATA_TYPE";
 
-    private Home<T> _home;
+    private Home<?> _home;
     private Class<T> _beanClass;
 
     private Coercer _coercer;
@@ -63,7 +63,7 @@ public class SQLProcessor < T extends Fauxjo >
     // Constructors
     // ============================================================
 
-    public SQLProcessor( Home<T> home, Class<T> beanClass )
+    public SQLProcessor( Home<?> home, Class<T> beanClass )
         throws SQLException
     {
         _home = home;
@@ -294,28 +294,34 @@ public class SQLProcessor < T extends Fauxjo >
     {
         try
         {
-            BeanInfo info = Introspector.getBeanInfo( bean.getClass() );
             StringBuilder setterClause = new StringBuilder();
             StringBuilder whereClause = new StringBuilder();
             List<DataValue> values = new ArrayList<DataValue>();
             List<DataValue> keyValues = new ArrayList<DataValue>();
-            for ( PropertyDescriptor prop : info.getPropertyDescriptors() )
+            for ( String key : getDBColumnRealNames().keySet() )
             {
-                // If not really a column, forget it.
-                if ( !getDBColumnRealNames().keySet().contains( prop.getName().toLowerCase() ) )
+                String realColumnName = getDBColumnRealNames().get( key );
+                int type = getDBColumnTypes().get( key );
+                Class<?> destClass = SQLTypeMapper.getInstance().getJavaClass( type );
+
+                Method readMethod = _readMethods.get( key );
+                if ( readMethod == null )
                 {
                     continue;
                 }
 
-                String realColumnName = getDBColumnRealNames().get( prop.getName().toLowerCase() );
-                int type = getDBColumnTypes().get( prop.getName().toLowerCase() );
-                Class<?> destClass = SQLTypeMapper.getInstance().getJavaClass( type );
-
-                Method readMethod = prop.getReadMethod();
                 Object val = readMethod.invoke( bean, new Object[]
                 {
                 } );
-                val = _coercer.coerce( val, destClass );
+                try
+                {
+                    val = _coercer.coerce( val, destClass );
+                }
+                catch ( FauxjoException ex )
+                {
+                    throw new FauxjoException( "Failed to coerce " + _home.getTableName() + "." +
+                        realColumnName + " for insert: " + key + ":" + realColumnName, ex );
+                }
 
                 if ( readMethod.isAnnotationPresent( FauxjoPrimaryKey.class ) )
                 {
