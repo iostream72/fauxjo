@@ -6,9 +6,4 @@
         <file name="fauxjo.jar" source="fauxjo.src.zip"/>
     </bundle>
 
-    <dependency localPath="net/jextra/dbconnection" externalPath="dbconnection/*"/>
-    <dependency localPath="net/jextra/jig" externalPath="jig/*"/>
-
-    <dependency externalPath="postgresql-jdbc/*"/>
-
 </nubbin>

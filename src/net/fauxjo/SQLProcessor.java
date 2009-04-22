@@ -32,7 +32,7 @@ import java.util.*;
 /**
  * Business logic for interacting with an SQL database.
  */
-public class SQLProcessor < T extends Fauxjo > 
+public class SQLProcessor <T extends Fauxjo> 
 {
     // ============================================================
     // Fields
@@ -541,7 +541,7 @@ public class SQLProcessor < T extends Fauxjo >
     protected Connection getConnection()
         throws SQLException
     {
-        return _home.getSchema().getConnection();
+        return _home.getSchema().getDBSource().getConnection();
     }
 
     protected List<T> processResultSet( ResultSet rs, int numRows )

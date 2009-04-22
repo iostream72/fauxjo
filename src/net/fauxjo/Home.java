@@ -27,7 +27,7 @@ import java.sql.*;
 import java.util.*;
 import net.fauxjo.coercer.*;
 
-public class Home < T extends Fauxjo > 
+public class Home <T extends Fauxjo> 
 {
     // ============================================================
     // Fields
@@ -39,8 +39,8 @@ public class Home < T extends Fauxjo >
     private Class<T> _beanClass;
     private String _tableName;
     private SQLProcessor<T> _sqlProcessor;
-    private HashMap<String,String> _sqls;
-    private WeakHashMap<Thread,HashMap<String,PreparedStatement>> _preparedStatements;
+//    private HashMap<Object,String> _sqls;
+//    private WeakHashMap<Thread,HashMap<String,PreparedStatement>> _preparedStatements;
 
     // ============================================================
     // Constructors
@@ -53,8 +53,8 @@ public class Home < T extends Fauxjo >
         _beanClass = beanClass;
         _tableName = tableName;
         _sqlProcessor = new SQLProcessor<T>( this, _beanClass );
-        _sqls = new HashMap<String,String>();
-        _preparedStatements = new WeakHashMap<Thread,HashMap<String,PreparedStatement>>();
+//        _sqls = new HashMap<Object,String>();
+//        _preparedStatements = new WeakHashMap<Thread,HashMap<String,PreparedStatement>>();
         _overrideSchemaName = false;
         _schemaName = null;
     }
@@ -67,29 +67,26 @@ public class Home < T extends Fauxjo >
     // protected
     // ----------
 
-    public void registerPreparedStatement( String statementId, String sql )
-    {
-        _sqls.put( statementId, sql );
-    }
 
-    public PreparedStatement getPreparedStatement( String statementId )
+    public PreparedStatement preparedStatement( String sql )
         throws SQLException
     {
-        HashMap<String,PreparedStatement> map = _preparedStatements.get( Thread.currentThread() );
-        if ( map == null )
-        {
-            map = new HashMap<String,PreparedStatement>();
-            _preparedStatements.put( Thread.currentThread(), map );
-        }
-
-        PreparedStatement statement = map.get( statementId );
-        if ( statement == null || statement.getConnection().isClosed() )
-        {
-            statement = getConnection().prepareStatement( _sqls.get( statementId ) );
-            map.put( statementId, statement );
-        }
-
-        return statement;
+    	return _schema.getDBSource().preparedStatement( sql );
+//        HashMap<String,PreparedStatement> map = _preparedStatements.get( Thread.currentThread() );
+//        if ( map == null )
+//        {
+//            map = new HashMap<String,PreparedStatement>();
+//            _preparedStatements.put( Thread.currentThread(), map );
+//        }
+//
+//        PreparedStatement statement = map.get( statementId );
+//        if ( statement == null || statement.getConnection().isClosed() )
+//        {
+//            statement = getConnection().prepareStatement( _sqls.get( statementId ) );
+//            map.put( statementId, statement );
+//        }
+//
+//        return statement;
     }
 
     public String getTableName()
@@ -198,7 +195,7 @@ public class Home < T extends Fauxjo >
     protected Connection getConnection()
         throws SQLException
     {
-        return _schema.getConnection();
+        return _schema.getDBSource().getConnection();
     }
 
     protected T getOne( ResultSet rs )

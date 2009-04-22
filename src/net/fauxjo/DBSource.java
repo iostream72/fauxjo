@@ -1,5 +1,5 @@
 //
-// Department
+// DBSource
 //
 // Copyright (C) 2007 Brian Stevens.
 //
@@ -21,41 +21,16 @@
 //  02111-1307 USA.
 //
 
-package net.fauxjo.test;
+package net.fauxjo;
 
-import net.fauxjo.*;
+import java.sql.*;
 
-public class Department extends FauxjoImpl
+public interface DBSource
 {
-    // ============================================================
-    // Fields
-    // ============================================================
+	Connection getConnection()
+		throws SQLException;
 
-    private Long _departmentId;
-    private String _name;
-
-    // ============================================================
-    // Methods
-    // ============================================================
-
-    @FauxjoPrimaryKey( "department_departmentid_seq" )
-    public Long getDepartmentId()
-    {
-        return _departmentId;
-    }
-
-    public void setDepartmentId( Long departmentId )
-    {
-        _departmentId = departmentId;
-    }
-
-    public String getName()
-    {
-        return _name;
-    }
-
-    public void setName( String name )
-    {
-        _name = name;
-    }
+	PreparedStatement preparedStatement(String sql)
+		throws SQLException;
 }
+

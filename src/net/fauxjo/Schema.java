@@ -53,7 +53,7 @@ public abstract class Schema
     // public
     // ----------
 
-    public abstract Connection getConnection()
+    public abstract DBSource getDBSource()
         throws SQLException;
     
 
