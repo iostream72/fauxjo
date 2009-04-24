@@ -39,8 +39,6 @@ public class Home <T extends Fauxjo>
     private Class<T> _beanClass;
     private String _tableName;
     private SQLProcessor<T> _sqlProcessor;
-//    private HashMap<Object,String> _sqls;
-//    private WeakHashMap<Thread,HashMap<String,PreparedStatement>> _preparedStatements;
 
     // ============================================================
     // Constructors
@@ -53,8 +51,6 @@ public class Home <T extends Fauxjo>
         _beanClass = beanClass;
         _tableName = tableName;
         _sqlProcessor = new SQLProcessor<T>( this, _beanClass );
-//        _sqls = new HashMap<Object,String>();
-//        _preparedStatements = new WeakHashMap<Thread,HashMap<String,PreparedStatement>>();
         _overrideSchemaName = false;
         _schemaName = null;
     }
@@ -68,25 +64,10 @@ public class Home <T extends Fauxjo>
     // ----------
 
 
-    public PreparedStatement preparedStatement( String sql )
+    public PreparedStatement prepareStatement( String sql )
         throws SQLException
     {
-    	return _schema.getDBSource().preparedStatement( sql );
-//        HashMap<String,PreparedStatement> map = _preparedStatements.get( Thread.currentThread() );
-//        if ( map == null )
-//        {
-//            map = new HashMap<String,PreparedStatement>();
-//            _preparedStatements.put( Thread.currentThread(), map );
-//        }
-//
-//        PreparedStatement statement = map.get( statementId );
-//        if ( statement == null || statement.getConnection().isClosed() )
-//        {
-//            statement = getConnection().prepareStatement( _sqls.get( statementId ) );
-//            map.put( statementId, statement );
-//        }
-//
-//        return statement;
+    	return _schema.getDBSource().prepareStatement( sql );
     }
 
     public String getTableName()
@@ -250,12 +231,12 @@ public class Home <T extends Fauxjo>
         return "select * from " + getQualifiedTableName() + " " + c;
     }
 
-    protected < S > void mapCoercer( Class<S> coercerClass, TypeCoercer<S> coercer )
+    protected <S> void mapCoercer( Class<S> coercerClass, TypeCoercer<S> coercer )
     {
         _sqlProcessor.getCoercer().putCoercer( coercerClass, coercer );
     }
 
-    protected < S > TypeCoercer<S> getCoercer( Class<S> coercerClass )
+    protected <S> TypeCoercer<S> getCoercer( Class<S> coercerClass )
     {
         return _sqlProcessor.getCoercer().getCoercer( coercerClass );
     }

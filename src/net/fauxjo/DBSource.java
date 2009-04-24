@@ -27,10 +27,10 @@ import java.sql.*;
 
 public interface DBSource
 {
-	Connection getConnection()
-		throws SQLException;
+    Connection getConnection()
+        throws SQLException;
 
-	PreparedStatement preparedStatement(String sql)
-		throws SQLException;
+    PreparedStatement prepareStatement( String sql )
+        throws SQLException;
 }
 
