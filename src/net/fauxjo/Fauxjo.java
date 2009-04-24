@@ -1,7 +1,7 @@
 //
 // Fauxjo
 //
-// Copyright (C) 2007 Brian Stevens.
+// Copyright (C) Brian Stevens.
 //
 //  This file is part of the Fauxjo Library.
 //
@@ -26,11 +26,16 @@ package net.fauxjo;
 import java.sql.*;
 
 /**
+ * <p>
  * Absolute minimum required representation of a Fauxjo bean. A fauxjo bean is a class that
  * represents a row within a specific database table.
- * <p>
+ * </p><p>
  * The {@link Schema} is set on the Fauxjo object via the {@link Home} object. The {@link Schema}
  * is used for any foreign key lookups.
+ * </p><p>
+ * Note: A Fauxjo implementation should also have a special hashCode and equals method that take
+ * into account two objects that represent the same record in the database (e.g. same primary key).
+ * </p>
  */
 public interface Fauxjo
 {
@@ -45,14 +50,24 @@ public interface Fauxjo
     public void setSchema( Schema schema )
         throws SQLException;
 
+    /**
+     * <p>
+     * Return true if this fauxjo does not represent an actual row in the database. This can usually
+     * be tested by checking the primary key values which should most likely be null if it is not
+     * in the database (auto-generated). Then, this should perform an actual select from the 
+     * database to see if it is there.
+     * </p>
+     */
     public boolean isInDatabase( Schema schema )
         throws SQLException;
 
     /**
      * <p>
-     * Return true if this fauxjo does not represent an actual row in the database. This can usually
-     * be tested by checking the primary key values which should most likely be null if it is not
-     * in the database (auto-generated).
+     * Return true if the primary key is "empty". Empty most likely implies that the object does not
+     * have a corresponding row in the database.
+     * </p><p>
+     * Warning: There are cases where the primary key is set (most likely set by user) but there 
+     * actually is no row in the database with its primary key.
      * </p>
      */
     public boolean hasEmptyPrimaryKey( Schema schema )

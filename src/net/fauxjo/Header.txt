@@ -1,5 +1,5 @@
 //
-// Build
+// ${name}
 //
 // Copyright (C) Brian Stevens.
 //
@@ -20,12 +20,3 @@
 //  Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
 //  02111-1307 USA.
 //
-
-package net.fauxjo;
-
-import net.jextra.crackbee.*;
-
-public class Build extends JavaComponentBuild
-{
-}
-

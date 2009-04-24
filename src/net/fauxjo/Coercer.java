@@ -1,7 +1,7 @@
 //
 // Coercer
 //
-// Copyright (C) 2007 Brian Stevens.
+// Copyright (C) Brian Stevens.
 //
 //  This file is part of the Fauxjo Library.
 //
@@ -28,7 +28,8 @@ import java.util.*;
 import net.fauxjo.coercer.*;
 
 /**
- * Coerces one value type to another value type.
+ * General use tool that coerces one value type to another value type. For example from a 
+ * String to an Integer.
  */
 public class Coercer
 {
@@ -67,7 +68,7 @@ public class Coercer
     // ----------
 
 
-    public < T > void putCoercer( Class<T> coercerClass, TypeCoercer<T> coercer )
+    public < T > void addCoercer( Class<T> coercerClass, TypeCoercer<T> coercer )
     {
         _coercerMap.put( ( Class<?> ) coercerClass, ( TypeCoercer<?> ) coercer );
     }

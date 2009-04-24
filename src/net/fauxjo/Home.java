@@ -1,7 +1,7 @@
 //
 // Home
 //
-// Copyright (C) 2007 Brian Stevens.
+// Copyright (C) Brian Stevens.
 //
 //  This file is part of the Fauxjo Library.
 //
@@ -233,7 +233,7 @@ public class Home <T extends Fauxjo>
 
     protected <S> void mapCoercer( Class<S> coercerClass, TypeCoercer<S> coercer )
     {
-        _sqlProcessor.getCoercer().putCoercer( coercerClass, coercer );
+        _sqlProcessor.getCoercer().addCoercer( coercerClass, coercer );
     }
 
     protected <S> TypeCoercer<S> getCoercer( Class<S> coercerClass )

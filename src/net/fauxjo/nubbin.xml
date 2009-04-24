@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 
-<nubbin name="fauxjo" localPath="net/fauxjo">
+<nubbin name="fauxjo">
 
     <bundle name="release">
         <file name="fauxjo.jar" source="fauxjo.src.zip"/>

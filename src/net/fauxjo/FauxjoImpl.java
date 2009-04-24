@@ -1,7 +1,7 @@
 //
 // FauxjoImpl
 //
-// Copyright (C) 2007 Brian Stevens.
+// Copyright (C) Brian Stevens.
 //
 //  This file is part of the Fauxjo Library.
 //
@@ -29,7 +29,7 @@ import java.sql.*;
 import java.util.*;
 
 /**
- * Convenient implementation of Fauxjo bean.
+ * {@link FauxjoPrimaryKey} annotation aware implementation of Fauxjo bean.
  */
 public abstract class FauxjoImpl implements Fauxjo
 {
@@ -46,56 +46,6 @@ public abstract class FauxjoImpl implements Fauxjo
     // ----------
     // public
     // ----------
-
-    /**
-     * This should return a single object that is unique for this object.
-     */
-    public Object getPrimaryKey()
-        throws SQLException
-    {
-        try
-        {
-            BeanInfo info = Introspector.getBeanInfo( getClass() );
-            ArrayList<Object> values = new ArrayList<Object>();
-            for ( PropertyDescriptor prop : info.getPropertyDescriptors() )
-            {
-                Method readMethod = prop.getReadMethod();
-                if ( readMethod == null )
-                {
-                    continue;
-                }
-                else if ( !readMethod.isAnnotationPresent( FauxjoPrimaryKey.class ) )
-                {
-                    continue;
-                }
-
-                Object value = readMethod.invoke( this, new Object[]
-                {
-                } );
-                values.add( value );
-            }
-            if ( values.size() == 0 )
-            {
-                return null;
-            }
-            else if ( values.size() == 1 )
-            {
-                return values.get( 0 );
-            }
-            // Convert all the objects to a single concatenated String
-            StringBuilder builder = new StringBuilder();
-            for ( Object value : values )
-            {
-                builder.append( value );
-                builder.append( "~" );
-            }
-            return builder.toString();
-        }
-        catch ( Exception ex )
-        {
-            throw new FauxjoException( ex );
-        }
-    }
 
     public Schema getSchema()
     {
@@ -121,7 +71,7 @@ public abstract class FauxjoImpl implements Fauxjo
             {
                 return false;
             }
-            
+
             Home<?> home = schema.getHome( getClass() );
             Method pkMethod = schema.findPrimaryFinder( home );
             Object[] pkValues = schema.findPrimaryKey( this );
@@ -168,6 +118,56 @@ public abstract class FauxjoImpl implements Fauxjo
         }
 
         return false;
+    }
+
+    /**
+     * This should return a single object that is unique for this fauxjo object.
+     */
+    public Object getPrimaryKey()
+        throws SQLException
+    {
+        try
+        {
+            BeanInfo info = Introspector.getBeanInfo( getClass() );
+            ArrayList<Object> values = new ArrayList<Object>();
+            for ( PropertyDescriptor prop : info.getPropertyDescriptors() )
+            {
+                Method readMethod = prop.getReadMethod();
+                if ( readMethod == null )
+                {
+                    continue;
+                }
+                else if ( !readMethod.isAnnotationPresent( FauxjoPrimaryKey.class ) )
+                {
+                    continue;
+                }
+
+                Object value = readMethod.invoke( this, new Object[]
+                {
+                } );
+                values.add( value );
+            }
+            if ( values.size() == 0 )
+            {
+                return null;
+            }
+            else if ( values.size() == 1 )
+            {
+                return values.get( 0 );
+            }
+            // Convert all the objects to a single concatenated String
+            StringBuilder builder = new StringBuilder();
+            for ( Object value : values )
+            {
+                builder.append( value );
+                builder.append( "~" );
+            }
+            return builder.toString();
+        }
+        catch ( Exception ex )
+        {
+            throw new FauxjoException( ex );
+        }
     }
 
     public int hashCode()

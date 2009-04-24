@@ -1,7 +1,7 @@
 //
 // SQLProcessor
 //
-// Copyright (C) 2007 Brian Stevens.
+// Copyright (C) Brian Stevens.
 //
 //  This file is part of the Fauxjo Library.
 //

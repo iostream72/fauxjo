@@ -1,7 +1,7 @@
 //
 // FauxjoSetter
 //
-// Copyright (C) 2007 Brian Stevens.
+// Copyright (C) Brian Stevens.
 //
 //  This file is part of the Fauxjo Library.
 //
@@ -25,6 +25,15 @@ package net.fauxjo;
 
 import java.lang.annotation.*;
 
+/**
+ * <p>
+ * Optional annotation placed on a method of a Fauxjo object that represents the setter for a 
+ * column in the database when creating a SELECT statement.
+ * </p><p>
+ * By default, the {@link Home} object locates the 'set' method by searching for a method with the
+ * standard name setXYZ where XYZ is the name of the column in the database (case insensitive). 
+ * </p>
+ */
 @Retention( RetentionPolicy.RUNTIME )
 @Target( ElementType.METHOD )
 public @interface FauxjoSetter
