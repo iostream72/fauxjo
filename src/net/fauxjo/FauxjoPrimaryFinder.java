@@ -1,7 +1,7 @@
 //
 // FauxjoPrimaryFinder
 //
-// Copyright (C) Brian Stevens.
+// Copyright (C) jextra.net.
 //
 //  This file is part of the Fauxjo Library.
 //

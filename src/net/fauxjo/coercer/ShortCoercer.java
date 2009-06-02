@@ -1,7 +1,7 @@
 //
 // ShortCoercer
 //
-// Copyright (C) 2007 Brian Stevens.
+// Copyright (C) jextra.net.
 //
 //  This file is part of the Fauxjo Library.
 //

@@ -1,7 +1,7 @@
 //
 // TextIndexedColumn
 //
-// Copyright (C) Brian Stevens.
+// Copyright (C) jextra.net.
 //
 //  This file is part of the Fauxjo Library.
 //
@@ -34,6 +34,6 @@ import java.lang.annotation.*;
 @Target( ElementType.METHOD )
 public @interface TextIndexedColumn
 {
-    String textIndexMetaColumn() default "";
+    String textIndexMetaColumn()default "";
 }
 

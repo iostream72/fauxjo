@@ -1,7 +1,7 @@
 //
 // Schema
 //
-// Copyright (C) Brian Stevens.
+// Copyright (C) jextra.net.
 //
 //  This file is part of the Fauxjo Library.
 //
@@ -53,9 +53,12 @@ public abstract class Schema
     // public
     // ----------
 
-    public abstract DBSource getDBSource()
+    public abstract Connection getConnection()
         throws SQLException;
-    
+
+    public abstract PreparedStatement prepareStatement( String sql )
+        throws SQLException;
+
 
     public void addHome( Class<?> beanType, Home<?> home )
     {

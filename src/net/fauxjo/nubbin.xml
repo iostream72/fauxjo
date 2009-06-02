@@ -6,4 +6,6 @@
         <file name="fauxjo.jar" source="fauxjo.src.zip"/>
     </bundle>
 
+    <dependency externalPath="postgresql-jdbc/*"/>
+
 </nubbin>

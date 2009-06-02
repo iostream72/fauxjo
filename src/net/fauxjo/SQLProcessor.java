@@ -1,7 +1,7 @@
 //
 // SQLProcessor
 //
-// Copyright (C) Brian Stevens.
+// Copyright (C) jextra.net.
 //
 //  This file is part of the Fauxjo Library.
 //
@@ -32,7 +32,7 @@ import java.util.*;
 /**
  * Business logic for interacting with an SQL database.
  */
-public class SQLProcessor <T extends Fauxjo> 
+public class SQLProcessor < T extends Fauxjo > 
 {
     // ============================================================
     // Fields
@@ -541,7 +541,7 @@ public class SQLProcessor <T extends Fauxjo>
     protected Connection getConnection()
         throws SQLException
     {
-        return _home.getSchema().getDBSource().getConnection();
+        return _home.getSchema().getConnection();
     }
 
     protected List<T> processResultSet( ResultSet rs, int numRows )
@@ -789,9 +789,12 @@ public class SQLProcessor <T extends Fauxjo>
         {
             if ( rs.getString( TABLE_NAME ).equalsIgnoreCase( tableName ) )
             {
-                return rs.getString( TABLE_NAME );
+                String name = rs.getString( TABLE_NAME );
+                rs.close();
+                return name;
             }
         }
+        rs.close();
 
         return null;
     }
