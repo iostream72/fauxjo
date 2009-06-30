@@ -149,6 +149,7 @@ public class PreparedStatementCache
         _cache.remove( thread );
     }
 
+    @Override
     public void finalize()
     {
         try

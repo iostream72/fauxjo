@@ -170,6 +170,7 @@ public abstract class FauxjoImpl implements Fauxjo
         }
     }
 
+    @Override
     public int hashCode()
     {
         try
@@ -183,6 +184,7 @@ public abstract class FauxjoImpl implements Fauxjo
         }
     }
 
+    @Override
     public boolean equals( Object other )
     {
         try

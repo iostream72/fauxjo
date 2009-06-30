@@ -101,6 +101,7 @@ public class ResultSetIterator < T extends Fauxjo > implements Iterator<T>, Iter
         }
     }
 
+    @Override
     public void finalize()
         throws Throwable
     {
