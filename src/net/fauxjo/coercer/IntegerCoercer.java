@@ -52,6 +52,10 @@ public class IntegerCoercer implements TypeCoercer<Integer>
         {
             return value.longValue();
         }
+        else if ( destClass.equals( String.class ) )
+        {
+        	return value.toString();
+        }
 
         throw new FauxjoException( "The IntegerCoercer does not know how to convert to type " +
             destClass );
