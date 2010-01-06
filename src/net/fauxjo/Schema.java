@@ -101,7 +101,7 @@ public abstract class Schema
      * @throws IllegalArgumentException 
      */
     @SuppressWarnings( "unchecked" )
-    public < T > T getForeignBean( Class<T> foreignBeanClass, Object ...foreignKeys )
+    public < T extends Home > T getForeignBean( Class<T> foreignBeanClass, Object ...foreignKeys )
         throws SQLException
     {
         Home<?> home = _homes.get( foreignBeanClass );

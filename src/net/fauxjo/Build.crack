@@ -27,5 +27,9 @@ import net.jextra.crackbee.*;
 
 public class Build extends JavaComponentBuild
 {
+    public Build()
+    {
+        super( "canifinish" );
+    }
 }
 
