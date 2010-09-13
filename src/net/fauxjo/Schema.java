@@ -65,11 +65,11 @@ public abstract class Schema
         _homes.put( beanType, home );
     }
 
-    public Home<?> getHome( Class<?> beanType )
+    public Home<?> getHome( Class<?> beanClass )
     {
-        return _homes.get( beanType );
+        return _homes.get( beanClass );
     }
-
+    
     public String getSchemaName()
     {
         return _schemaName;

@@ -63,7 +63,6 @@ public class Home < T extends Fauxjo >
     // protected
     // ----------
 
-
     public PreparedStatement prepareStatement( String sql )
         throws SQLException
     {

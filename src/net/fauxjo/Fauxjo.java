@@ -39,15 +39,11 @@ import java.sql.*;
  */
 public interface Fauxjo
 {
-    public Schema getSchema()
-        throws SQLException;
-
     /**
-     * This is called by the home object as a "paper-trail" back to the schema that this fauxjo
-     * object came from. The schema is most often used to lookup foreign objects that are within
-     * the same schema.
+     * This is called by the home object as a "paper-trail" back to the home object that this fauxjo
+     * object came from.
      */
-    public void setSchema( Schema schema )
+    public void setHome( Home<?> home )
         throws SQLException;
 
     /**

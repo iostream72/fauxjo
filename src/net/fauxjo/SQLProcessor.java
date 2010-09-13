@@ -277,7 +277,7 @@ public class SQLProcessor < T extends Fauxjo >
             //
             // Fill in the schema value since it is a new object.
             //
-            bean.setSchema( _home.getSchema() );
+            bean.setHome( _home );
             return retVal;
         }
         catch ( Exception ex )
@@ -588,7 +588,7 @@ public class SQLProcessor < T extends Fauxjo >
         try
         {
             T bean = (T)_beanClass.newInstance();
-            bean.setSchema( _home.getSchema() );
+            bean.setHome( _home );
 
             for ( String key : record.keySet() )
             {

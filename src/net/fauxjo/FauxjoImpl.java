@@ -37,7 +37,7 @@ public abstract class FauxjoImpl implements Fauxjo
     // Fields
     // ============================================================
 
-    private Schema _schema;
+    private Home<?> _home;
 
     // ============================================================
     // Methods
@@ -47,14 +47,14 @@ public abstract class FauxjoImpl implements Fauxjo
     // public
     // ----------
 
-    public Schema getSchema()
+    public Home<?> getHome()
     {
-        return _schema;
+        return _home;
     }
 
-    public void setSchema( Schema schema )
+    public void setHome( Home<?> home )
     {
-        _schema = schema;
+        _home = home;
     }
 
     /**
@@ -72,7 +72,7 @@ public abstract class FauxjoImpl implements Fauxjo
                 return false;
             }
 
-            Home<?> home = schema.getHome( getClass() );
+            Home < ? extends Fauxjo > home = schema.getHome( getClass() );
             Method pkMethod = schema.findPrimaryFinder( home );
             Object[] pkValues = schema.findPrimaryKey( this );
             Object val = pkMethod.invoke( home, pkValues );
