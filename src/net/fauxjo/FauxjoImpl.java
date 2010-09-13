@@ -104,20 +104,23 @@ public abstract class FauxjoImpl implements Fauxjo
     // protected
     // ----------
 
+    /**
+     * Returns value of primary keys in a standard order.
+     */
     protected List<Object> getPrimaryKeys()
         throws SQLException
     {
         try
         {
-            List<Object> keys = new ArrayList<Object>();
+            // Arbitrarily ordered by method names.
+            TreeMap<String,Object> keys = new TreeMap<String,Object>();
             for ( Class<?> cls = getClass(); cls != null; cls = cls.getSuperclass() )
             {
                 for ( Method method : cls.getMethods() )
                 {
                     if ( method.isAnnotationPresent( FauxjoPrimaryKey.class ) )
                     {
-                        FauxjoPrimaryKey fpk = method.getAnnotation( FauxjoPrimaryKey.class );
-                        keys.add( fpk.sequence(), method.invoke( this, new Object[0] ) );
+                        keys.put( method.getName(), method.invoke( this, new Object[0] ) );
                     }
                 }
             }
@@ -127,7 +130,7 @@ public abstract class FauxjoImpl implements Fauxjo
                 return null;
             }
 
-            return keys;
+            return new ArrayList<Object>( keys.values() );
         }
         catch ( Exception ex )
         {
