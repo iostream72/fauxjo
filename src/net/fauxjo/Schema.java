@@ -23,7 +23,6 @@
 
 package net.fauxjo;
 
-import java.lang.reflect.*;
 import java.sql.*;
 import java.util.*;
 
@@ -60,11 +59,17 @@ public abstract class Schema
         throws SQLException;
 
 
+    /**
+     * @deprecated
+     */
     public void addHome( Class<?> beanType, Home<?> home )
     {
         _homes.put( beanType, home );
     }
 
+    /**
+     * @deprecated
+     */
     public Home<?> getHome( Class<?> beanClass )
     {
         return _homes.get( beanClass );
@@ -80,92 +85,15 @@ public abstract class Schema
         _schemaName = schemaName;
     }
 
-    public String getQualifiedName( String relationName )
+    public String getQualifiedName( String name )
     {
         if ( _schemaName == null || _schemaName.equals( "" ) )
         {
-            return relationName;
+            return name;
         }
         else
         {
-            return _schemaName + "." + relationName;
-        }
-    }
-
-    /**
-     * Given a bean class, a potentially null bean, and an array of foreign keys find the
-     * bean, set it and return it.
-     * @throws FauxjoException 
-     * @throws InvocationTargetException 
-     * @throws IllegalAccessException 
-     * @throws IllegalArgumentException 
-     */
-    @SuppressWarnings( "unchecked" )
-    public < T extends Home > T getForeignBean( Class<T> foreignBeanClass, Object ...foreignKeys )
-        throws SQLException
-    {
-        Home<?> home = _homes.get( foreignBeanClass );
-        Method finderMethod = findPrimaryFinder( home );
-        if ( foreignKeys == null )
-        {
-            return null;
-        }
-
-        try
-        {
-            return (T)finderMethod.invoke( home, foreignKeys );
-        }
-        catch ( Exception ex )
-        {
-            throw new FauxjoException( ex );
-        }
-    }
-
-    // ----------
-    // protected
-    // ----------
-
-    protected Method findPrimaryFinder( Home<?> home )
-        throws FauxjoException
-    {
-        for ( Method method : home.getClass().getMethods() )
-        {
-            if ( method.isAnnotationPresent( FauxjoPrimaryFinder.class ) )
-            {
-                return method;
-            }
-        }
-
-        throw new FauxjoException( "The home object " + home.getClass().getCanonicalName() +
-            " does not have an annotated FJOPrimaryFinder method" );
-    }
-
-    protected Object[] findPrimaryKey( Object bean )
-        throws SQLException
-    {
-        try
-        {
-            List<Object> returnval = new ArrayList<Object>( 5 );
-            for ( Class<?> cls = bean.getClass(); cls != null; cls = cls.getSuperclass() )
-            {
-                for ( Method method : cls.getMethods() )
-                {
-                    if ( method.isAnnotationPresent( FauxjoPrimaryKey.class ) )
-                    {
-                        FauxjoPrimaryKey fpk = method.getAnnotation( FauxjoPrimaryKey.class );
-                        returnval.add( fpk.sequence(), method.invoke( bean, new Object[0] ) );
-                    }
-                }
-            }
-            if ( returnval.size() == 0 )
-            {
-                return null;
-            }
-            return returnval.toArray();
-        }
-        catch ( Exception ex )
-        {
-            throw new FauxjoException( ex );
+            return _schemaName + "." + name;
         }
     }
 }

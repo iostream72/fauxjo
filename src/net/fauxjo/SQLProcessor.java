@@ -42,7 +42,9 @@ public class SQLProcessor < T extends Fauxjo >
     private static final String COLUMN_NAME = "COLUMN_NAME";
     private static final String DATA_TYPE = "DATA_TYPE";
 
-    private Home<?> _home;
+    private Connection _conn;
+    private String _schemaName;
+    private String _tableName;
     private Class<T> _beanClass;
 
     private Coercer _coercer;
@@ -63,10 +65,12 @@ public class SQLProcessor < T extends Fauxjo >
     // Constructors
     // ============================================================
 
-    public SQLProcessor( Home<?> home, Class<T> beanClass )
+    public SQLProcessor( Connection conn, String schemaName, String tableName, Class<T> beanClass )
         throws SQLException
     {
-        _home = home;
+        _conn = conn;
+        _schemaName = schemaName;
+        _tableName = tableName;
         _beanClass = beanClass;
         _coercer = new Coercer();
         init();
@@ -193,8 +197,8 @@ public class SQLProcessor < T extends Fauxjo >
                 }
                 catch ( FauxjoException ex )
                 {
-                    throw new FauxjoException( "Failed to coerce " + _home.getTableName() + "." +
-                        realColumnName + " for insert: " + key + ":" + realColumnName, ex );
+                    throw new FauxjoException( "Failed to coerce " + prependSchema( _tableName ) +
+                        "." + realColumnName + " for insert: " + key + ":" + realColumnName, ex );
                 }
 
                 // If this is a primary key and it is null, try to get sequence name from
@@ -242,7 +246,7 @@ public class SQLProcessor < T extends Fauxjo >
                     values.add( new DataValue( val, type ) );
                 }
             }
-            String sql = "insert into " + _home.getQualifiedTableName() + " (" + columns +
+            String sql = "insert into " + prependSchema( _tableName ) + " (" + columns +
                 ") values (" + questionMarks + ")";
             PreparedStatement statement = getConnection().prepareStatement( sql );
             int propIndex = 1;
@@ -256,12 +260,11 @@ public class SQLProcessor < T extends Fauxjo >
             //
             // Now get generated keys
             //
-            String prefix = _home.getSchemaName() == null ? "" : _home.getSchemaName() + ".";
             for ( String key : generatedKeys.keySet() )
             {
                 Statement gkStatement = getConnection().createStatement();
-                ResultSet rs = gkStatement.executeQuery( "select currval('" + prefix +
-                    generatedKeys.get( key ) + "')" );
+                ResultSet rs = gkStatement.executeQuery( "select currval('" +
+                    prependSchema( generatedKeys.get( key ) ) + "')" );
                 rs.next();
                 Object value = rs.getObject( 1 );
                 rs.close();
@@ -274,10 +277,6 @@ public class SQLProcessor < T extends Fauxjo >
                 } );
             }
 
-            //
-            // Fill in the schema value since it is a new object.
-            //
-            bean.setHome( _home );
             return retVal;
         }
         catch ( Exception ex )
@@ -319,8 +318,8 @@ public class SQLProcessor < T extends Fauxjo >
                 }
                 catch ( FauxjoException ex )
                 {
-                    throw new FauxjoException( "Failed to coerce " + _home.getTableName() + "." +
-                        realColumnName + " for insert: " + key + ":" + realColumnName, ex );
+                    throw new FauxjoException( "Failed to coerce " + prependSchema( _tableName ) +
+                        "." + realColumnName + " for insert: " + key + ":" + realColumnName, ex );
                 }
 
                 if ( readMethod.isAnnotationPresent( FauxjoPrimaryKey.class ) )
@@ -363,7 +362,7 @@ public class SQLProcessor < T extends Fauxjo >
                     }
                 }
             }
-            String sql = "update " + _home.getQualifiedTableName() + " set " + setterClause +
+            String sql = "update " + prependSchema( _tableName ) + " set " + setterClause +
                 " where " + whereClause;
             PreparedStatement statement = getConnection().prepareStatement( sql );
             int propIndex = 1;
@@ -425,7 +424,7 @@ public class SQLProcessor < T extends Fauxjo >
                     keyValues.add( new DataValue( val, type ) );
                 }
             }
-            String sql = "delete from " + _home.getQualifiedTableName() + " where " + whereClause;
+            String sql = "delete from " + prependSchema( _tableName ) + " where " + whereClause;
             PreparedStatement statement = getConnection().prepareStatement( sql );
             int propIndex = 1;
             for ( DataValue value : keyValues )
@@ -450,14 +449,8 @@ public class SQLProcessor < T extends Fauxjo >
     {
         assert sequenceName != null;
 
-        String name = sequenceName;
-        if ( _home.getSchemaName() != null )
-        {
-            name = _home.getSchemaName() + "." + sequenceName;
-        }
-
-        PreparedStatement getKey = getConnection().prepareStatement( "select nextval('" + name +
-            "')" );
+        PreparedStatement getKey = getConnection().prepareStatement( "select nextval('" +
+            prependSchema( sequenceName ) + "')" );
 
         ResultSet rs = getKey.executeQuery();
         rs.next();
@@ -541,7 +534,7 @@ public class SQLProcessor < T extends Fauxjo >
     protected Connection getConnection()
         throws SQLException
     {
-        return _home.getSchema().getConnection();
+        return _conn;
     }
 
     protected List<T> processResultSet( ResultSet rs, int numRows )
@@ -588,7 +581,6 @@ public class SQLProcessor < T extends Fauxjo >
         try
         {
             T bean = (T)_beanClass.newInstance();
-            bean.setHome( _home );
 
             for ( String key : record.keySet() )
             {
@@ -726,7 +718,7 @@ public class SQLProcessor < T extends Fauxjo >
     private void getColumnInfo( boolean throwException )
         throws SQLException
     {
-        String realTableName = getRealTableName( _home.getTableName() );
+        String realTableName = getRealTableName( prependSchema( _tableName ) );
 
         //
         // If the table does not actually exist, assume it will be created later.
@@ -735,9 +727,8 @@ public class SQLProcessor < T extends Fauxjo >
         {
             if ( throwException )
             {
-                String name = _home.getTableName();
-                name = _home.getSchemaName() == null ? name : _home.getSchemaName() + "." + name;
-                throw new FauxjoException( String.format( "Table %s does not exist.", name ) );
+                throw new FauxjoException( String.format( "Table %s does not exist.",
+                    prependSchema( _tableName ) ) );
             }
             else
             {
@@ -748,8 +739,8 @@ public class SQLProcessor < T extends Fauxjo >
         _dbColumnRealNames = new HashMap<String,String>();
         _dbColumnTypes = new HashMap<String,Integer>();
 
-        ResultSet rs = getConnection().getMetaData().getColumns( null, _home.getSchemaName(),
-            realTableName, null );
+        ResultSet rs = getConnection().getMetaData().getColumns( null, _schemaName, realTableName,
+            null );
         while ( rs.next() )
         {
             String realName = rs.getString( COLUMN_NAME );
@@ -780,9 +771,7 @@ public class SQLProcessor < T extends Fauxjo >
         }
         rs.close();
 
-        String schemaName = _home.getSchemaName();
-
-        rs = getConnection().getMetaData().getTables( null, schemaName, null,
+        rs = getConnection().getMetaData().getTables( null, _schemaName, null,
             tableTypes.toArray( new String[0] ) );
 
         while ( rs.next() )
@@ -797,6 +786,11 @@ public class SQLProcessor < T extends Fauxjo >
         rs.close();
 
         return null;
+    }
+
+    private String prependSchema( String name )
+    {
+        return _schemaName == null ? name : _schemaName + "." + name;
     }
 
     // ============================================================

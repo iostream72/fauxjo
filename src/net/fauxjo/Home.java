@@ -27,6 +27,9 @@ import java.sql.*;
 import java.util.*;
 import net.fauxjo.coercer.*;
 
+/**
+ * Default implementation of a Home object that represents a single table in the database.
+ */
 public class Home < T extends Fauxjo > 
 {
     // ============================================================
@@ -34,8 +37,6 @@ public class Home < T extends Fauxjo >
     // ============================================================
 
     private Schema _schema;
-    private boolean _overrideSchemaName;
-    private String _schemaName;
     private Class<T> _beanClass;
     private String _tableName;
     private SQLProcessor<T> _sqlProcessor;
@@ -50,9 +51,8 @@ public class Home < T extends Fauxjo >
         _schema = schema;
         _beanClass = beanClass;
         _tableName = tableName;
-        _sqlProcessor = new SQLProcessor<T>( this, _beanClass );
-        _overrideSchemaName = false;
-        _schemaName = null;
+        _sqlProcessor = new SQLProcessor<T>( getConnection(), _schema.getSchemaName(), _tableName,
+            _beanClass );
     }
 
     // ============================================================
@@ -86,36 +86,12 @@ public class Home < T extends Fauxjo >
 
     public String getQualifiedName( String name )
     {
-        if ( _overrideSchemaName )
-        {
-            return _schemaName == null ? name : _schemaName + "." + name;
-        }
-
         return _schema.getQualifiedName( name );
     }
 
     public String getSchemaName()
     {
-        return _overrideSchemaName ? _schemaName : _schema.getSchemaName();
-    }
-
-    public void setSchemaName( String schemaName )
-        throws SQLException
-    {
-        _overrideSchemaName = true;
-        _schemaName = schemaName;
-
-        // Have to recreate processor because schemaName change.
-        _sqlProcessor = new SQLProcessor<T>( this, _beanClass );
-    }
-
-    public void clearSchemaNameOverride()
-        throws SQLException
-    {
-        _overrideSchemaName = false;
-
-        // Have to recreate processor because schemaName change.
-        _sqlProcessor = new SQLProcessor<T>( this, _beanClass );
+        return _schema.getSchemaName();
     }
 
     public long getNextKey( String sequenceName )
@@ -146,7 +122,7 @@ public class Home < T extends Fauxjo >
         throws SQLException
     {
         // If has empty PK, assumed to be new.
-        if ( bean.hasEmptyPrimaryKey( _schema ) )
+        if ( !bean.isInDatabase() )
         {
             return insert( bean );
         }

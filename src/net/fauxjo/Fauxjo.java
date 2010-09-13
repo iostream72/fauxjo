@@ -25,6 +25,7 @@ package net.fauxjo;
 
 import java.sql.*;
 
+
 /**
  * <p>
  * Absolute minimum required representation of a Fauxjo bean. A fauxjo bean is a class that
@@ -40,33 +41,13 @@ import java.sql.*;
 public interface Fauxjo
 {
     /**
-     * This is called by the home object as a "paper-trail" back to the home object that this fauxjo
-     * object came from.
-     */
-    public void setHome( Home<?> home )
-        throws SQLException;
-
-    /**
      * <p>
      * Return true if this fauxjo does not represent an actual row in the database. This can usually
      * be tested by checking the primary key values which should most likely be null if it is not
-     * in the database (auto-generated). Then, this should perform an actual select from the 
-     * database to see if it is there.
+     * in the database (auto-generated).
      * </p>
      */
-    public boolean isInDatabase( Schema schema )
-        throws SQLException;
-
-    /**
-     * <p>
-     * Return true if the primary key is "empty". Empty most likely implies that the object does not
-     * have a corresponding row in the database.
-     * </p><p>
-     * Warning: There are cases where the primary key is set (most likely set by user) but there 
-     * actually is no row in the database with its primary key.
-     * </p>
-     */
-    public boolean hasEmptyPrimaryKey( Schema schema )
+    public boolean isInDatabase()
         throws SQLException;
 }
 

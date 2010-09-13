@@ -23,7 +23,6 @@
 
 package net.fauxjo;
 
-import java.beans.*;
 import java.lang.reflect.*;
 import java.sql.*;
 import java.util.*;
@@ -34,12 +33,6 @@ import java.util.*;
 public abstract class FauxjoImpl implements Fauxjo
 {
     // ============================================================
-    // Fields
-    // ============================================================
-
-    private Home<?> _home;
-
-    // ============================================================
     // Methods
     // ============================================================
 
@@ -47,69 +40,23 @@ public abstract class FauxjoImpl implements Fauxjo
     // public
     // ----------
 
-    public Home<?> getHome()
-    {
-        return _home;
-    }
-
-    public void setHome( Home<?> home )
-    {
-        _home = home;
-    }
-
     /**
-     * The schema is passed in because there is no guarantee that the schema was set on the
-     * fauxjo object.
+     * @return false if any of the primary key values are null. This is implied that it is
+     * not actually in the database.
      */
-    public boolean isInDatabase( Schema schema )
+    public boolean isInDatabase()
         throws SQLException
     {
-        try
-        {
-            // If the item has a null PK, then it obviously can not be in the database
-            if ( hasEmptyPrimaryKey( schema ) )
-            {
-                return false;
-            }
+        List<Object> keys = getPrimaryKeys();
 
-            Home < ? extends Fauxjo > home = schema.getHome( getClass() );
-            Method pkMethod = schema.findPrimaryFinder( home );
-            Object[] pkValues = schema.findPrimaryKey( this );
-            Object val = pkMethod.invoke( home, pkValues );
-            if ( val == null )
-            {
-                return false;
-            }
-            return true;
-        }
-        catch ( Exception ex )
-        {
-            throw new FauxjoException( ex );
-        }
-    }
-
-    /**
-     * The schema is passed in because there is no guarantee that the schema was set on the
-     * fauxjo object.
-     */
-    public boolean hasEmptyPrimaryKey( Schema schema )
-        throws SQLException
-    {
-        if ( schema == null )
-        {
-            return false;
-        }
-
-        Object[] pkValues = schema.findPrimaryKey( this );
-
-                // if no values, new
-        if ( pkValues == null || pkValues.length == 0 )
+        // If no values, assume empty.
+        if ( keys == null || keys.isEmpty() )
         {
             return true;
         }
 
-                // if any values null, new
-        for ( Object key : pkValues )
+        // If any values null, empty.
+        for ( Object key : keys )
         {
             if ( key == null )
             {
@@ -120,63 +67,13 @@ public abstract class FauxjoImpl implements Fauxjo
         return false;
     }
 
-    /**
-     * This should return a single object that is unique for this fauxjo object.
-     */
-    public Object getPrimaryKey()
-        throws SQLException
-    {
-        try
-        {
-            BeanInfo info = Introspector.getBeanInfo( getClass() );
-            ArrayList<Object> values = new ArrayList<Object>();
-            for ( PropertyDescriptor prop : info.getPropertyDescriptors() )
-            {
-                Method readMethod = prop.getReadMethod();
-                if ( readMethod == null )
-                {
-                    continue;
-                }
-                else if ( !readMethod.isAnnotationPresent( FauxjoPrimaryKey.class ) )
-                {
-                    continue;
-                }
-
-                Object value = readMethod.invoke( this, new Object[]
-                {
-                } );
-                values.add( value );
-            }
-            if ( values.size() == 0 )
-            {
-                return null;
-            }
-            else if ( values.size() == 1 )
-            {
-                return values.get( 0 );
-            }
-            // Convert all the objects to a single concatenated String
-            StringBuilder builder = new StringBuilder();
-            for ( Object value : values )
-            {
-                builder.append( value );
-                builder.append( "~" );
-            }
-            return builder.toString();
-        }
-        catch ( Exception ex )
-        {
-            throw new FauxjoException( ex );
-        }
-    }
-
     @Override
     public int hashCode()
     {
         try
         {
             // Any nulled hash keys equate to default of zero.
-            return getPrimaryKey() == null ? 0 : getPrimaryKey().hashCode();
+            return getPrimaryKeys() == null ? 0 : getPrimaryKeys().hashCode();
         }
         catch ( Exception ex )
         {
@@ -189,9 +86,10 @@ public abstract class FauxjoImpl implements Fauxjo
     {
         try
         {
-            if ( getPrimaryKey() != null && other != null && other.getClass().equals( getClass() ) )
+            if ( getPrimaryKeys() != null && other != null && other.getClass().equals(
+                getClass() ) )
             {
-                return getPrimaryKey().equals( ( (FauxjoImpl)other ).getPrimaryKey() );
+                return getPrimaryKeys().equals( ( (FauxjoImpl)other ).getPrimaryKeys() );
             }
         }
         catch ( Exception ex )
@@ -200,6 +98,41 @@ public abstract class FauxjoImpl implements Fauxjo
         }
 
         return super.equals( other );
+    }
+
+    // ----------
+    // protected
+    // ----------
+
+    protected List<Object> getPrimaryKeys()
+        throws SQLException
+    {
+        try
+        {
+            List<Object> keys = new ArrayList<Object>();
+            for ( Class<?> cls = getClass(); cls != null; cls = cls.getSuperclass() )
+            {
+                for ( Method method : cls.getMethods() )
+                {
+                    if ( method.isAnnotationPresent( FauxjoPrimaryKey.class ) )
+                    {
+                        FauxjoPrimaryKey fpk = method.getAnnotation( FauxjoPrimaryKey.class );
+                        keys.add( fpk.sequence(), method.invoke( this, new Object[0] ) );
+                    }
+                }
+            }
+
+            if ( keys.size() == 0 )
+            {
+                return null;
+            }
+
+            return keys;
+        }
+        catch ( Exception ex )
+        {
+            throw new FauxjoException( ex );
+        }
     }
 }
 
