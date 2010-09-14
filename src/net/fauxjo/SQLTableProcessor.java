@@ -49,6 +49,10 @@ public class SQLTableProcessor < T extends Fauxjo >
     // Value = Name of column used by the database and SQL type.
     private Map<String,ColumnInfo> _dbColumnInfos;
 
+    // Key = Lowercase column name (in code known as the "key").
+    // Value = Information about the bean property.
+    private Map<String,ValueDef> _valueDefs;
+
     // ============================================================
     // Constructors
     // ============================================================
@@ -160,7 +164,7 @@ public class SQLTableProcessor < T extends Fauxjo >
     /**
      * Convert the bean into an insert statement and execute it.
      */
-    public boolean insert( Fauxjo bean )
+    public boolean insert( T bean )
         throws SQLException
     {
         try
@@ -190,8 +194,12 @@ public class SQLTableProcessor < T extends Fauxjo >
 
                 // If this is a primary key and it is null, try to get sequence name from
                 // annotation and not include this column in insert statement.
-                ValueDef valueDef = bean.getValueDefs().get( key );
-                if ( valueDef.isPrimaryKey() && val == null && 
+                ValueDef valueDef = getValueDefs( bean ).get( key );
+                if ( valueDef == null )
+                {
+                    continue;
+                }
+                else if ( valueDef.isPrimaryKey() && val == null && 
                     valueDef.getPrimaryKeySequenceName() != null )
                 {
                     generatedKeys.put( key, valueDef.getPrimaryKeySequenceName() );
@@ -268,7 +276,7 @@ public class SQLTableProcessor < T extends Fauxjo >
     /**
      * Convert the bean into an update statement and execute it.
      */
-    public int update( Fauxjo bean )
+    public int update( T bean )
         throws SQLException
     {
         try
@@ -295,24 +303,26 @@ public class SQLTableProcessor < T extends Fauxjo >
                         " for insert: " + key + ":" + columnInfo.getRealName(), ex );
                 }
 
-                ValueDef valueDef = bean.getValueDefs().get( key );
-                if ( valueDef.isPrimaryKey() )
+                ValueDef valueDef = getValueDefs( bean ).get( key );
+                if ( valueDef != null )
                 {
-                    if ( whereClause.length() > 0 )
+                    if ( valueDef.isPrimaryKey() )
                     {
-                        whereClause.append( " and " );
+                        if ( whereClause.length() > 0 )
+                        {
+                            whereClause.append( " and " );
+                        }
+                        whereClause.append( columnInfo.getRealName() + "=?" );
+                        keyValues.add( new DataValue( val, columnInfo.getSQLType() ) );
                     }
-                    whereClause.append( columnInfo.getRealName() + "=?" );
-                    keyValues.add( new DataValue( val, columnInfo.getSQLType() ) );
-                }
-                else
-                {
-                    if ( setterClause.length() > 0 )
+                    else
                     {
-                        setterClause.append( "," );
-                    }
-                    setterClause.append( columnInfo.getRealName() + "=?" );
-                    values.add( new DataValue( val, columnInfo.getSQLType() ) );
+                        if ( setterClause.length() > 0 )
+                        {
+                            setterClause.append( "," );
+                        }
+                        setterClause.append( columnInfo.getRealName() + "=?" );
+                        values.add( new DataValue( val, columnInfo.getSQLType() ) );
 
 //                    if ( readMethod.isAnnotationPresent( TextIndexedColumn.class ) )
 //                    {
@@ -334,8 +344,10 @@ public class SQLTableProcessor < T extends Fauxjo >
 //                        setterClause.append( "," + tsVectorColumn + "=to_tsvector(?)" );
 //                        values.add( new DataValue( val, columnInfo.getSQLType() ) );
 //                    }
+                    }
                 }
             }
+
             String sql = "update " + getQualifiedName( _tableName ) + " set " + setterClause +
                 " where " + whereClause;
             PreparedStatement statement = getConnection().prepareStatement( sql );
@@ -362,17 +374,17 @@ public class SQLTableProcessor < T extends Fauxjo >
     /**
      * Convert the bean into an delete statement and execute it.
      */
-    public boolean delete( Fauxjo bean )
+    public boolean delete( T bean )
         throws SQLException
     {
         try
         {
             StringBuilder whereClause = new StringBuilder();
             List<DataValue> primaryKeyValues = new ArrayList<DataValue>();
-            for ( String key : bean.getValueDefs().keySet() )
+            for ( String key : getValueDefs( bean ).keySet() )
             {
-                ValueDef valueDef = bean.getValueDefs().get( key );
-                if ( !valueDef.isPrimaryKey() )
+                ValueDef valueDef = getValueDefs( bean ).get( key );
+                if ( valueDef == null || !valueDef.isPrimaryKey() )
                 {
                     continue;
                 }
@@ -493,7 +505,7 @@ public class SQLTableProcessor < T extends Fauxjo >
 
         for ( String key : record.keySet() )
         {
-            ValueDef valueDef = bean.getValueDefs().get( key );
+            ValueDef valueDef = getValueDefs( bean ).get( key );
             if ( valueDef != null )
             {
                 Object value = record.get( key );
@@ -545,7 +557,8 @@ public class SQLTableProcessor < T extends Fauxjo >
     private void cacheColumnInfos( boolean throwException )
         throws SQLException
     {
-        String realTableName = getRealTableName( getQualifiedName( _tableName ) );
+        String realTableName = getRealTableName( _tableName );
+        System.out.println( "   ***** TABLE " + realTableName );
 
         //
         // If the table does not actually exist optionally throw exception.
@@ -573,6 +586,7 @@ public class SQLTableProcessor < T extends Fauxjo >
             Integer type = rs.getInt( DATA_TYPE );
 
             _dbColumnInfos.put( realName.toLowerCase(), new ColumnInfo( realName, type ) );
+            System.out.println( "   ***** COLUMN " + realName.toLowerCase() );
         }
         rs.close();
     }
@@ -611,6 +625,21 @@ public class SQLTableProcessor < T extends Fauxjo >
         rs.close();
 
         return null;
+    }
+
+    /**
+     * See if the ValueDefs have already been cached, if not call this bean to get it's
+     * ValueDefs.
+     */
+    private Map<String,ValueDef> getValueDefs( Fauxjo bean )
+        throws FauxjoException
+    {
+        if ( _valueDefs == null )
+        {
+            _valueDefs = bean.getValueDefs();
+        }
+
+        return _valueDefs;
     }
 
     // ============================================================

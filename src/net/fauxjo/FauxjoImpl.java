@@ -46,9 +46,7 @@ public abstract class FauxjoImpl implements Fauxjo
     // Fields
     // ============================================================
 
-    private Map<String,ValueDef> _columnDefs;
-    private Map<String,Method> _writeMethods;
-    private Map<String,Method> _readMethods;
+    private static HashMap<String,ColumnDefsCache> _caches;
 
     // ============================================================
     // Methods
@@ -61,20 +59,11 @@ public abstract class FauxjoImpl implements Fauxjo
     public Map<String,ValueDef> getValueDefs()
         throws FauxjoException
     {
-        if ( _columnDefs == null )
-        {
-            cacheColumnDefs();
-        }
-
-        return _columnDefs;
-    }
-
-    public Object readValue( String key )
-        throws FauxjoException
-    {
         try
         {
-            return _readMethods.get( key ).invoke( this, new Object[0] );
+            ColumnDefsCache cache = getColumnDefsCache();
+
+            return cache._columnDefs;
         }
         catch ( Exception ex )
         {
@@ -82,12 +71,39 @@ public abstract class FauxjoImpl implements Fauxjo
         }
     }
 
+    public Object readValue( String key )
+        throws FauxjoException
+    {
+        try
+        {
+            ColumnDefsCache cache = getColumnDefsCache();
+
+            Method readMethod = cache._readMethods.get( key );
+            if ( readMethod != null )
+            {
+                return readMethod.invoke( this, new Object[0] );
+            }
+        }
+        catch ( Exception ex )
+        {
+            throw new FauxjoException( ex );
+        }
+
+        return null;
+    }
+
     public void writeValue( String key, Object value )
         throws FauxjoException
     {
         try
         {
-            _writeMethods.get( key ).invoke( this, value );
+            ColumnDefsCache cache = getColumnDefsCache();
+
+            Method writeMethod = cache._writeMethods.get( key );
+            if ( writeMethod != null )
+            {
+                writeMethod.invoke( this, value );
+            }
         }
         catch ( Exception ex )
         {
@@ -199,6 +215,8 @@ public abstract class FauxjoImpl implements Fauxjo
     {
         try
         {
+            ColumnDefsCache cache = getColumnDefsCache();
+
             // Arbitrarily ordered by keys.
             TreeMap<String,Object> keys = new TreeMap<String,Object>();
 
@@ -206,7 +224,7 @@ public abstract class FauxjoImpl implements Fauxjo
             {
                 if ( getValueDefs().get( key ).isPrimaryKey() )
                 {
-                    keys.put( key, _readMethods.get( key ).invoke( this, new Object[0] ) );
+                    keys.put( key, cache._readMethods.get( key ).invoke( this, new Object[0] ) );
                 }
             }
 
@@ -250,86 +268,108 @@ public abstract class FauxjoImpl implements Fauxjo
         return false;
     }
 
-    protected void cacheColumnDefs()
-        throws FauxjoException
+    protected ColumnDefsCache getColumnDefsCache()
+        throws FauxjoException, IntrospectionException
     {
-        try
+        if ( _caches == null )
         {
-            BeanInfo info = Introspector.getBeanInfo( getClass() );
-            _columnDefs = new TreeMap<String,ValueDef>();
-            _writeMethods = new TreeMap<String,Method>();
-            _readMethods = new TreeMap<String,Method>();
+            _caches = new HashMap<String,ColumnDefsCache>();
+        }
 
-            for ( PropertyDescriptor prop : info.getPropertyDescriptors() )
+        ColumnDefsCache cache = _caches.get( getClass().getCanonicalName() );
+        if ( cache != null )
+        {
+            return cache;
+        }
+
+        //
+        // Was not cached, collect information.
+        //
+        cache = new ColumnDefsCache();
+        _caches.put( getClass().getCanonicalName(), cache );
+        cache._columnDefs = new TreeMap<String,ValueDef>();
+        cache._writeMethods = new TreeMap<String,Method>();
+        cache._readMethods = new TreeMap<String,Method>();
+        BeanInfo info = Introspector.getBeanInfo( getClass() );
+
+        for ( PropertyDescriptor prop : info.getPropertyDescriptors() )
+        {
+            if ( prop.getWriteMethod() != null )
             {
-                if ( prop.getWriteMethod() != null )
-                {
-                    String name = prop.getName();
+                String name = prop.getName();
 
                     //
                     // Check for override of column name in database for this setter method.
                     //
-                    FauxjoSetter ann = prop.getWriteMethod().getAnnotation( FauxjoSetter.class );
-                    if ( ann != null )
-                    {
-                        name = ann.column();
-                    }
-                    String key = name.toLowerCase();
-
-                    ValueDef def = _columnDefs.get( key );
-                    if ( def == null )
-                    {
-                        def = new ValueDef();
-                        def.setValueClass( prop.getWriteMethod().getParameterTypes()[0] );
-                        _columnDefs.put( key, def );
-                    }
-                    _writeMethods.put( key, prop.getWriteMethod() );
-                }
-
-                if ( prop.getReadMethod() != null )
+                FauxjoSetter ann = prop.getWriteMethod().getAnnotation( FauxjoSetter.class );
+                if ( ann != null )
                 {
-                    String name = prop.getName();
+                    name = ann.column();
+                }
+                String key = name.toLowerCase();
+
+                ValueDef def = cache._columnDefs.get( key );
+                if ( def == null )
+                {
+                    def = new ValueDef();
+                    def.setValueClass( prop.getWriteMethod().getParameterTypes()[0] );
+                    cache._columnDefs.put( key, def );
+                }
+                cache._writeMethods.put( key, prop.getWriteMethod() );
+            }
+
+            if ( prop.getReadMethod() != null )
+            {
+                String name = prop.getName();
 
                     //
                     // Check for override of column name in database for this getter method.
                     //
-                    FauxjoGetter ann = prop.getReadMethod().getAnnotation( FauxjoGetter.class );
-                    if ( ann != null )
-                    {
-                        name = ann.column();
-                    }
-                    String key = name.toLowerCase();
+                FauxjoGetter ann = prop.getReadMethod().getAnnotation( FauxjoGetter.class );
+                if ( ann != null )
+                {
+                    name = ann.column();
+                }
+                String key = name.toLowerCase();
 
-                    ValueDef def = _columnDefs.get( key );
-                    if ( def == null )
-                    {
-                        def = new ValueDef();
-                        def.setValueClass( prop.getReadMethod().getReturnType() );
-                        _columnDefs.put( key, def );
-                    }
-                    _readMethods.put( key, prop.getReadMethod() );
+                ValueDef def = cache._columnDefs.get( key );
+                if ( def == null )
+                {
+                    def = new ValueDef();
+                    def.setValueClass( prop.getReadMethod().getReturnType() );
+                    cache._columnDefs.put( key, def );
+                }
+                cache._readMethods.put( key, prop.getReadMethod() );
 
-                    //
-                    // Check if FauxjoPrimaryKey.
-                    //
-                    if ( prop.getReadMethod().isAnnotationPresent( FauxjoPrimaryKey.class ) )
-                    {
-                        def.setPrimaryKey( true );
+                //
+                // Check if FauxjoPrimaryKey.
+                //
+                if ( prop.getReadMethod().isAnnotationPresent( FauxjoPrimaryKey.class ) )
+                {
+                    def.setPrimaryKey( true );
 
-                        FauxjoPrimaryKey pkAnn = (FauxjoPrimaryKey)prop.getReadMethod().
-                            getAnnotation( FauxjoPrimaryKey.class );
-                        if ( pkAnn.value() != null && !pkAnn.value().trim().isEmpty() )
-                        {
-                            def.setPrimaryKeySequenceName( pkAnn.value().trim() );
-                        }
+                    FauxjoPrimaryKey pkAnn = (FauxjoPrimaryKey)prop.getReadMethod().getAnnotation(
+                        FauxjoPrimaryKey.class );
+                    if ( pkAnn.value() != null && !pkAnn.value().trim().isEmpty() )
+                    {
+                        def.setPrimaryKeySequenceName( pkAnn.value().trim() );
                     }
                 }
             }
         }
-        catch ( Exception ex )
-        {
-            throw new FauxjoException( ex );
-        }
+
+        return cache;
+    }
+
+    // ============================================================
+    // Inner Classes
+    // ============================================================
+
+    private static class ColumnDefsCache
+    {
+        public Map<String,ValueDef> _columnDefs;
+        public Map<String,Method> _writeMethods;
+        public Map<String,Method> _readMethods;
     }
 }
 
