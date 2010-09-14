@@ -145,7 +145,7 @@ public class Home < T extends Fauxjo >
         return _schema.getConnection();
     }
 
-    protected SQLTableProcessor<T> getSQLProcessor()
+    protected SQLTableProcessor<T> getSQLTableProcessor()
     {
         return _sqlProcessor;
     }
