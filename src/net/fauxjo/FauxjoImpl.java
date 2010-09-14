@@ -162,7 +162,7 @@ public abstract class FauxjoImpl implements Fauxjo
             }
 
             // If other object is not same class as this object, quickly return false.
-            if ( otherObj == null || otherObj.getClass().equals( getClass() ) )
+            if ( otherObj == null || !otherObj.getClass().equals( getClass() ) )
             {
                 return false;
             }
