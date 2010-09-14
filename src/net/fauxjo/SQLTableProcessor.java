@@ -558,7 +558,6 @@ public class SQLTableProcessor < T extends Fauxjo >
         throws SQLException
     {
         String realTableName = getRealTableName( _tableName );
-        System.out.println( "   ***** TABLE " + realTableName );
 
         //
         // If the table does not actually exist optionally throw exception.
@@ -586,7 +585,6 @@ public class SQLTableProcessor < T extends Fauxjo >
             Integer type = rs.getInt( DATA_TYPE );
 
             _dbColumnInfos.put( realName.toLowerCase(), new ColumnInfo( realName, type ) );
-            System.out.println( "   ***** COLUMN " + realName.toLowerCase() );
         }
         rs.close();
     }
