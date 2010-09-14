@@ -25,7 +25,6 @@ package net.fauxjo;
 
 import java.beans.*;
 import java.lang.reflect.*;
-import java.sql.*;
 import java.util.*;
 
 /**
@@ -41,7 +40,7 @@ import java.util.*;
  * in order to compare rows in the database properly (e.g. same primary key).
  * </p>
  */
-public abstract class FauxjoImpl
+public abstract class FauxjoImpl implements Fauxjo
 {
     // ============================================================
     // Fields
@@ -102,7 +101,7 @@ public abstract class FauxjoImpl
      * is not accurate for this Fauxjo bean.
      */
     public boolean isInDatabase()
-        throws SQLException
+        throws FauxjoException
     {
         return !hasEmptyPrimaryKey();
     }
@@ -229,7 +228,7 @@ public abstract class FauxjoImpl
      * not actually in the database.
      */
     protected boolean hasEmptyPrimaryKey()
-        throws SQLException
+        throws FauxjoException
     {
         List<Object> keys = getPrimaryKeyValues();
 
