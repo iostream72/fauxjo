@@ -1,5 +1,5 @@
 //
-// SQLProcessor
+// SQLTableProcessor
 //
 // Copyright (C) jextra.net.
 //
@@ -23,16 +23,13 @@
 
 package net.fauxjo;
 
-import java.beans.*;
-import java.lang.reflect.*;
 import java.sql.*;
-import java.sql.Statement;
 import java.util.*;
 
 /**
  * Business logic for interacting with an SQL database table.
  */
-public class SQLProcessor < T extends Fauxjo > 
+public class SQLTableProcessor < T extends Fauxjo > 
 {
     // ============================================================
     // Fields
@@ -49,22 +46,14 @@ public class SQLProcessor < T extends Fauxjo >
     private Coercer _coercer;
 
     // Key = Lowercase column name (in code known as the "key").
-    // Value = Name of column used by the database.
-    private Map<String,String> _dbColumnRealNames;
-
-    // Key = Lowercase column name (in code known as the "key").
-    // Value = SQL column type.
-    private Map<String,Integer> _dbColumnTypes;
-
-    // Key = lowercase column name (in code known as the "key").
-    private Map<String,Method> _writeMethods;
-    private Map<String,Method> _readMethods;
+    // Value = Name of column used by the database and SQL type.
+    private Map<String,ColumnInfo> _dbColumnInfos;
 
     // ============================================================
     // Constructors
     // ============================================================
 
-    public SQLProcessor( Schema schema, String tableName, Class<T> beanClass )
+    public SQLTableProcessor( Schema schema, String tableName, Class<T> beanClass )
         throws SQLException
     {
         _schema = schema;
@@ -81,6 +70,11 @@ public class SQLProcessor < T extends Fauxjo >
     // ----------
     // public
     // ----------
+
+    public Coercer getCoercer()
+    {
+        return _coercer;
+    }
 
     /**
      * Get first item from result set and not zero. It will never return null.
@@ -162,7 +156,7 @@ public class SQLProcessor < T extends Fauxjo >
 
         return iterator;
     }
-    
+
     /**
      * Convert the bean into an insert statement and execute it.
      */
@@ -176,40 +170,32 @@ public class SQLProcessor < T extends Fauxjo >
             List<DataValue> values = new ArrayList<DataValue>();
             HashMap<String,String> generatedKeys = new HashMap<String,String>();
 
-            for ( String key : getDBColumnRealNames().keySet() )
+            for ( String key : getDBColumnInfos().keySet() )
             {
-                String realColumnName = getDBColumnRealNames().get( key );
-                int type = getDBColumnTypes().get( key );
-                Class<?> destClass = SQLTypeMapper.getInstance().getJavaClass( type );
+                ColumnInfo columnInfo = getDBColumnInfos().get( key );
+                Class<?> destClass = SQLTypeMapper.getInstance().getJavaClass(
+                    columnInfo.getSQLType() );
 
-                Method readMethod = _readMethods.get( key );
-                if ( readMethod == null )
-                {
-                    continue;
-                }
-
-                Object val = readMethod.invoke( bean, new Object[0] );
+                Object val = bean.readValue( key );
                 try
                 {
                     val = _coercer.coerce( val, destClass );
                 }
                 catch ( FauxjoException ex )
                 {
-                    throw new FauxjoException( "Failed to coerce " + getQualifiedName( _tableName ) +
-                        "." + realColumnName + " for insert: " + key + ":" + realColumnName, ex );
+                    throw new FauxjoException( "Failed to coerce " +
+                        getQualifiedName( _tableName ) + "." + columnInfo.getRealName() +
+                        " for insert: " + key + ":" + columnInfo.getRealName(), ex );
                 }
 
                 // If this is a primary key and it is null, try to get sequence name from
                 // annotation and not include this column in insert statement.
-                if ( readMethod.isAnnotationPresent( FauxjoPrimaryKey.class ) && val == null )
+                ValueDef valueDef = bean.getValueDefs().get( key );
+                if ( valueDef.isPrimaryKey() && val == null && 
+                    valueDef.getPrimaryKeySequenceName() != null )
                 {
-                    FauxjoPrimaryKey ann = (FauxjoPrimaryKey)readMethod.getAnnotation(
-                        FauxjoPrimaryKey.class );
-                    if ( ann.value() != null && !ann.value().trim().isEmpty() )
-                    {
-                        generatedKeys.put( key, ann.value().trim() );
-                        continue;
-                    }
+                    generatedKeys.put( key, valueDef.getPrimaryKeySequenceName() );
+                    continue;
                 }
 
                 if ( columns.length() > 0 )
@@ -217,32 +203,32 @@ public class SQLProcessor < T extends Fauxjo >
                     columns.append( "," );
                     questionMarks.append( "," );
                 }
-                columns.append( realColumnName );
+                columns.append( columnInfo.getRealName() );
                 questionMarks.append( "?" );
-                values.add( new DataValue( val, type ) );
+                values.add( new DataValue( val, columnInfo.getSQLType() ) );
 
                 // If this is a TS Vector text search column, add the TS Vector column.
-                if ( readMethod.isAnnotationPresent( TextIndexedColumn.class ) )
-                {
-                    TextIndexedColumn ann = readMethod.getAnnotation( TextIndexedColumn.class );
-                    String tsVectorColumn = null;
-                    if ( ann != null )
-                    {
-                        tsVectorColumn = ann.textIndexMetaColumn().trim();
-                    }
-
-                    // If the tsVectorColumn is not specified, we use the original column name +
-                    // TsVector. So if you have a column named 'noteText', then it would use
-                    // noteTextTsVector unless specified in the annotation.
-                    if ( tsVectorColumn == null || tsVectorColumn.equals( "" ) )
-                    {
-                        tsVectorColumn = realColumnName + "TsVector";
-                    }
-
-                    columns.append( "," + tsVectorColumn );
-                    questionMarks.append( ",to_tsvector(?)" );
-                    values.add( new DataValue( val, type ) );
-                }
+//                if ( readMethod.isAnnotationPresent( TextIndexedColumn.class ) )
+//                {
+//                    TextIndexedColumn ann = readMethod.getAnnotation( TextIndexedColumn.class );
+//                    String tsVectorColumn = null;
+//                    if ( ann != null )
+//                    {
+//                        tsVectorColumn = ann.textIndexMetaColumn().trim();
+//                    }
+//
+//                    // If the tsVectorColumn is not specified, we use the original column name +
+//                    // TsVector. So if you have a column named 'noteText', then it would use
+//                    // noteTextTsVector unless specified in the annotation.
+//                    if ( tsVectorColumn == null || tsVectorColumn.equals( "" ) )
+//                    {
+//                        tsVectorColumn = columnInfo.getRealName() + "TsVector";
+//                    }
+//
+//                    columns.append( "," + tsVectorColumn );
+//                    questionMarks.append( ",to_tsvector(?)" );
+//                    values.add( new DataValue( val, columnInfo.getSQLType() ) );
+//                }
             }
             String sql = "insert into " + getQualifiedName( _tableName ) + " (" + columns +
                 ") values (" + questionMarks + ")";
@@ -268,11 +254,7 @@ public class SQLProcessor < T extends Fauxjo >
                 rs.close();
                 gkStatement.close();
 
-                Method writeMethod = _writeMethods.get( key );
-                writeMethod.invoke( bean, new Object[]
-                {
-                    value
-                } );
+                bean.writeValue( key, value );
             }
 
             return retVal;
@@ -295,39 +277,33 @@ public class SQLProcessor < T extends Fauxjo >
             StringBuilder whereClause = new StringBuilder();
             List<DataValue> values = new ArrayList<DataValue>();
             List<DataValue> keyValues = new ArrayList<DataValue>();
-            for ( String key : getDBColumnRealNames().keySet() )
+            for ( String key : getDBColumnInfos().keySet() )
             {
-                String realColumnName = getDBColumnRealNames().get( key );
-                int type = getDBColumnTypes().get( key );
-                Class<?> destClass = SQLTypeMapper.getInstance().getJavaClass( type );
+                ColumnInfo columnInfo = getDBColumnInfos().get( key );
+                Class<?> destClass = SQLTypeMapper.getInstance().getJavaClass(
+                    columnInfo.getSQLType() );
 
-                Method readMethod = _readMethods.get( key );
-                if ( readMethod == null )
-                {
-                    continue;
-                }
-
-                Object val = readMethod.invoke( bean, new Object[]
-                {
-                } );
+                Object val = bean.readValue( key );
                 try
                 {
                     val = _coercer.coerce( val, destClass );
                 }
                 catch ( FauxjoException ex )
                 {
-                    throw new FauxjoException( "Failed to coerce " + getQualifiedName( _tableName ) +
-                        "." + realColumnName + " for insert: " + key + ":" + realColumnName, ex );
+                    throw new FauxjoException( "Failed to coerce " +
+                        getQualifiedName( _tableName ) + "." + columnInfo.getRealName() +
+                        " for insert: " + key + ":" + columnInfo.getRealName(), ex );
                 }
 
-                if ( readMethod.isAnnotationPresent( FauxjoPrimaryKey.class ) )
+                ValueDef valueDef = bean.getValueDefs().get( key );
+                if ( valueDef.isPrimaryKey() )
                 {
                     if ( whereClause.length() > 0 )
                     {
                         whereClause.append( " and " );
                     }
-                    whereClause.append( realColumnName + "=?" );
-                    keyValues.add( new DataValue( val, type ) );
+                    whereClause.append( columnInfo.getRealName() + "=?" );
+                    keyValues.add( new DataValue( val, columnInfo.getSQLType() ) );
                 }
                 else
                 {
@@ -335,29 +311,29 @@ public class SQLProcessor < T extends Fauxjo >
                     {
                         setterClause.append( "," );
                     }
-                    setterClause.append( realColumnName + "=?" );
-                    values.add( new DataValue( val, type ) );
+                    setterClause.append( columnInfo.getRealName() + "=?" );
+                    values.add( new DataValue( val, columnInfo.getSQLType() ) );
 
-                    if ( readMethod.isAnnotationPresent( TextIndexedColumn.class ) )
-                    {
-                        TextIndexedColumn ann = readMethod.getAnnotation( TextIndexedColumn.class );
-                        String tsVectorColumn = null;
-                        if ( ann != null )
-                        {
-                            tsVectorColumn = ann.textIndexMetaColumn().trim();
-                        }
-
-                        // If the tsVectorColumn is not specified, we use the original column name +
-                        // TsVector. So if you have a column named 'noteText', then it would use
-                        // noteTextTsVector unless specified in the annotation.
-                        if ( tsVectorColumn == null || tsVectorColumn.equals( "" ) )
-                        {
-                            tsVectorColumn = realColumnName + "TsVector";
-                        }
-
-                        setterClause.append( "," + tsVectorColumn + "=to_tsvector(?)" );
-                        values.add( new DataValue( val, type ) );
-                    }
+//                    if ( readMethod.isAnnotationPresent( TextIndexedColumn.class ) )
+//                    {
+//                        TextIndexedColumn ann = readMethod.getAnnotation( TextIndexedColumn.class );
+//                        String tsVectorColumn = null;
+//                        if ( ann != null )
+//                        {
+//                            tsVectorColumn = ann.textIndexMetaColumn().trim();
+//                        }
+//
+//                        // If the tsVectorColumn is not specified, we use the original column name +
+//                        // TsVector. So if you have a column named 'noteText', then it would use
+//                        // noteTextTsVector unless specified in the annotation.
+//                        if ( tsVectorColumn == null || tsVectorColumn.equals( "" ) )
+//                        {
+//                            tsVectorColumn = columnInfo.getRealName() + "TsVector";
+//                        }
+//
+//                        setterClause.append( "," + tsVectorColumn + "=to_tsvector(?)" );
+//                        values.add( new DataValue( val, columnInfo.getSQLType() ) );
+//                    }
                 }
             }
             String sql = "update " + getQualifiedName( _tableName ) + " set " + setterClause +
@@ -391,41 +367,35 @@ public class SQLProcessor < T extends Fauxjo >
     {
         try
         {
-            BeanInfo info = Introspector.getBeanInfo( bean.getClass() );
             StringBuilder whereClause = new StringBuilder();
-            List<DataValue> keyValues = new ArrayList<DataValue>();
-            for ( PropertyDescriptor prop : info.getPropertyDescriptors() )
+            List<DataValue> primaryKeyValues = new ArrayList<DataValue>();
+            for ( String key : bean.getValueDefs().keySet() )
             {
-                // If not really a column, forget it.
-                if ( !getDBColumnRealNames().keySet().contains( prop.getName().toLowerCase() ) )
+                ValueDef valueDef = bean.getValueDefs().get( key );
+                if ( !valueDef.isPrimaryKey() )
                 {
                     continue;
                 }
 
-                String realColumnName = getDBColumnRealNames().get( prop.getName().toLowerCase() );
-                int type = getDBColumnTypes().get( prop.getName().toLowerCase() );
-                Class<?> destClass = SQLTypeMapper.getInstance().getJavaClass( type );
+                ColumnInfo columnInfo = getDBColumnInfos().get( key );
+                Class<?> destClass = SQLTypeMapper.getInstance().getJavaClass(
+                    columnInfo.getSQLType() );
 
-                Method readMethod = prop.getReadMethod();
-                Object val = readMethod.invoke( bean, new Object[]
-                {
-                } );
+                Object val = bean.readValue( key );
                 val = _coercer.coerce( val, destClass );
 
-                if ( readMethod.isAnnotationPresent( FauxjoPrimaryKey.class ) )
+                if ( whereClause.length() > 0 )
                 {
-                    if ( whereClause.length() > 0 )
-                    {
-                        whereClause.append( " and " );
-                    }
-                    whereClause.append( realColumnName + "=?" );
-                    keyValues.add( new DataValue( val, type ) );
+                    whereClause.append( " and " );
                 }
+                whereClause.append( columnInfo.getRealName() + "=?" );
+                primaryKeyValues.add( new DataValue( val, columnInfo.getSQLType() ) );
             }
+
             String sql = "delete from " + getQualifiedName( _tableName ) + " where " + whereClause;
             PreparedStatement statement = getConnection().prepareStatement( sql );
             int propIndex = 1;
-            for ( DataValue value : keyValues )
+            for ( DataValue value : primaryKeyValues )
             {
                 statement.setObject( propIndex, value.getValue(), value.getSqlType() );
                 propIndex++;
@@ -440,7 +410,6 @@ public class SQLProcessor < T extends Fauxjo >
 
     /**
      * Get the next value from a sequence.
-     * @throws SQLException 
      */
     public Long getNextKey( String sequenceName )
         throws SQLException
@@ -455,79 +424,9 @@ public class SQLProcessor < T extends Fauxjo >
         return rs.getLong( 1 );
     }
 
-    public void setLong( PreparedStatement statement, int index, Long value )
-        throws SQLException
-    {
-        if ( value == null )
-        {
-            statement.setNull( index, Types.NUMERIC );
-        }
-        else
-        {
-            statement.setLong( index, value );
-        }
-    }
-
-    public void setString( PreparedStatement statement, int index, String value )
-        throws SQLException
-    {
-        if ( value == null )
-        {
-            statement.setNull( index, Types.VARCHAR );
-        }
-        else
-        {
-            statement.setString( index, value );
-        }
-    }
-
-    public void setDouble( PreparedStatement statement, int index, Double value )
-        throws SQLException
-    {
-        if ( value == null )
-        {
-            statement.setNull( index, Types.DOUBLE );
-        }
-        else
-        {
-            statement.setDouble( index, value );
-        }
-    }
-
-    public void setInt( PreparedStatement statement, int index, Integer value )
-        throws SQLException
-    {
-        if ( value == null )
-        {
-            statement.setNull( index, Types.INTEGER );
-        }
-        else
-        {
-            statement.setInt( index, value );
-        }
-    }
-
-    public void setShort( PreparedStatement statement, int index, Short value )
-        throws SQLException
-    {
-        if ( value == null )
-        {
-            statement.setNull( index, Types.SMALLINT );
-        }
-        else
-        {
-            statement.setInt( index, value );
-        }
-    }
-
     // ----------
     // protected
     // ----------
-
-    protected Coercer getCoercer()
-    {
-        return _coercer;
-    }
 
     protected Connection getConnection()
         throws SQLException
@@ -581,55 +480,42 @@ public class SQLProcessor < T extends Fauxjo >
     protected T processRecord( Map<String,Object> record )
         throws SQLException
     {
+        T bean = null;
+
         try
         {
-            T bean = (T)_beanClass.newInstance();
-
-            for ( String key : record.keySet() )
-            {
-                Method method = _writeMethods.get( key );
-                if ( method != null )
-                {
-                    Object value = record.get( key );
-
-                    try
-                    {
-                        if ( value != null )
-                        {
-                            // Assume one argument to the write method.
-                            Class<?> destClass = method.getParameterTypes()[0];
-                            value = _coercer.coerce( value, destClass );
-                        }
-                    }
-                    catch ( FauxjoException ex )
-                    {
-                        throw new FauxjoException( "Failed to coerce " + key, ex );
-                    }
-
-                    try
-                    {
-                        method.invoke( bean, value );
-                    }
-                    catch ( IllegalAccessException ex )
-                    {
-                        throw new FauxjoException( "Unable to get value: " + key, ex );
-                    }
-                    catch ( IllegalArgumentException ex )
-                    {
-                        throw new FauxjoException( "Unable to get value: " + key, ex );
-                    }
-                    catch ( InvocationTargetException ex )
-                    {
-                        throw new FauxjoException( "Unable to get value: " + key, ex );
-                    }
-                }
-            }
-            return bean;
+            bean = (T)_beanClass.newInstance();
         }
         catch ( Exception ex )
         {
             throw new FauxjoException( ex );
         }
+
+        for ( String key : record.keySet() )
+        {
+            ValueDef valueDef = bean.getValueDefs().get( key );
+            if ( valueDef != null )
+            {
+                Object value = record.get( key );
+
+                try
+                {
+                    if ( value != null )
+                    {
+                        Class<?> destClass = valueDef.getValueClass();
+                        value = _coercer.coerce( value, destClass );
+                    }
+                }
+                catch ( FauxjoException ex )
+                {
+                    throw new FauxjoException( "Failed to coerce " + key, ex );
+                }
+
+                bean.writeValue( key, value );
+            }
+        }
+
+        return bean;
     }
 
     // ----------
@@ -639,92 +525,30 @@ public class SQLProcessor < T extends Fauxjo >
     private void init()
         throws SQLException
     {
-        getReadAndWriteMethods();
-        getColumnInfo( false );
+        cacheColumnInfos( false );
     }
 
-    private void getReadAndWriteMethods()
+    private Map<String,ColumnInfo> getDBColumnInfos()
         throws SQLException
     {
-        try
+        if ( _dbColumnInfos == null )
         {
-            BeanInfo info = Introspector.getBeanInfo( _beanClass );
-            _writeMethods = new HashMap<String,Method>();
-            _readMethods = new HashMap<String,Method>();
-
-            for ( PropertyDescriptor prop : info.getPropertyDescriptors() )
-            {
-                if ( prop.getWriteMethod() != null )
-                {
-                    String name = prop.getName();
-
-                    //
-                    // Check for override of column name in database for this setter method.
-                    //
-                    FauxjoSetter ann = prop.getWriteMethod().getAnnotation( FauxjoSetter.class );
-                    if ( ann != null )
-                    {
-                        name = ann.column();
-                    }
-
-                    _writeMethods.put( name.toLowerCase(), prop.getWriteMethod() );
-                }
-
-                if ( prop.getReadMethod() != null )
-                {
-                    String name = prop.getName();
-
-                    //
-                    // Check for override of column name in database for this getter method.
-                    //
-                    FauxjoGetter ann = prop.getReadMethod().getAnnotation( FauxjoGetter.class );
-                    if ( ann != null )
-                    {
-                        name = ann.column();
-                    }
-
-                    _readMethods.put( name.toLowerCase(), prop.getReadMethod() );
-                }
-            }
-        }
-        catch ( Exception ex )
-        {
-            throw new FauxjoException( ex );
-        }
-    }
-
-    private Map<String,String> getDBColumnRealNames()
-        throws SQLException
-    {
-        if ( _dbColumnRealNames == null )
-        {
-            getColumnInfo( true );
+            cacheColumnInfos( true );
         }
 
-        return _dbColumnRealNames;
-    }
-
-    private Map<String,Integer> getDBColumnTypes()
-        throws SQLException
-    {
-        if ( _dbColumnTypes == null )
-        {
-            getColumnInfo( true );
-        }
-
-        return _dbColumnTypes;
+        return _dbColumnInfos;
     }
 
     /**
      * This is a really slow method to call when it actually gets the meta data.
      */
-    private void getColumnInfo( boolean throwException )
+    private void cacheColumnInfos( boolean throwException )
         throws SQLException
     {
         String realTableName = getRealTableName( getQualifiedName( _tableName ) );
 
         //
-        // If the table does not actually exist, assume it will be created later.
+        // If the table does not actually exist optionally throw exception.
         //
         if ( realTableName == null )
         {
@@ -739,8 +563,7 @@ public class SQLProcessor < T extends Fauxjo >
             }
         }
 
-        _dbColumnRealNames = new HashMap<String,String>();
-        _dbColumnTypes = new HashMap<String,Integer>();
+        _dbColumnInfos = new HashMap<String,ColumnInfo>();
 
         ResultSet rs = getConnection().getMetaData().getColumns( null, _schema.getSchemaName(),
             realTableName, null );
@@ -749,8 +572,7 @@ public class SQLProcessor < T extends Fauxjo >
             String realName = rs.getString( COLUMN_NAME );
             Integer type = rs.getInt( DATA_TYPE );
 
-            _dbColumnRealNames.put( realName.toLowerCase(), realName );
-            _dbColumnTypes.put( realName.toLowerCase(), type );
+            _dbColumnInfos.put( realName.toLowerCase(), new ColumnInfo( realName, type ) );
         }
         rs.close();
     }
@@ -795,6 +617,38 @@ public class SQLProcessor < T extends Fauxjo >
     // Inner Classes
     // ============================================================
 
+    public static class ColumnInfo
+    {
+        private String _realName;
+        private int _sqlType;
+
+        public ColumnInfo( String realName, int sqlType )
+        {
+            _realName = realName;
+            _sqlType = sqlType;
+        }
+
+        public String getRealName()
+        {
+            return _realName;
+        }
+
+        public void setRealName( String realName )
+        {
+            _realName = realName;
+        }
+
+        public int getSQLType()
+        {
+            return _sqlType;
+        }
+
+        public void setSQLType( int sqlType )
+        {
+            _sqlType = sqlType;
+        }
+    }
+
     private class DataValue
     {
         private Object _value;
@@ -816,6 +670,5 @@ public class SQLProcessor < T extends Fauxjo >
             return _sqlType;
         }
     }
-
 }
 

@@ -29,10 +29,6 @@ import java.util.*;
 /**
  * <p>
  * Default implementation of a Home object that represents a single table in the database.
- * </p><p>
- * This implementation assumes for the {@link #save(Fauxjo)} method that to test if the object
- * is already in the database or not that {@link #isInDatabase(Fauxjo)} just returns the
- * inverse value calculated via {@link #hasEmptyPrimaryKey(Fauxjo)}.
  * </p>
  */
 public class Home < T extends Fauxjo > 
@@ -44,7 +40,7 @@ public class Home < T extends Fauxjo >
     private Schema _schema;
     private Class<T> _beanClass;
     private String _tableName;
-    private SQLProcessor<T> _sqlProcessor;
+    private SQLTableProcessor<T> _sqlProcessor;
 
     // ============================================================
     // Constructors
@@ -56,7 +52,7 @@ public class Home < T extends Fauxjo >
         _schema = schema;
         _beanClass = beanClass;
         _tableName = tableName;
-        _sqlProcessor = new SQLProcessor<T>( _schema, _tableName, _beanClass );
+        _sqlProcessor = new SQLTableProcessor<T>( _schema, _tableName, _beanClass );
     }
 
     // ============================================================
@@ -115,7 +111,7 @@ public class Home < T extends Fauxjo >
         throws SQLException
     {
         // If has empty PK, assumed to be new.
-        if ( !isInDatabase( bean ) )
+        if ( !bean.isInDatabase() )
         {
             return insert( bean );
         }
@@ -134,17 +130,6 @@ public class Home < T extends Fauxjo >
         return true;
     }
 
-    /**
-     * @return true if object is already in the database. The default behavior is to return the
-     * inverse value of {@link #hasEmptyPrimaryKey(Fauxjo)}. This should be overridden if that
-     * is not accurate for this Fauxjo bean.
-     */
-    public boolean isInDatabase( T bean )
-        throws SQLException
-    {
-        return !hasEmptyPrimaryKey( bean );
-    }
-
     // ----------
     // protected
     // ----------
@@ -160,7 +145,7 @@ public class Home < T extends Fauxjo >
         return _schema.getConnection();
     }
 
-    protected SQLProcessor<T> getSQLProcessor()
+    protected SQLTableProcessor<T> getSQLProcessor()
     {
         return _sqlProcessor;
     }
@@ -217,31 +202,5 @@ public class Home < T extends Fauxjo >
         return "select * from " + getQualifiedTableName() + " " + c;
     }
 
-    /**
-     * @return false if any of the primary key values are null. This is implied that it is
-     * not actually in the database.
-     */
-    protected boolean hasEmptyPrimaryKey( T bean )
-        throws SQLException
-    {
-        List<Object> keys = bean.getPrimaryKeys();
-
-        // If no values, assume empty.
-        if ( keys == null || keys.isEmpty() )
-        {
-            return true;
-        }
-
-        // If any value is null, empty.
-        for ( Object key : keys )
-        {
-            if ( key == null )
-            {
-                return true;
-            }
-        }
-
-        return false;
-    }
 }
 
