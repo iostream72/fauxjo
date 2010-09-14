@@ -68,13 +68,13 @@ public class Coercer
     // ----------
 
 
-    public < T > void addCoercer( Class<T> coercerClass, TypeCoercer<T> coercer )
+    public < T > void addTypeCoercer( Class<T> coercerClass, TypeCoercer<T> coercer )
     {
         _coercerMap.put( ( Class<?> ) coercerClass, ( TypeCoercer<?> ) coercer );
     }
 
     @SuppressWarnings( "unchecked" )
-    public < T > TypeCoercer<T> getCoercer( Class<T> coercerClass )
+    public < T > TypeCoercer<T> getTypeCoercer( Class<T> coercerClass )
     {
         return( TypeCoercer<T> ) _coercerMap.get( coercerClass );
     }

@@ -27,7 +27,7 @@ import java.lang.annotation.*;
 
 /**
  * <p>
- * This annotation should be added to all getter methods of the fauxjo bean in order to specify
+ * This annotation should be added to all getter methods of the Fauxjo bean in order to specify
  * the values that uniquely identify a row in the database.
  * </p><p>
  * In particular this is used to auto-create insert, update, and delete SQL statements.

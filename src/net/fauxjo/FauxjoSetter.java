@@ -27,7 +27,7 @@ import java.lang.annotation.*;
 
 /**
  * <p>
- * Optional annotation placed on a method of a Fauxjo object that represents the setter for a 
+ * Optional annotation placed on a method of a Fauxjo beans that represents the setter for a 
  * column in the database when creating a SELECT statement.
  * </p><p>
  * By default, the {@link Home} object locates the 'set' method by searching for a method with the

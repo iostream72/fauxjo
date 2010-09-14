@@ -55,26 +55,15 @@ public abstract class Schema
     public abstract Connection getConnection()
         throws SQLException;
 
+    /**
+     * It is encouraged that Home objects use this method to prepareStatements and that the
+     * implementation of the Schema knows how to cache the PreparedStatements (probably via
+     * a {@link PreparedStatementCache}.
+     */
     public abstract PreparedStatement prepareStatement( String sql )
         throws SQLException;
 
 
-    /**
-     * @deprecated
-     */
-    public void addHome( Class<?> beanType, Home<?> home )
-    {
-        _homes.put( beanType, home );
-    }
-
-    /**
-     * @deprecated
-     */
-    public Home<?> getHome( Class<?> beanClass )
-    {
-        return _homes.get( beanClass );
-    }
-    
     public String getSchemaName()
     {
         return _schemaName;
@@ -85,6 +74,11 @@ public abstract class Schema
         _schemaName = schemaName;
     }
 
+    /**
+     * This method attaches the schema name to the front of the name passed in.
+     * 
+     * @return String that represents the given short name.
+     */
     public String getQualifiedName( String name )
     {
         if ( _schemaName == null || _schemaName.equals( "" ) )
@@ -95,6 +89,22 @@ public abstract class Schema
         {
             return _schemaName + "." + name;
         }
+    }
+    
+    /**
+     * @deprecated Having Schema know how to cache Home objects is no longer recommended.
+     */
+    public void addHome( Class<?> beanType, Home<?> home )
+    {
+        _homes.put( beanType, home );
+    }
+
+    /**
+     * @deprecated Having Schema know how to cache Home objects is no longer recommended.
+     */
+    public Home<?> getHome( Class<?> beanClass )
+    {
+        return _homes.get( beanClass );
     }
 }
 

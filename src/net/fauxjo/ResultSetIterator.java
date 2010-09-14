@@ -26,6 +26,11 @@ package net.fauxjo;
 import java.sql.*;
 import java.util.*;
 
+/**
+ * Iterator of a {@link ResultSet} that knows how to convert each row in the ResultSet to a 
+ * Fauxjo bean. This is used primarily to iterate over a large number records without having to
+ * load them all into memory.
+ */
 public class ResultSetIterator < T extends Fauxjo > implements Iterator<T>, Iterable<T>
 {
     // ============================================================
