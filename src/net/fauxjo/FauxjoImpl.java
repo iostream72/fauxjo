@@ -46,7 +46,7 @@ public abstract class FauxjoImpl implements Fauxjo
     // Fields
     // ============================================================
 
-    private static HashMap<String,ColumnDefsCache> _caches;
+    private static HashMap<Class<?>,ColumnDefsCache> _caches;
 
     // ============================================================
     // Methods
@@ -273,7 +273,7 @@ public abstract class FauxjoImpl implements Fauxjo
     {
         if ( _caches == null )
         {
-            _caches = new HashMap<String,ColumnDefsCache>();
+            _caches = new HashMap<Class<?>,ColumnDefsCache>();
         }
 
         ColumnDefsCache cache = _caches.get( getClass().getCanonicalName() );
@@ -286,7 +286,7 @@ public abstract class FauxjoImpl implements Fauxjo
         // Was not cached, collect information.
         //
         cache = new ColumnDefsCache();
-        _caches.put( getClass().getCanonicalName(), cache );
+        _caches.put( getClass(), cache );
         cache._columnDefs = new TreeMap<String,ValueDef>();
         cache._writeMethods = new TreeMap<String,Method>();
         cache._readMethods = new TreeMap<String,Method>();
@@ -298,9 +298,9 @@ public abstract class FauxjoImpl implements Fauxjo
             {
                 String name = prop.getName();
 
-                    //
-                    // Check for override of column name in database for this setter method.
-                    //
+                //
+                // Check for override of column name in database for this setter method.
+                //
                 FauxjoSetter ann = prop.getWriteMethod().getAnnotation( FauxjoSetter.class );
                 if ( ann != null )
                 {
@@ -322,9 +322,9 @@ public abstract class FauxjoImpl implements Fauxjo
             {
                 String name = prop.getName();
 
-                    //
-                    // Check for override of column name in database for this getter method.
-                    //
+                //
+                // Check for override of column name in database for this getter method.
+                //
                 FauxjoGetter ann = prop.getReadMethod().getAnnotation( FauxjoGetter.class );
                 if ( ann != null )
                 {
