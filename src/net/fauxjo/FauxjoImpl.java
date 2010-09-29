@@ -276,7 +276,7 @@ public abstract class FauxjoImpl implements Fauxjo
             _caches = new HashMap<Class<?>,ColumnDefsCache>();
         }
 
-        ColumnDefsCache cache = _caches.get( getClass().getCanonicalName() );
+        ColumnDefsCache cache = _caches.get( getClass() );
         if ( cache != null )
         {
             return cache;
