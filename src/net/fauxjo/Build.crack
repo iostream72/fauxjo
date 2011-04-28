@@ -29,7 +29,6 @@ public class Build extends JavaComponentBuild
 {
     public Build()
     {
-        super( "canifinish" );
     }
 }
 
