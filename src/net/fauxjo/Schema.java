@@ -63,7 +63,6 @@ public abstract class Schema
     public abstract PreparedStatement prepareStatement( String sql )
         throws SQLException;
 
-
     public String getSchemaName()
     {
         return _schemaName;
@@ -76,7 +75,7 @@ public abstract class Schema
 
     /**
      * This method attaches the schema name to the front of the name passed in.
-     * 
+     *
      * @return String that represents the given short name.
      */
     public String getQualifiedName( String name )
@@ -90,7 +89,7 @@ public abstract class Schema
             return _schemaName + "." + name;
         }
     }
-    
+
     /**
      * @deprecated Having Schema know how to cache Home objects is no longer recommended.
      */

@@ -32,9 +32,9 @@ import java.util.*;
  * {@link PreparedStatement} cache where the {@link PreparedStatement}s are stored per
  * {@link Thread}:{@link Connection} combo.
  * </p><p>
- * {@link PreparedStatement}s are not thread-safe and certainly can not be shared between 
+ * {@link PreparedStatement}s are not thread-safe and certainly can not be shared between
  * {@link Connection}s.
- * {@link Connection}s on the other hand may be thread-safe (depends on implementation). 
+ * {@link Connection}s on the other hand may be thread-safe (depends on implementation).
  * Therefore, in order to guarentee thread and connection boundary safety, both are used as keys
  * in the cache.
  */
@@ -46,7 +46,7 @@ public class PreparedStatementCache
 
     private WeakHashMap<Thread,PreparedStatementCacheThreadData> _cache;
 
-    // A listener thread that waits for Thread to finish then throws away the 
+    // A listener thread that waits for Thread to finish then throws away the
     // PreparedStatements for that Thread.
     private HashMap<Thread,Thread> _listenerMap;
 
@@ -72,8 +72,41 @@ public class PreparedStatementCache
     public PreparedStatement prepareStatement( Connection connection, String sql )
         throws SQLException
     {
-        Thread thread = Thread.currentThread();
+        PreparedStatementCacheThreadData threadData = getOrCreateThreadData(
+            Thread.currentThread() );
 
+        PreparedStatementGroup group = threadData.get( connection );
+        if ( group == null )
+        {
+            group = new PreparedStatementGroup();
+            threadData.put( connection, group );
+        }
+
+        return group.getPreparedStatement( connection, sql );
+    }
+
+    public CallableStatement prepareCall( Connection connection, String sql )
+        throws SQLException
+    {
+        PreparedStatementCacheThreadData threadData = getOrCreateThreadData(
+            Thread.currentThread() );
+
+        PreparedStatementGroup group = threadData.get( connection );
+        if ( group == null )
+        {
+            group = new PreparedStatementGroup();
+            threadData.put( connection, group );
+        }
+
+        return group.getCallableStatement( connection, sql );
+    }
+
+    /**
+     * Get the thread data for the given thread. If none is found yet, create it and add a listener
+     * to clear the cached statements out when the thread dies.
+     */
+    protected PreparedStatementCacheThreadData getOrCreateThreadData( Thread thread )
+    {
         PreparedStatementCacheThreadData threadData = _cache.get( thread );
         if ( threadData == null )
         {
@@ -93,19 +126,12 @@ public class PreparedStatementCache
             }
         }
 
-        PreparedStatementGroup group = threadData.get( connection );
-        if ( group == null )
-        {
-            group = new PreparedStatementGroup();
-            threadData.put( connection, group );
-        }
-
-        return group.getPreparedStatement( connection, sql );
+        return threadData;
     }
 
     /**
      * Close all known PreparedStatements.
-     * @throws SQLException 
+     * @throws SQLException
      */
     public void clearAll()
         throws SQLException
@@ -118,7 +144,7 @@ public class PreparedStatementCache
 
     /**
      * Used to close any connections for a particular thread.
-     * @throws SQLException 
+     * @throws SQLException
      */
     @SuppressWarnings( "deprecation" )
     public void clearThread( Thread thread )
@@ -126,7 +152,7 @@ public class PreparedStatementCache
     {
         //
         // Kill any ThreadListeners associated with this thread.
-        // 
+        //
         Thread listenerThread = _listenerMap.get( thread );
         _listenerMap.remove( thread );
         if ( listenerThread != null )
@@ -137,7 +163,7 @@ public class PreparedStatementCache
 
         //
         // Remove any PreparedStatements associated with this Thread
-        // 
+        //
         PreparedStatementCacheThreadData threadData = _cache.get( thread );
         if ( threadData != null )
         {
@@ -221,6 +247,22 @@ public class PreparedStatementCache
             else
             {
                 return ref.get();
+            }
+        }
+
+        public CallableStatement getCallableStatement( Connection conn, String sql )
+            throws SQLException
+        {
+            SoftReference<PreparedStatement> ref = _map.get( sql );
+            if ( ref == null || ref.get() == null )
+            {
+                CallableStatement statement = conn.prepareCall( sql );
+                _map.put( sql, new SoftReference<PreparedStatement>( statement ) );
+                return statement;
+            }
+            else
+            {
+                return (CallableStatement)ref.get();
             }
         }
 
