@@ -87,7 +87,10 @@ public class SQLTableProcessor < T extends Fauxjo >
         throws SQLException
     {
         T bean = getFirst( rs );
-        assert bean != null : "Resultset is improperly empty.";
+        if ( bean == null )
+        {
+            throw new FauxjoException( "ResultSet is improperly empty." );
+        }
 
         return bean;
     }
@@ -99,7 +102,10 @@ public class SQLTableProcessor < T extends Fauxjo >
         throws SQLException
     {
         T bean = getOnlyFirst( rs );
-        assert bean != null : "Resultset is improperly empty.";
+        if ( bean == null )
+        {
+            throw new FauxjoException( "Resultset is improperly empty." );
+        }
 
         return bean;
     }
@@ -133,7 +139,10 @@ public class SQLTableProcessor < T extends Fauxjo >
             return null;
         }
 
-        assert beans.size() == 1 : "More than one item was in resultset.";
+        if ( beans.size() != 1 )
+        {
+            throw new FauxjoException( "More than one item was in resultset." );
+        }
 
         return beans.get( 0 );
     }
@@ -382,7 +391,10 @@ public class SQLTableProcessor < T extends Fauxjo >
     public Long getNextKey( String sequenceName )
         throws SQLException
     {
-        assert sequenceName != null;
+        if ( sequenceName == null || sequenceName.isEmpty() )
+        {
+            throw new FauxjoException( "Sequence name must not be null or empty." );
+        }
 
         PreparedStatement getKey = getConnection().prepareStatement( "select nextval('" +
             getQualifiedName( sequenceName ) + "')" );
