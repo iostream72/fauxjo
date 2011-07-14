@@ -214,29 +214,6 @@ public class SQLTableProcessor < T extends Fauxjo >
                 columns.append( columnInfo.getRealName() );
                 questionMarks.append( "?" );
                 values.add( new DataValue( val, columnInfo.getSQLType() ) );
-
-                // If this is a TS Vector text search column, add the TS Vector column.
-//                if ( readMethod.isAnnotationPresent( TextIndexedColumn.class ) )
-//                {
-//                    TextIndexedColumn ann = readMethod.getAnnotation( TextIndexedColumn.class );
-//                    String tsVectorColumn = null;
-//                    if ( ann != null )
-//                    {
-//                        tsVectorColumn = ann.textIndexMetaColumn().trim();
-//                    }
-//
-//                    // If the tsVectorColumn is not specified, we use the original column name +
-//                    // TsVector. So if you have a column named 'noteText', then it would use
-//                    // noteTextTsVector unless specified in the annotation.
-//                    if ( tsVectorColumn == null || tsVectorColumn.equals( "" ) )
-//                    {
-//                        tsVectorColumn = columnInfo.getRealName() + "TsVector";
-//                    }
-//
-//                    columns.append( "," + tsVectorColumn );
-//                    questionMarks.append( ",to_tsvector(?)" );
-//                    values.add( new DataValue( val, columnInfo.getSQLType() ) );
-//                }
             }
             String sql = "insert into " + getQualifiedName( _tableName ) + " (" + columns +
                 ") values (" + questionMarks + ")";
@@ -323,27 +300,6 @@ public class SQLTableProcessor < T extends Fauxjo >
                         }
                         setterClause.append( columnInfo.getRealName() + "=?" );
                         values.add( new DataValue( val, columnInfo.getSQLType() ) );
-
-//                    if ( readMethod.isAnnotationPresent( TextIndexedColumn.class ) )
-//                    {
-//                        TextIndexedColumn ann = readMethod.getAnnotation( TextIndexedColumn.class );
-//                        String tsVectorColumn = null;
-//                        if ( ann != null )
-//                        {
-//                            tsVectorColumn = ann.textIndexMetaColumn().trim();
-//                        }
-//
-//                        // If the tsVectorColumn is not specified, we use the original column name +
-//                        // TsVector. So if you have a column named 'noteText', then it would use
-//                        // noteTextTsVector unless specified in the annotation.
-//                        if ( tsVectorColumn == null || tsVectorColumn.equals( "" ) )
-//                        {
-//                            tsVectorColumn = columnInfo.getRealName() + "TsVector";
-//                        }
-//
-//                        setterClause.append( "," + tsVectorColumn + "=to_tsvector(?)" );
-//                        values.add( new DataValue( val, columnInfo.getSQLType() ) );
-//                    }
                     }
                 }
             }
