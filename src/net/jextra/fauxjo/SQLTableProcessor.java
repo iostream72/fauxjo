@@ -21,7 +21,7 @@
 //  02111-1307 USA.
 //
 
-package net.fauxjo;
+package net.jextra.fauxjo;
 
 import java.sql.*;
 import java.util.*;
@@ -29,7 +29,7 @@ import java.util.*;
 /**
  * Business logic for interacting with an SQL database table.
  */
-public class SQLTableProcessor < T extends Fauxjo > 
+public class SQLTableProcessor < T extends Fauxjo >
 {
     // ============================================================
     // Fields
@@ -199,7 +199,7 @@ public class SQLTableProcessor < T extends Fauxjo >
                 {
                     continue;
                 }
-                else if ( valueDef.isPrimaryKey() && val == null && 
+                else if ( valueDef.isPrimaryKey() && val == null &&
                     valueDef.getPrimaryKeySequenceName() != null )
                 {
                     generatedKeys.put( key, valueDef.getPrimaryKeySequenceName() );

@@ -21,7 +21,7 @@
 //  02111-1307 USA.
 //
 
-package net.fauxjo.coercer;
+package net.jextra.fauxjo.coercer;
 
 public class ObjectCoercer implements TypeCoercer<Object>
 {

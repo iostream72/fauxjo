@@ -21,7 +21,7 @@
 //  02111-1307 USA.
 //
 
-package net.fauxjo;
+package net.jextra.fauxjo;
 
 import java.sql.*;
 import java.util.*;
@@ -31,7 +31,7 @@ import java.util.*;
  * Default implementation of a Home object that represents a single table in the database.
  * </p>
  */
-public class Home < T extends Fauxjo > 
+public class Home < T extends Fauxjo >
 {
     // ============================================================
     // Fields

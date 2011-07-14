@@ -21,14 +21,14 @@
 //  02111-1307 USA.
 //
 
-package net.fauxjo;
+package net.jextra.fauxjo;
 
 import java.math.*;
 import java.util.*;
-import net.fauxjo.coercer.*;
+import net.jextra.fauxjo.coercer.*;
 
 /**
- * General use tool that coerces one value type to another value type. For example from a 
+ * General use tool that coerces one value type to another value type. For example from a
  * String to an Integer.
  */
 public class Coercer

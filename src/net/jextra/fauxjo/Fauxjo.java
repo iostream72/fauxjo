@@ -21,7 +21,7 @@
 //  02111-1307 USA.
 //
 
-package net.fauxjo;
+package net.jextra.fauxjo;
 
 import java.util.*;
 
@@ -47,8 +47,8 @@ public interface Fauxjo
         throws FauxjoException;
 
     /**
-     * Set a value in the Fauxjo bean with the given "key" = lowercase database column name. The 
-     * Object Class will be the equal to whatever was returned from {@link getValueDefs} for the 
+     * Set a value in the Fauxjo bean with the given "key" = lowercase database column name. The
+     * Object Class will be the equal to whatever was returned from {@link getValueDefs} for the
      * given key.
      */
     public void writeValue( String key, Object value )

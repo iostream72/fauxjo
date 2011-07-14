@@ -21,7 +21,7 @@
 //  02111-1307 USA.
 //
 
-package net.fauxjo;
+package net.jextra.fauxjo;
 
 import java.sql.*;
 

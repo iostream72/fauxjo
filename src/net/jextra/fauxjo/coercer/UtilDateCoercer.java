@@ -21,12 +21,12 @@
 //  02111-1307 USA.
 //
 
-package net.fauxjo.coercer;
+package net.jextra.fauxjo.coercer;
 
 import java.sql.*;
-import net.fauxjo.*;
+import net.jextra.fauxjo.*;
 
-public class UtilDateCoercer implements TypeCoercer < java.util.Date > 
+public class UtilDateCoercer implements TypeCoercer < java.util.Date >
 {
     // ============================================================
     // Methods

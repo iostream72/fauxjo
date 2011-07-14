@@ -21,10 +21,10 @@
 //  02111-1307 USA.
 //
 
-package net.fauxjo.coercer;
+package net.jextra.fauxjo.coercer;
 
 import java.sql.*;
-import net.fauxjo.*;
+import net.jextra.fauxjo.*;
 
 public class StringCoercer implements TypeCoercer<String>
 {

@@ -21,13 +21,13 @@
 //  02111-1307 USA.
 //
 
-package net.fauxjo;
+package net.jextra.fauxjo;
 
 import java.sql.*;
 import java.util.*;
 
 /**
- * Iterator of a {@link ResultSet} that knows how to convert each row in the ResultSet to a 
+ * Iterator of a {@link ResultSet} that knows how to convert each row in the ResultSet to a
  * Fauxjo bean. This is used primarily to iterate over a large number records without having to
  * load them all into memory.
  */

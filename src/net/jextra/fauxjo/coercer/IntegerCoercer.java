@@ -21,9 +21,9 @@
 //  02111-1307 USA.
 //
 
-package net.fauxjo.coercer;
+package net.jextra.fauxjo.coercer;
 
-import net.fauxjo.*;
+import net.jextra.fauxjo.*;
 
 public class IntegerCoercer implements TypeCoercer<Integer>
 {
@@ -54,7 +54,7 @@ public class IntegerCoercer implements TypeCoercer<Integer>
         }
         else if ( destClass.equals( String.class ) )
         {
-        	return value.toString();
+            return value.toString();
         }
 
         throw new FauxjoException( "The IntegerCoercer does not know how to convert to type " +

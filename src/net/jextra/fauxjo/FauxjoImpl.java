@@ -21,7 +21,7 @@
 //  02111-1307 USA.
 //
 
-package net.fauxjo;
+package net.jextra.fauxjo;
 
 import java.beans.*;
 import java.lang.reflect.*;
@@ -29,7 +29,7 @@ import java.util.*;
 
 /**
  * <p>
- * Concrete implementation of {@link Fauxjo} interface that is {@link FauxjoPrimaryKey} annotation 
+ * Concrete implementation of {@link Fauxjo} interface that is {@link FauxjoPrimaryKey} annotation
  * aware.
  * </p><p>
  * This implementation assumes for that to test if the object
@@ -207,7 +207,7 @@ public abstract class FauxjoImpl implements Fauxjo
     // ----------
 
     /**
-     * @return Values of primary keys in a consistent order so that it can be compared to another 
+     * @return Values of primary keys in a consistent order so that it can be compared to another
      * Fauxjo beans.
      */
     protected List<Object> getPrimaryKeyValues()
