@@ -23,12 +23,35 @@
 
 package net.jextra.fauxjo;
 
-import net.jextra.crackbee.*;
+import net.jextra.crack.*;
+import net.jextra.crack.java.*;
+import net.jextra.crackeclipse.*;
+import net.jextra.cracknubbin.*;
 
-public class Build extends JavaComponentBuild
+public class Build extends CrackBuild
 {
+    // ============================================================
+    // Constructors
+    // ============================================================
+
     public Build()
+        throws Exception
+    {
+        Params params = new Params();
+
+        addCommands( "", new JavaKnob( params ) );
+
+        addCommands( "nubbin.", new NubbinKnob( params ) );
+
+        addCommands( "eclipse.", new EclipseKnob( params ) );
+        createCommandAlias( "eclipse.createProject", "prj" );
+    }
+
+    // ============================================================
+    // Inner Classes
+    // ============================================================
+
+    public static class Params extends NubbinStandardParams implements EclipseKnobParams
     {
     }
 }
-

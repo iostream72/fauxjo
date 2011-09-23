@@ -27,7 +27,7 @@ import java.sql.*;
 import java.util.*;
 
 /**
- * Business logic for interacting with an SQL database table.
+ * Core Business logic for interacting with an SQL database table.
  */
 public class SQLTableProcessor < T extends Fauxjo >
 {
@@ -81,67 +81,61 @@ public class SQLTableProcessor < T extends Fauxjo >
     }
 
     /**
-     * Get first item from result set and not zero. It will never return null.
-     */
-    public T getOne( ResultSet rs )
-        throws SQLException
-    {
-        T bean = getFirst( rs );
-        if ( bean == null )
-        {
-            throw new FauxjoException( "ResultSet is improperly empty." );
-        }
-
-        return bean;
-    }
-
-    /**
-     * Get only item from result set (resultset must contain 1 item).
-     */
-    public T getOnlyOne( ResultSet rs )
-        throws SQLException
-    {
-        T bean = getOnlyFirst( rs );
-        if ( bean == null )
-        {
-            throw new FauxjoException( "Resultset is improperly empty." );
-        }
-
-        return bean;
-    }
-
-    /**
-     * Create an item from the first row in the result set.
+     * Create an item from the first row in the ResultSet or return null if empty ResultSet.
      */
     public T getFirst( ResultSet rs )
         throws SQLException
     {
-        List<T> beans = processResultSet( rs, 1 );
-        if ( beans == null || beans.isEmpty() )
-        {
-            return null;
-        }
-        else
-        {
-            return beans.get( 0 );
-        }
+        return getFirst( rs, false, false );
+    }
+    
+    /**
+     * Create an item from the first row in the ResultSet or return null or throw exception if empty ResultSet.
+     */
+    public T getFirst( ResultSet rs, boolean errorIfEmpty )
+        throws SQLException
+    {
+        return getFirst( rs, errorIfEmpty, false );
     }
 
     /**
-     * Get only item from result or null (resultset must contain 0 or 1 items).
+     * Create ONLY item from the ResultSet or return null if empty ResultSet.
      */
-    public T getOnlyFirst( ResultSet rs )
+    public T getUnique( ResultSet rs )
+        throws SQLException
+    {
+        return getFirst( rs, false, true );
+    }
+    
+    /**
+     * Create ONLY item from the ResultSet or return null or throw exception if empty ResultSet.
+     */
+    public T getUnique( ResultSet rs, boolean errorIfEmpty )
+        throws SQLException
+    {
+        return getFirst( rs, errorIfEmpty, true );
+    }
+
+    /**
+     * Get first item from result-set.
+     */
+    public T getFirst( ResultSet rs, boolean errorIfEmpty, boolean errorIfNotUnique )
         throws SQLException
     {
         List<T> beans = processResultSet( rs, 2 );
         if ( beans == null || beans.isEmpty() )
         {
+            if ( errorIfEmpty )
+            {
+                throw new FauxjoException( "ResultSet is improperly empty." );
+            }
+            
             return null;
         }
 
-        if ( beans.size() != 1 )
+        if ( errorIfNotUnique && beans.size() != 1 )
         {
-            throw new FauxjoException( "More than one item was in resultset." );
+            throw new FauxjoException( "ResultSet improperly contained more than one item." );
         }
 
         return beans.get( 0 );

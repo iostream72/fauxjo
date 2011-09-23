@@ -150,28 +150,28 @@ public class Home < T extends Fauxjo >
         return _sqlProcessor;
     }
 
-    protected T getOne( ResultSet rs )
-        throws SQLException
-    {
-        return _sqlProcessor.getOne( rs );
-    }
-
-    protected T getOnlyOne( ResultSet rs )
-        throws SQLException
-    {
-        return _sqlProcessor.getOnlyOne( rs );
-    }
-
     protected T getFirst( ResultSet rs )
         throws SQLException
     {
         return _sqlProcessor.getFirst( rs );
     }
 
-    protected T getOnlyFirst( ResultSet rs )
+    protected T getFirst( ResultSet rs, boolean errorIfEmpty )
         throws SQLException
     {
-        return _sqlProcessor.getOnlyFirst( rs );
+        return _sqlProcessor.getFirst( rs, errorIfEmpty );
+    }
+
+    protected T getUnique( ResultSet rs )
+        throws SQLException
+    {
+        return _sqlProcessor.getUnique( rs );
+    }
+
+    protected T getUnique( ResultSet rs, boolean errorIfEmpty )
+        throws SQLException
+    {
+        return _sqlProcessor.getUnique( rs, errorIfEmpty );
     }
 
     protected List<T> getList( ResultSet rs )
