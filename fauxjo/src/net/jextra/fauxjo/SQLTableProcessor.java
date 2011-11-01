@@ -29,7 +29,7 @@ import java.util.*;
 /**
  * Core Business logic for interacting with an SQL database table.
  */
-public class SQLTableProcessor < T extends Fauxjo >
+public class SQLTableProcessor<T extends Fauxjo>
 {
     // ============================================================
     // Fields
@@ -47,11 +47,11 @@ public class SQLTableProcessor < T extends Fauxjo >
 
     // Key = Lowercase column name (in code known as the "key").
     // Value = Name of column used by the database and SQL type.
-    private Map<String,ColumnInfo> _dbColumnInfos;
+    private Map<String, ColumnInfo> _dbColumnInfos;
 
     // Key = Lowercase column name (in code known as the "key").
     // Value = Information about the bean property.
-    private Map<String,ValueDef> _valueDefs;
+    private Map<String, ValueDef> _valueDefs;
 
     // ============================================================
     // Constructors
@@ -88,7 +88,7 @@ public class SQLTableProcessor < T extends Fauxjo >
     {
         return getFirst( rs, false, false );
     }
-    
+
     /**
      * Create an item from the first row in the ResultSet or return null or throw exception if empty ResultSet.
      */
@@ -106,7 +106,7 @@ public class SQLTableProcessor < T extends Fauxjo >
     {
         return getFirst( rs, false, true );
     }
-    
+
     /**
      * Create ONLY item from the ResultSet or return null or throw exception if empty ResultSet.
      */
@@ -129,7 +129,7 @@ public class SQLTableProcessor < T extends Fauxjo >
             {
                 throw new FauxjoException( "ResultSet is improperly empty." );
             }
-            
+
             return null;
         }
 
@@ -175,13 +175,12 @@ public class SQLTableProcessor < T extends Fauxjo >
             StringBuilder columns = new StringBuilder();
             StringBuilder questionMarks = new StringBuilder();
             List<DataValue> values = new ArrayList<DataValue>();
-            HashMap<String,String> generatedKeys = new HashMap<String,String>();
+            HashMap<String, String> generatedKeys = new HashMap<String, String>();
 
             for ( String key : getDBColumnInfos().keySet() )
             {
                 ColumnInfo columnInfo = getDBColumnInfos().get( key );
-                Class<?> destClass = SQLTypeMapper.getInstance().getJavaClass(
-                    columnInfo.getSQLType() );
+                Class<?> destClass = SQLTypeMapper.getInstance().getJavaClass( columnInfo.getSQLType() );
 
                 Object val = bean.readValue( key );
                 try
@@ -190,9 +189,8 @@ public class SQLTableProcessor < T extends Fauxjo >
                 }
                 catch ( FauxjoException ex )
                 {
-                    throw new FauxjoException( "Failed to coerce " +
-                        getQualifiedName( _tableName ) + "." + columnInfo.getRealName() +
-                        " for insert: " + key + ":" + columnInfo.getRealName(), ex );
+                    throw new FauxjoException( "Failed to coerce " + getQualifiedName( _tableName ) + "."
+                        + columnInfo.getRealName() + " for insert: " + key + ":" + columnInfo.getRealName(), ex );
                 }
 
                 // If this is a primary key and it is null, try to get sequence name from
@@ -202,8 +200,7 @@ public class SQLTableProcessor < T extends Fauxjo >
                 {
                     continue;
                 }
-                else if ( valueDef.isPrimaryKey() && val == null &&
-                    valueDef.getPrimaryKeySequenceName() != null )
+                else if ( valueDef.isPrimaryKey() && val == null && valueDef.getPrimaryKeySequenceName() != null )
                 {
                     generatedKeys.put( key, valueDef.getPrimaryKeySequenceName() );
                     continue;
@@ -218,8 +215,8 @@ public class SQLTableProcessor < T extends Fauxjo >
                 questionMarks.append( "?" );
                 values.add( new DataValue( val, columnInfo.getSQLType() ) );
             }
-            String sql = "insert into " + getQualifiedName( _tableName ) + " (" + columns +
-                ") values (" + questionMarks + ")";
+            String sql = "insert into " + getQualifiedName( _tableName ) + " (" + columns + ") values ("
+                + questionMarks + ")";
             PreparedStatement statement = getConnection().prepareStatement( sql );
             int propIndex = 1;
             for ( DataValue value : values )
@@ -235,8 +232,8 @@ public class SQLTableProcessor < T extends Fauxjo >
             for ( String key : generatedKeys.keySet() )
             {
                 Statement gkStatement = getConnection().createStatement();
-                ResultSet rs = gkStatement.executeQuery( "select currval('" +
-                    getQualifiedName( generatedKeys.get( key ) ) + "')" );
+                ResultSet rs = gkStatement.executeQuery( "select currval('"
+                    + getQualifiedName( generatedKeys.get( key ) ) + "')" );
                 rs.next();
                 Object value = rs.getObject( 1 );
                 rs.close();
@@ -268,8 +265,7 @@ public class SQLTableProcessor < T extends Fauxjo >
             for ( String key : getDBColumnInfos().keySet() )
             {
                 ColumnInfo columnInfo = getDBColumnInfos().get( key );
-                Class<?> destClass = SQLTypeMapper.getInstance().getJavaClass(
-                    columnInfo.getSQLType() );
+                Class<?> destClass = SQLTypeMapper.getInstance().getJavaClass( columnInfo.getSQLType() );
 
                 Object val = bean.readValue( key );
                 try
@@ -278,9 +274,8 @@ public class SQLTableProcessor < T extends Fauxjo >
                 }
                 catch ( FauxjoException ex )
                 {
-                    throw new FauxjoException( "Failed to coerce " +
-                        getQualifiedName( _tableName ) + "." + columnInfo.getRealName() +
-                        " for insert: " + key + ":" + columnInfo.getRealName(), ex );
+                    throw new FauxjoException( "Failed to coerce " + getQualifiedName( _tableName ) + "."
+                        + columnInfo.getRealName() + " for insert: " + key + ":" + columnInfo.getRealName(), ex );
                 }
 
                 ValueDef valueDef = getValueDefs( bean ).get( key );
@@ -307,8 +302,7 @@ public class SQLTableProcessor < T extends Fauxjo >
                 }
             }
 
-            String sql = "update " + getQualifiedName( _tableName ) + " set " + setterClause +
-                " where " + whereClause;
+            String sql = "update " + getQualifiedName( _tableName ) + " set " + setterClause + " where " + whereClause;
             PreparedStatement statement = getConnection().prepareStatement( sql );
             int propIndex = 1;
             for ( DataValue value : values )
@@ -349,8 +343,7 @@ public class SQLTableProcessor < T extends Fauxjo >
                 }
 
                 ColumnInfo columnInfo = getDBColumnInfos().get( key );
-                Class<?> destClass = SQLTypeMapper.getInstance().getJavaClass(
-                    columnInfo.getSQLType() );
+                Class<?> destClass = SQLTypeMapper.getInstance().getJavaClass( columnInfo.getSQLType() );
 
                 Object val = bean.readValue( key );
                 val = _coercer.coerce( val, destClass );
@@ -390,8 +383,8 @@ public class SQLTableProcessor < T extends Fauxjo >
             throw new FauxjoException( "Sequence name must not be null or empty." );
         }
 
-        PreparedStatement getKey = getConnection().prepareStatement( "select nextval('" +
-            getQualifiedName( sequenceName ) + "')" );
+        PreparedStatement getKey = getConnection().prepareStatement(
+            "select nextval('" + getQualifiedName( sequenceName ) + "')" );
 
         ResultSet rs = getKey.executeQuery();
         rs.next();
@@ -437,7 +430,7 @@ public class SQLTableProcessor < T extends Fauxjo >
             ResultSetMetaData meta = rs.getMetaData();
             int columnCount = meta.getColumnCount();
 
-            Map<String,Object> record = new HashMap<String,Object>();
+            Map<String, Object> record = new HashMap<String, Object>();
             for ( int i = 1; i <= columnCount; i++ )
             {
                 record.put( meta.getColumnName( i ).toLowerCase(), rs.getObject( i ) );
@@ -451,14 +444,14 @@ public class SQLTableProcessor < T extends Fauxjo >
         }
     }
 
-    protected T processRecord( Map<String,Object> record )
+    protected T processRecord( Map<String, Object> record )
         throws SQLException
     {
         T bean = null;
 
         try
         {
-            bean = (T)_beanClass.newInstance();
+            bean = (T) _beanClass.newInstance();
         }
         catch ( Exception ex )
         {
@@ -502,7 +495,7 @@ public class SQLTableProcessor < T extends Fauxjo >
         cacheColumnInfos( false );
     }
 
-    private Map<String,ColumnInfo> getDBColumnInfos()
+    private Map<String, ColumnInfo> getDBColumnInfos()
         throws SQLException
     {
         if ( _dbColumnInfos == null )
@@ -528,8 +521,7 @@ public class SQLTableProcessor < T extends Fauxjo >
         {
             if ( throwException )
             {
-                throw new FauxjoException( String.format( "Table %s does not exist.",
-                    getQualifiedName( _tableName ) ) );
+                throw new FauxjoException( String.format( "Table %s does not exist.", getQualifiedName( _tableName ) ) );
             }
             else
             {
@@ -537,10 +529,9 @@ public class SQLTableProcessor < T extends Fauxjo >
             }
         }
 
-        _dbColumnInfos = new HashMap<String,ColumnInfo>();
+        _dbColumnInfos = new HashMap<String, ColumnInfo>();
 
-        ResultSet rs = getConnection().getMetaData().getColumns( null, _schema.getSchemaName(),
-            realTableName, null );
+        ResultSet rs = getConnection().getMetaData().getColumns( null, _schema.getSchemaName(), realTableName, null );
         while ( rs.next() )
         {
             String realName = rs.getString( COLUMN_NAME );
@@ -552,8 +543,8 @@ public class SQLTableProcessor < T extends Fauxjo >
     }
 
     /**
-     * This takes a case insensitive tableName and searches for it in the connection's meta data
-     * to find the connections case sensitive tableName.
+     * This takes a case insensitive tableName and searches for it in the connection's meta data to find the connections
+     * case sensitive tableName.
      */
     private String getRealTableName( String tableName )
         throws SQLException
@@ -588,10 +579,9 @@ public class SQLTableProcessor < T extends Fauxjo >
     }
 
     /**
-     * See if the ValueDefs have already been cached, if not call this bean to get it's
-     * ValueDefs.
+     * See if the ValueDefs have already been cached, if not call this bean to get it's ValueDefs.
      */
-    private Map<String,ValueDef> getValueDefs( Fauxjo bean )
+    private Map<String, ValueDef> getValueDefs( Fauxjo bean )
         throws FauxjoException
     {
         if ( _valueDefs == null )
@@ -660,4 +650,3 @@ public class SQLTableProcessor < T extends Fauxjo >
         }
     }
 }
-

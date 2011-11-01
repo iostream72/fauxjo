@@ -57,6 +57,7 @@ public class Coercer
         _coercerMap.put( java.util.Date.class, new UtilDateCoercer() );
         _coercerMap.put( java.sql.Date.class, new SQLDateCoercer() );
         _coercerMap.put( java.sql.Timestamp.class, new SQLTimestampCoercer() );
+        _coercerMap.put( UUID.class, new UUIDCoercer() );
     }
 
     // ============================================================

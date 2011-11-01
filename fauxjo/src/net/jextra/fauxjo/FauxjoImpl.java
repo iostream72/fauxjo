@@ -29,15 +29,15 @@ import java.util.*;
 
 /**
  * <p>
- * Concrete implementation of {@link Fauxjo} interface that is {@link FauxjoPrimaryKey} annotation
- * aware.
- * </p><p>
- * This implementation assumes for that to test if the object
- * is already in the database or not that {@link #isInDatabase()} just returns the
- * inverse value calculated via {@link #hasEmptyPrimaryKey()}.
- * </p><p>
- * Note: This implementation overrides the {@code hashCode} and {@code equals} methods
- * in order to compare rows in the database properly (e.g. same primary key).
+ * Concrete implementation of {@link Fauxjo} interface that is {@link FauxjoPrimaryKey} annotation aware.
+ * </p>
+ * <p>
+ * This implementation assumes for that to test if the object is already in the database or not that
+ * {@link #isInDatabase()} just returns the inverse value calculated via {@link #hasEmptyPrimaryKey()}.
+ * </p>
+ * <p>
+ * Note: This implementation overrides the {@code hashCode} and {@code equals} methods in order to compare rows in the
+ * database properly (e.g. same primary key).
  * </p>
  */
 public abstract class FauxjoImpl implements Fauxjo
@@ -46,7 +46,7 @@ public abstract class FauxjoImpl implements Fauxjo
     // Fields
     // ============================================================
 
-    private static HashMap<Class<?>,ColumnDefsCache> _caches;
+    private static HashMap<Class<?>, ColumnDefsCache> _caches;
 
     // ============================================================
     // Methods
@@ -56,7 +56,7 @@ public abstract class FauxjoImpl implements Fauxjo
     // public
     // ----------
 
-    public Map<String,ValueDef> getValueDefs()
+    public Map<String, ValueDef> getValueDefs()
         throws FauxjoException
     {
         try
@@ -95,26 +95,34 @@ public abstract class FauxjoImpl implements Fauxjo
     public void writeValue( String key, Object value )
         throws FauxjoException
     {
+        ColumnDefsCache cache = null;
         try
         {
-            ColumnDefsCache cache = getColumnDefsCache();
-
-            Method writeMethod = cache._writeMethods.get( key );
-            if ( writeMethod != null )
-            {
-                writeMethod.invoke( this, value );
-            }
+            cache = getColumnDefsCache();
         }
         catch ( Exception ex )
         {
             throw new FauxjoException( ex );
         }
+
+        Method writeMethod = cache._writeMethods.get( key );
+        if ( writeMethod != null )
+        {
+            try
+            {
+                writeMethod.invoke( this, value );
+            }
+            catch ( Exception ex )
+            {
+                throw new FauxjoException( "Unable to invoke write method [" + writeMethod.getName() + "]", ex );
+            }
+        }
     }
 
     /**
-     * @return true if object is already in the database. The default behavior is to return the
-     * inverse value of {@link #hasEmptyPrimaryKey(Fauxjo)}. This should be overridden if that
-     * is not accurate for this Fauxjo bean.
+     * @return true if object is already in the database. The default behavior is to return the inverse value of
+     *         {@link #hasEmptyPrimaryKey(Fauxjo)}. This should be overridden if that is not accurate for this Fauxjo
+     *         bean.
      */
     public boolean isInDatabase()
         throws FauxjoException
@@ -139,7 +147,8 @@ public abstract class FauxjoImpl implements Fauxjo
             int hashCode = 0;
             for ( Object item : keys )
             {
-                hashCode += item == null ? 0 : item.hashCode();
+                hashCode += item == null
+                    ? 0 : item.hashCode();
             }
 
             return hashCode;
@@ -167,7 +176,7 @@ public abstract class FauxjoImpl implements Fauxjo
                 return false;
             }
 
-            FauxjoImpl other = (FauxjoImpl)otherObj;
+            FauxjoImpl other = (FauxjoImpl) otherObj;
 
             List<Object> keys1 = getPrimaryKeyValues();
             List<Object> keys2 = other.getPrimaryKeyValues();
@@ -207,8 +216,7 @@ public abstract class FauxjoImpl implements Fauxjo
     // ----------
 
     /**
-     * @return Values of primary keys in a consistent order so that it can be compared to another
-     * Fauxjo beans.
+     * @return Values of primary keys in a consistent order so that it can be compared to another Fauxjo beans.
      */
     protected List<Object> getPrimaryKeyValues()
         throws FauxjoException
@@ -218,7 +226,7 @@ public abstract class FauxjoImpl implements Fauxjo
             ColumnDefsCache cache = getColumnDefsCache();
 
             // Arbitrarily ordered by keys.
-            TreeMap<String,Object> keys = new TreeMap<String,Object>();
+            TreeMap<String, Object> keys = new TreeMap<String, Object>();
 
             for ( String key : getValueDefs().keySet() )
             {
@@ -242,8 +250,7 @@ public abstract class FauxjoImpl implements Fauxjo
     }
 
     /**
-     * @return false if any of the primary key values are null. This is implied that it is
-     * not actually in the database.
+     * @return false if any of the primary key values are null. This is implied that it is not actually in the database.
      */
     protected boolean hasEmptyPrimaryKey()
         throws FauxjoException
@@ -273,7 +280,7 @@ public abstract class FauxjoImpl implements Fauxjo
     {
         if ( _caches == null )
         {
-            _caches = new HashMap<Class<?>,ColumnDefsCache>();
+            _caches = new HashMap<Class<?>, ColumnDefsCache>();
         }
 
         ColumnDefsCache cache = _caches.get( getClass() );
@@ -287,9 +294,9 @@ public abstract class FauxjoImpl implements Fauxjo
         //
         cache = new ColumnDefsCache();
         _caches.put( getClass(), cache );
-        cache._columnDefs = new TreeMap<String,ValueDef>();
-        cache._writeMethods = new TreeMap<String,Method>();
-        cache._readMethods = new TreeMap<String,Method>();
+        cache._columnDefs = new TreeMap<String, ValueDef>();
+        cache._writeMethods = new TreeMap<String, Method>();
+        cache._readMethods = new TreeMap<String, Method>();
         BeanInfo info = Introspector.getBeanInfo( getClass() );
 
         for ( PropertyDescriptor prop : info.getPropertyDescriptors() )
@@ -348,7 +355,7 @@ public abstract class FauxjoImpl implements Fauxjo
                 {
                     def.setPrimaryKey( true );
 
-                    FauxjoPrimaryKey pkAnn = (FauxjoPrimaryKey)prop.getReadMethod().getAnnotation(
+                    FauxjoPrimaryKey pkAnn = (FauxjoPrimaryKey) prop.getReadMethod().getAnnotation(
                         FauxjoPrimaryKey.class );
                     if ( pkAnn.value() != null && !pkAnn.value().trim().isEmpty() )
                     {
@@ -367,9 +374,8 @@ public abstract class FauxjoImpl implements Fauxjo
 
     private static class ColumnDefsCache
     {
-        public Map<String,ValueDef> _columnDefs;
-        public Map<String,Method> _writeMethods;
-        public Map<String,Method> _readMethods;
+        public Map<String, ValueDef> _columnDefs;
+        public Map<String, Method> _writeMethods;
+        public Map<String, Method> _readMethods;
     }
 }
-
