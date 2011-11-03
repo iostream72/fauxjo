@@ -4,6 +4,6 @@
 
     <file name="fauxjo.jar"/>
 
-    <dependency storePath="postgresql-jdbc/*"/>
+    <dependency name="postgresql-jdbc" version="*"/>
 
 </nubbin>
