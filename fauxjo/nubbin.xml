@@ -2,10 +2,8 @@
 
 <nubbin name="fauxjo">
 
-    <bundle name="release">
-        <file name="fauxjo.jar" source="fauxjo.src.zip"/>
-    </bundle>
+    <file name="fauxjo.jar"/>
 
-    <dependency externalPath="postgresql-jdbc/*"/>
+    <dependency storePath="postgresql-jdbc/*"/>
 
 </nubbin>
