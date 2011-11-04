@@ -43,14 +43,12 @@ public class UUIDCoercer implements TypeCoercer<UUID>
         {
             return value.toString();
         }
-        else if ( destClass.equals(  Object.class ) )
+        else if ( destClass.equals( Object.class ) )
         {
             return value;
         }
 
-        throw new FauxjoException( "The UUIDCoercer does not know how to convert to type " +
-            destClass );
+        throw new FauxjoException( "The UUIDCoercer does not know how to convert to type " + destClass );
     }
 
 }
-
