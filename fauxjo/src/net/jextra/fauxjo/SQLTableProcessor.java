@@ -27,9 +27,9 @@ import java.sql.*;
 import java.util.*;
 
 /**
- * Core Business logic for interacting with an SQL database table.
+ * Core Business logic for interacting with a single SQL database table.
  */
-public class SQLTableProcessor<T extends Fauxjo>
+public class SQLTableProcessor<T extends Fauxjo> extends AbstractSQLProcessor<T>
 {
     // ============================================================
     // Fields
@@ -41,17 +41,12 @@ public class SQLTableProcessor<T extends Fauxjo>
 
     private Schema _schema;
     private String _tableName;
-    private Class<T> _beanClass;
 
     private Coercer _coercer;
 
     // Key = Lowercase column name (in code known as the "key").
     // Value = Name of column used by the database and SQL type.
     private Map<String, ColumnInfo> _dbColumnInfos;
-
-    // Key = Lowercase column name (in code known as the "key").
-    // Value = Information about the bean property.
-    private Map<String, ValueDef> _valueDefs;
 
     // ============================================================
     // Constructors
@@ -60,9 +55,9 @@ public class SQLTableProcessor<T extends Fauxjo>
     public SQLTableProcessor( Schema schema, String tableName, Class<T> beanClass )
         throws SQLException
     {
+    	super( new ResultSetRecordProcessor<T>( beanClass ) );
         _schema = schema;
         _tableName = tableName;
-        _beanClass = beanClass;
         _coercer = new Coercer();
         init();
     }
@@ -81,93 +76,10 @@ public class SQLTableProcessor<T extends Fauxjo>
     }
 
     /**
-     * Create an item from the first row in the ResultSet or return null if empty ResultSet.
-     */
-    public T getFirst( ResultSet rs )
-        throws SQLException
-    {
-        return getFirst( rs, false, false );
-    }
-
-    /**
-     * Create an item from the first row in the ResultSet or return null or throw exception if empty ResultSet.
-     */
-    public T getFirst( ResultSet rs, boolean errorIfEmpty )
-        throws SQLException
-    {
-        return getFirst( rs, errorIfEmpty, false );
-    }
-
-    /**
-     * Create ONLY item from the ResultSet or return null if empty ResultSet.
-     */
-    public T getUnique( ResultSet rs )
-        throws SQLException
-    {
-        return getFirst( rs, false, true );
-    }
-
-    /**
-     * Create ONLY item from the ResultSet or return null or throw exception if empty ResultSet.
-     */
-    public T getUnique( ResultSet rs, boolean errorIfEmpty )
-        throws SQLException
-    {
-        return getFirst( rs, errorIfEmpty, true );
-    }
-
-    /**
-     * Get first item from result-set.
-     */
-    public T getFirst( ResultSet rs, boolean errorIfEmpty, boolean errorIfNotUnique )
-        throws SQLException
-    {
-        List<T> beans = processResultSet( rs, 2 );
-        if ( beans == null || beans.isEmpty() )
-        {
-            if ( errorIfEmpty )
-            {
-                throw new FauxjoException( "ResultSet is improperly empty." );
-            }
-
-            return null;
-        }
-
-        if ( errorIfNotUnique && beans.size() != 1 )
-        {
-            throw new FauxjoException( "ResultSet improperly contained more than one item." );
-        }
-
-        return beans.get( 0 );
-    }
-
-    /**
-     * Convert each row in the result set to an item.
-     */
-    public List<T> getList( ResultSet rs )
-        throws SQLException
-    {
-        return getList( rs, Integer.MAX_VALUE );
-    }
-
-    public List<T> getList( ResultSet rs, int maxNumItems )
-        throws SQLException
-    {
-        return processResultSet( rs, maxNumItems );
-    }
-
-    public ResultSetIterator<T> getIterator( ResultSet rs )
-        throws SQLException
-    {
-        ResultSetIterator<T> iterator = new ResultSetIterator<T>( this, rs );
-
-        return iterator;
-    }
-
-    /**
      * Convert the bean into an insert statement and execute it.
      */
-    public boolean insert( T bean )
+    @Override
+    public boolean insert( Fauxjo bean )
         throws SQLException
     {
         try
@@ -195,7 +107,7 @@ public class SQLTableProcessor<T extends Fauxjo>
 
                 // If this is a primary key and it is null, try to get sequence name from
                 // annotation and not include this column in insert statement.
-                ValueDef valueDef = getValueDefs( bean ).get( key );
+                ValueDef valueDef = getResultSetRecordProcessor().getBeanValueDefs( bean ).get( key );
                 if ( valueDef == null )
                 {
                     continue;
@@ -253,7 +165,8 @@ public class SQLTableProcessor<T extends Fauxjo>
     /**
      * Convert the bean into an update statement and execute it.
      */
-    public int update( T bean )
+    @Override
+    public int update( Fauxjo bean )
         throws SQLException
     {
         try
@@ -278,7 +191,7 @@ public class SQLTableProcessor<T extends Fauxjo>
                         + columnInfo.getRealName() + " for insert: " + key + ":" + columnInfo.getRealName(), ex );
                 }
 
-                ValueDef valueDef = getValueDefs( bean ).get( key );
+                ValueDef valueDef = getResultSetRecordProcessor().getBeanValueDefs( bean ).get( key );
                 if ( valueDef != null )
                 {
                     if ( valueDef.isPrimaryKey() )
@@ -303,6 +216,7 @@ public class SQLTableProcessor<T extends Fauxjo>
             }
 
             String sql = "update " + getQualifiedName( _tableName ) + " set " + setterClause + " where " + whereClause;
+            System.out.println( sql );
             PreparedStatement statement = getConnection().prepareStatement( sql );
             int propIndex = 1;
             for ( DataValue value : values )
@@ -327,16 +241,17 @@ public class SQLTableProcessor<T extends Fauxjo>
     /**
      * Convert the bean into an delete statement and execute it.
      */
-    public boolean delete( T bean )
+    @Override
+    public boolean delete( Fauxjo bean )
         throws SQLException
     {
         try
         {
             StringBuilder whereClause = new StringBuilder();
             List<DataValue> primaryKeyValues = new ArrayList<DataValue>();
-            for ( String key : getValueDefs( bean ).keySet() )
+            for ( String key : getResultSetRecordProcessor().getBeanValueDefs( bean ).keySet() )
             {
-                ValueDef valueDef = getValueDefs( bean ).get( key );
+                ValueDef valueDef = getResultSetRecordProcessor().getBeanValueDefs( bean ).get( key );
                 if ( valueDef == null || !valueDef.isPrimaryKey() )
                 {
                     continue;
@@ -372,6 +287,28 @@ public class SQLTableProcessor<T extends Fauxjo>
         }
     }
 
+    @Override
+    public String buildBasicSelect( String clause )
+    {
+        String c = "";
+        if ( clause != null && !clause.trim().isEmpty() )
+        {
+            c = clause;
+        }
+        return "select * from " + _schema.getQualifiedName( _tableName ) + " " + c;
+    }
+
+    @Override
+    public Schema getSchema()
+    {
+    	return _schema;
+    }
+
+    public String getTableName()
+    {
+    	return _tableName;
+    }
+
     /**
      * Get the next value from a sequence.
      */
@@ -404,85 +341,6 @@ public class SQLTableProcessor<T extends Fauxjo>
     private String getQualifiedName( String name )
     {
         return _schema.getQualifiedName( name );
-    }
-
-    protected List<T> processResultSet( ResultSet rs, int numRows )
-        throws SQLException
-    {
-        List<T> list = new ArrayList<T>();
-
-        int counter = 0;
-        while ( rs.next() && ( counter < numRows ) )
-        {
-            list.add( convertResultSetRow( rs ) );
-            counter++;
-        }
-        rs.close();
-
-        return list;
-    }
-
-    protected T convertResultSetRow( ResultSet rs )
-        throws SQLException
-    {
-        try
-        {
-            ResultSetMetaData meta = rs.getMetaData();
-            int columnCount = meta.getColumnCount();
-
-            Map<String, Object> record = new HashMap<String, Object>();
-            for ( int i = 1; i <= columnCount; i++ )
-            {
-                record.put( meta.getColumnName( i ).toLowerCase(), rs.getObject( i ) );
-            }
-
-            return processRecord( record );
-        }
-        catch ( Exception ex )
-        {
-            throw new FauxjoException( ex );
-        }
-    }
-
-    protected T processRecord( Map<String, Object> record )
-        throws SQLException
-    {
-        T bean = null;
-
-        try
-        {
-            bean = (T) _beanClass.newInstance();
-        }
-        catch ( Exception ex )
-        {
-            throw new FauxjoException( ex );
-        }
-
-        for ( String key : record.keySet() )
-        {
-            ValueDef valueDef = getValueDefs( bean ).get( key );
-            if ( valueDef != null )
-            {
-                Object value = record.get( key );
-
-                try
-                {
-                    if ( value != null )
-                    {
-                        Class<?> destClass = valueDef.getValueClass();
-                        value = _coercer.coerce( value, destClass );
-                    }
-                }
-                catch ( FauxjoException ex )
-                {
-                    throw new FauxjoException( "Failed to coerce " + key, ex );
-                }
-
-                bean.writeValue( key, value );
-            }
-        }
-
-        return bean;
     }
 
     // ----------
@@ -576,20 +434,6 @@ public class SQLTableProcessor<T extends Fauxjo>
         rs.close();
 
         return null;
-    }
-
-    /**
-     * See if the ValueDefs have already been cached, if not call this bean to get it's ValueDefs.
-     */
-    private Map<String, ValueDef> getValueDefs( Fauxjo bean )
-        throws FauxjoException
-    {
-        if ( _valueDefs == null )
-        {
-            _valueDefs = bean.getValueDefs();
-        }
-
-        return _valueDefs;
     }
 
     // ============================================================

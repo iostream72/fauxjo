@@ -37,7 +37,7 @@ public class ResultSetIterator < T extends Fauxjo > implements Iterator<T>, Iter
     // Fields
     // ============================================================
 
-    private SQLTableProcessor<T> _sqlProcessor;
+    private ResultSetRecordProcessor<T> _sqlProcessor;
     private ResultSet _resultSet;
     private boolean _hasNext;
 
@@ -45,7 +45,7 @@ public class ResultSetIterator < T extends Fauxjo > implements Iterator<T>, Iter
     // Constructors
     // ============================================================
 
-    public ResultSetIterator( SQLTableProcessor<T> sqlProcessor, ResultSet resultSet )
+    public ResultSetIterator( ResultSetRecordProcessor<T> sqlProcessor, ResultSet resultSet )
         throws SQLException
     {
         _sqlProcessor = sqlProcessor;

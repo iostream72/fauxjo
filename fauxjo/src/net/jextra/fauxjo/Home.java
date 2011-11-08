@@ -37,10 +37,7 @@ public class Home < T extends Fauxjo >
     // Fields
     // ============================================================
 
-    private Schema _schema;
-    private Class<T> _beanClass;
-    private String _tableName;
-    private SQLTableProcessor<T> _sqlProcessor;
+    private SQLProcessor<T> _sqlProcessor;
 
     // ============================================================
     // Constructors
@@ -49,10 +46,12 @@ public class Home < T extends Fauxjo >
     public Home( Schema schema, Class<T> beanClass, String tableName )
         throws SQLException
     {
-        _schema = schema;
-        _beanClass = beanClass;
-        _tableName = tableName;
-        _sqlProcessor = new SQLTableProcessor<T>( _schema, _tableName, _beanClass );
+        _sqlProcessor = new SQLTableProcessor<T>( schema, tableName, beanClass );
+    }
+
+    public Home( Schema schema, Class<T> beanClass, SQLProcessor<T> sqlProcessor )
+    {
+    	_sqlProcessor = sqlProcessor;
     }
 
     // ============================================================
@@ -66,14 +65,21 @@ public class Home < T extends Fauxjo >
     public PreparedStatement prepareStatement( String sql )
         throws SQLException
     {
-        return _schema.prepareStatement( sql );
+        return getSchema().prepareStatement( sql );
     }
 
+    @Deprecated
     public String getTableName()
     {
-        return _tableName;
+        if ( _sqlProcessor instanceof SQLTableProcessor<?> )
+        {
+        	return ((SQLTableProcessor<?>)_sqlProcessor).getTableName();
+        }
+
+        return null;
     }
 
+    @Deprecated
     public String getQualifiedTableName()
     {
         return getQualifiedName( getTableName() );
@@ -81,12 +87,12 @@ public class Home < T extends Fauxjo >
 
     public String getQualifiedName( String name )
     {
-        return _schema.getQualifiedName( name );
+        return getSchema().getQualifiedName( name );
     }
 
     public String getSchemaName()
     {
-        return _schema.getSchemaName();
+        return getSchema().getSchemaName();
     }
 
     public boolean insert( T bean )
@@ -136,16 +142,22 @@ public class Home < T extends Fauxjo >
 
     protected Schema getSchema()
     {
-        return _schema;
+        return _sqlProcessor.getSchema();
     }
 
     protected Connection getConnection()
         throws SQLException
     {
-        return _schema.getConnection();
+        return getSchema().getConnection();
     }
 
-    protected SQLTableProcessor<T> getSQLTableProcessor()
+    protected SQLProcessor<T> getSQLProcessor()
+    {
+    	return _sqlProcessor;
+    }
+
+    @Deprecated
+    protected SQLProcessor<T> getSQLTableProcessor()
     {
         return _sqlProcessor;
     }
@@ -194,12 +206,7 @@ public class Home < T extends Fauxjo >
 
     protected String buildBasicSelect( String clause )
     {
-        String c = "";
-        if ( clause != null && !clause.trim().isEmpty() )
-        {
-            c = clause;
-        }
-        return "select * from " + getQualifiedTableName() + " " + c;
+    	return _sqlProcessor.buildBasicSelect( clause );
     }
 
 }
