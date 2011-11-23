@@ -31,7 +31,7 @@ import java.util.*;
  * Default implementation of a Home object that represents a single table in the database.
  * </p>
  */
-public class Home < T extends Fauxjo >
+public class Home<T extends Fauxjo>
 {
     // ============================================================
     // Fields
@@ -51,7 +51,7 @@ public class Home < T extends Fauxjo >
 
     public Home( Schema schema, Class<T> beanClass, SQLProcessor<T> sqlProcessor )
     {
-    	_sqlProcessor = sqlProcessor;
+        _sqlProcessor = sqlProcessor;
     }
 
     // ============================================================
@@ -73,7 +73,7 @@ public class Home < T extends Fauxjo >
     {
         if ( _sqlProcessor instanceof SQLTableProcessor<?> )
         {
-        	return ((SQLTableProcessor<?>)_sqlProcessor).getTableName();
+            return ( (SQLTableProcessor<?>) _sqlProcessor ).getTableName();
         }
 
         return null;
@@ -136,6 +136,53 @@ public class Home < T extends Fauxjo >
         return true;
     }
 
+    public T getFirst( ResultSet rs )
+        throws SQLException
+    {
+        return _sqlProcessor.getFirst( rs );
+    }
+
+    public T getFirst( ResultSet rs, boolean errorIfEmpty )
+        throws SQLException
+    {
+        return _sqlProcessor.getFirst( rs, errorIfEmpty );
+    }
+
+    public T getUnique( ResultSet rs )
+        throws SQLException
+    {
+        return _sqlProcessor.getUnique( rs );
+    }
+
+    public T getUnique( ResultSet rs, boolean errorIfEmpty )
+        throws SQLException
+    {
+        return _sqlProcessor.getUnique( rs, errorIfEmpty );
+    }
+
+    public List<T> getList( ResultSet rs )
+        throws SQLException
+    {
+        return _sqlProcessor.getList( rs );
+    }
+
+    public List<T> getList( ResultSet rs, int maxNumRows )
+        throws SQLException
+    {
+        return _sqlProcessor.getList( rs, maxNumRows );
+    }
+
+    public ResultSetIterator<T> getIterator( ResultSet rs )
+        throws SQLException
+    {
+        return _sqlProcessor.getIterator( rs );
+    }
+
+    public String buildBasicSelect( String clause )
+    {
+        return _sqlProcessor.buildBasicSelect( clause );
+    }
+
     // ----------
     // protected
     // ----------
@@ -153,7 +200,7 @@ public class Home < T extends Fauxjo >
 
     protected SQLProcessor<T> getSQLProcessor()
     {
-    	return _sqlProcessor;
+        return _sqlProcessor;
     }
 
     @Deprecated
@@ -161,53 +208,4 @@ public class Home < T extends Fauxjo >
     {
         return _sqlProcessor;
     }
-
-    protected T getFirst( ResultSet rs )
-        throws SQLException
-    {
-        return _sqlProcessor.getFirst( rs );
-    }
-
-    protected T getFirst( ResultSet rs, boolean errorIfEmpty )
-        throws SQLException
-    {
-        return _sqlProcessor.getFirst( rs, errorIfEmpty );
-    }
-
-    protected T getUnique( ResultSet rs )
-        throws SQLException
-    {
-        return _sqlProcessor.getUnique( rs );
-    }
-
-    protected T getUnique( ResultSet rs, boolean errorIfEmpty )
-        throws SQLException
-    {
-        return _sqlProcessor.getUnique( rs, errorIfEmpty );
-    }
-
-    protected List<T> getList( ResultSet rs )
-        throws SQLException
-    {
-        return _sqlProcessor.getList( rs );
-    }
-
-    protected List<T> getList( ResultSet rs, int maxNumRows )
-        throws SQLException
-    {
-        return _sqlProcessor.getList( rs, maxNumRows );
-    }
-
-    protected ResultSetIterator<T> getIterator( ResultSet rs )
-        throws SQLException
-    {
-        return _sqlProcessor.getIterator( rs );
-    }
-
-    protected String buildBasicSelect( String clause )
-    {
-    	return _sqlProcessor.buildBasicSelect( clause );
-    }
-
 }
-

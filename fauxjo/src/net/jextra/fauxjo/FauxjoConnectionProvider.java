@@ -23,7 +23,7 @@
 
 package net.jextra.fauxjo;
 
-import java.sql.Connection;
+import java.sql.*;
 
 public interface FauxjoConnectionProvider
 {
