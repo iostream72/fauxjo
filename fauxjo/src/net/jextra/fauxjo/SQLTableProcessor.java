@@ -55,7 +55,7 @@ public class SQLTableProcessor<T extends Fauxjo> extends AbstractSQLProcessor<T>
     public SQLTableProcessor( Schema schema, String tableName, Class<T> beanClass )
         throws SQLException
     {
-    	super( new ResultSetRecordProcessor<T>( beanClass ) );
+        super( new ResultSetRecordProcessor<T>( beanClass ) );
         _schema = schema;
         _tableName = tableName;
         _coercer = new Coercer();
@@ -107,14 +107,14 @@ public class SQLTableProcessor<T extends Fauxjo> extends AbstractSQLProcessor<T>
 
                 // If this is a primary key and it is null, try to get sequence name from
                 // annotation and not include this column in insert statement.
-                ValueDef valueDef = getResultSetRecordProcessor().getBeanValueDefs( bean ).get( key );
-                if ( valueDef == null )
+                FieldDef fieldDef = getResultSetRecordProcessor().getBeanFieldDefs( bean ).get( key );
+                if ( fieldDef == null )
                 {
                     continue;
                 }
-                else if ( valueDef.isPrimaryKey() && val == null && valueDef.getPrimaryKeySequenceName() != null )
+                else if ( fieldDef.isPrimaryKey() && val == null && fieldDef.getPrimaryKeySequenceName() != null )
                 {
-                    generatedKeys.put( key, valueDef.getPrimaryKeySequenceName() );
+                    generatedKeys.put( key, fieldDef.getPrimaryKeySequenceName() );
                     continue;
                 }
 
@@ -158,6 +158,11 @@ public class SQLTableProcessor<T extends Fauxjo> extends AbstractSQLProcessor<T>
         }
         catch ( Exception ex )
         {
+            if ( ex instanceof FauxjoException )
+            {
+                throw (FauxjoException)ex;
+            }
+            
             throw new FauxjoException( ex );
         }
     }
@@ -191,10 +196,10 @@ public class SQLTableProcessor<T extends Fauxjo> extends AbstractSQLProcessor<T>
                         + columnInfo.getRealName() + " for insert: " + key + ":" + columnInfo.getRealName(), ex );
                 }
 
-                ValueDef valueDef = getResultSetRecordProcessor().getBeanValueDefs( bean ).get( key );
-                if ( valueDef != null )
+                FieldDef fieldDef = getResultSetRecordProcessor().getBeanFieldDefs( bean ).get( key );
+                if ( fieldDef != null )
                 {
-                    if ( valueDef.isPrimaryKey() )
+                    if ( fieldDef.isPrimaryKey() )
                     {
                         if ( whereClause.length() > 0 )
                         {
@@ -234,6 +239,11 @@ public class SQLTableProcessor<T extends Fauxjo> extends AbstractSQLProcessor<T>
         }
         catch ( Exception ex )
         {
+            if ( ex instanceof FauxjoException )
+            {
+                throw (FauxjoException)ex;
+            }
+            
             throw new FauxjoException( ex );
         }
     }
@@ -249,10 +259,11 @@ public class SQLTableProcessor<T extends Fauxjo> extends AbstractSQLProcessor<T>
         {
             StringBuilder whereClause = new StringBuilder();
             List<DataValue> primaryKeyValues = new ArrayList<DataValue>();
-            for ( String key : getResultSetRecordProcessor().getBeanValueDefs( bean ).keySet() )
+            Map<String, FieldDef> fieldDefs = getResultSetRecordProcessor().getBeanFieldDefs( bean );
+            for ( String key : fieldDefs.keySet() )
             {
-                ValueDef valueDef = getResultSetRecordProcessor().getBeanValueDefs( bean ).get( key );
-                if ( valueDef == null || !valueDef.isPrimaryKey() )
+                FieldDef fieldDef = fieldDefs.get( key );
+                if ( fieldDef == null || !fieldDef.isPrimaryKey() )
                 {
                     continue;
                 }
@@ -283,6 +294,11 @@ public class SQLTableProcessor<T extends Fauxjo> extends AbstractSQLProcessor<T>
         }
         catch ( Exception ex )
         {
+            if ( ex instanceof FauxjoException )
+            {
+                throw (FauxjoException)ex;
+            }
+            
             throw new FauxjoException( ex );
         }
     }
@@ -301,12 +317,12 @@ public class SQLTableProcessor<T extends Fauxjo> extends AbstractSQLProcessor<T>
     @Override
     public Schema getSchema()
     {
-    	return _schema;
+        return _schema;
     }
 
     public String getTableName()
     {
-    	return _tableName;
+        return _tableName;
     }
 
     /**

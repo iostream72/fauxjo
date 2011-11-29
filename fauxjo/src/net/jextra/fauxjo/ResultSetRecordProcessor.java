@@ -23,39 +23,36 @@
 
 package net.jextra.fauxjo;
 
-import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
-import java.sql.SQLException;
-import java.util.HashMap;
-import java.util.Map;
+import java.sql.*;
+import java.util.*;
 
 /**
  * Class that's responsible for converting a result set into a {@link Fauxjo} bean.
  *
  * @param <T> The {@link Fauxjo} bean this instance handles conversions for.
  */
-public class ResultSetRecordProcessor <T extends Fauxjo>
+public class ResultSetRecordProcessor<T extends Fauxjo>
 {
     // ============================================================
     // Fields
     // ============================================================
 
-	private Class<T> _beanClass;
-	private Coercer _coercer;
+    private Class<T> _beanClass;
+    private Coercer _coercer;
 
-	// Key = Lowercase column name (in code known as the "key").
+    // Key = Lowercase column name (in code known as the "key").
     // Value = Information about the bean property.
-    private Map<String, ValueDef> _valueDefs;
+    private Map<String, FieldDef> _fieldDefs;
 
     // ============================================================
     // Constructors
     // ============================================================
 
-	public ResultSetRecordProcessor( Class<T> beanClass )
-	{
-		_beanClass = beanClass;
-		_coercer = new Coercer();
-	}
+    public ResultSetRecordProcessor( Class<T> beanClass )
+    {
+        _beanClass = beanClass;
+        _coercer = new Coercer();
+    }
 
     // ============================================================
     // Methods
@@ -65,81 +62,87 @@ public class ResultSetRecordProcessor <T extends Fauxjo>
     // public
     // ----------
 
-	public T convertResultSetRow( ResultSet rs )
-	    throws SQLException
-	{
-	    try
-	    {
-	        ResultSetMetaData meta = rs.getMetaData();
-	        int columnCount = meta.getColumnCount();
+    public T convertResultSetRow( ResultSet rs )
+        throws SQLException
+    {
+        try
+        {
+            ResultSetMetaData meta = rs.getMetaData();
+            int columnCount = meta.getColumnCount();
 
-	        Map<String, Object> record = new HashMap<String, Object>();
-	        for ( int i = 1; i <= columnCount; i++ )
-	        {
-	            record.put( meta.getColumnName( i ).toLowerCase(), rs.getObject( i ) );
-	        }
+            Map<String, Object> record = new HashMap<String, Object>();
+            for ( int i = 1; i <= columnCount; i++ )
+            {
+                record.put( meta.getColumnName( i ).toLowerCase(), rs.getObject( i ) );
+            }
 
-	        return processRecord( record );
-	    }
-	    catch ( Exception ex )
-	    {
-	        throw new FauxjoException( ex );
-	    }
-	}
+            return processRecord( record );
+        }
+        catch ( Exception ex )
+        {
+            if ( ex instanceof FauxjoException )
+            {
+                throw (FauxjoException) ex;
+            }
 
-    public Map<String, ValueDef> getBeanValueDefs( Fauxjo bean )
-	    throws FauxjoException
-	{
-	    if ( _valueDefs == null )
-	    {
-	        _valueDefs = bean.getValueDefs();
-	    }
+            throw new FauxjoException( ex );
+        }
+    }
 
-	    return _valueDefs;
-	}
+    public Map<String, FieldDef> getBeanFieldDefs( Fauxjo bean )
+        throws FauxjoException
+    {
+        if ( _fieldDefs == null )
+        {
+            _fieldDefs = bean.getFieldDefs();
+        }
+
+        return _fieldDefs;
+    }
 
     // ----------
     // protected
     // ----------
 
-	protected T processRecord( Map<String, Object> record )
-	    throws SQLException
-	{
-	    T bean = null;
+    protected T processRecord( Map<String, Object> record )
+        throws SQLException
+    {
+        T bean = null;
 
-	    try
-	    {
-	        bean = (T) _beanClass.newInstance();
-	    }
-	    catch ( Exception ex )
-	    {
-	        throw new FauxjoException( ex );
-	    }
+        try
+        {
+            bean = (T) _beanClass.newInstance();
+        }
+        catch ( Exception ex )
+        {
+            throw new FauxjoException( ex );
+        }
 
-	    for ( String key : record.keySet() )
-	    {
-	        ValueDef valueDef = getBeanValueDefs( bean ).get( key );
-	        if ( valueDef != null )
-	        {
-	            Object value = record.get( key );
+        for ( String key : record.keySet() )
+        {
+            FieldDef fieldDef = getBeanFieldDefs( bean ).get( key );
+            // TODO: If column in database but not in bean, what to do?
+            if ( fieldDef != null )
+            {
+                Object value = record.get( key );
 
-	            try
-	            {
-	                if ( value != null )
-	                {
-	                    Class<?> destClass = valueDef.getValueClass();
-	                    value = _coercer.coerce( value, destClass );
-	                }
-	            }
-	            catch ( FauxjoException ex )
-	            {
-	                throw new FauxjoException( "Failed to coerce " + key, ex );
-	            }
+                try
+                {
+                    if ( value != null )
+                    {
+                        Class<?> destClass = fieldDef.getValueClass();
+                        value = _coercer.coerce( value, destClass );
+                    }
+                }
+                catch ( FauxjoException ex )
+                {
+                    throw new FauxjoException( "Failed to coerce " + key, ex );
+                }
 
-	            bean.writeValue( key, value );
-	        }
-	    }
+                bean.writeValue( key, value );
+            }
+        }
 
-	    return bean;
-	}
+        return bean;
+    }
 }

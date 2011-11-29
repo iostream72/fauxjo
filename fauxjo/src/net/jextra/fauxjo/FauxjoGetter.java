@@ -40,6 +40,6 @@ import java.lang.annotation.*;
 public @interface FauxjoGetter
 {
     // Column in the database for insert,update statements.
-    String column();
+    String value();
 }
 

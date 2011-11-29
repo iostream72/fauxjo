@@ -39,6 +39,6 @@ import java.lang.annotation.*;
 public @interface FauxjoSetter
 {
     // Column in the database from select statement.
-    String column();
+    String value();
 }
 

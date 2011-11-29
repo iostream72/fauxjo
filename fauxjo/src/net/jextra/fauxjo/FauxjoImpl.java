@@ -46,7 +46,16 @@ public abstract class FauxjoImpl implements Fauxjo
     // Fields
     // ============================================================
 
-    private static HashMap<Class<?>, ColumnDefsCache> _caches;
+    private static HashMap<Class<?>, FauxjoBeanDef> _caches;
+
+    // ============================================================
+    // Constructors
+    // ============================================================
+
+    static
+    {
+        _caches = new HashMap<Class<?>, FauxjoBeanDef>();
+    }
 
     // ============================================================
     // Methods
@@ -56,17 +65,22 @@ public abstract class FauxjoImpl implements Fauxjo
     // public
     // ----------
 
-    public Map<String, ValueDef> getValueDefs()
+    public Map<String, FieldDef> getFieldDefs()
         throws FauxjoException
     {
         try
         {
-            ColumnDefsCache cache = getColumnDefsCache();
+            FauxjoBeanDef beanDef = getFauxjoBeanDef();
 
-            return cache._columnDefs;
+            return beanDef.getFieldDefs();
         }
         catch ( Exception ex )
         {
+            if ( ex instanceof FauxjoException )
+            {
+                throw (FauxjoException)ex;
+            }
+            
             throw new FauxjoException( ex );
         }
     }
@@ -76,9 +90,16 @@ public abstract class FauxjoImpl implements Fauxjo
     {
         try
         {
-            ColumnDefsCache cache = getColumnDefsCache();
+            FauxjoBeanDef beanDef = _caches.get( getClass() );
 
-            Method readMethod = cache._readMethods.get( key );
+            Field field = beanDef.getField( key );
+            if ( field != null )
+            {
+                field.setAccessible( true );
+                return field.get( this );
+            }
+
+            Method readMethod = beanDef.getReadMethod( key );
             if ( readMethod != null )
             {
                 return readMethod.invoke( this, new Object[0] );
@@ -86,6 +107,11 @@ public abstract class FauxjoImpl implements Fauxjo
         }
         catch ( Exception ex )
         {
+            if ( ex instanceof FauxjoException )
+            {
+                throw (FauxjoException)ex;
+            }
+            
             throw new FauxjoException( ex );
         }
 
@@ -95,17 +121,24 @@ public abstract class FauxjoImpl implements Fauxjo
     public void writeValue( String key, Object value )
         throws FauxjoException
     {
-        ColumnDefsCache cache = null;
-        try
+        FauxjoBeanDef beanDef = _caches.get( getClass() );
+
+        Field field = beanDef.getField( key );
+        if ( field != null )
         {
-            cache = getColumnDefsCache();
-        }
-        catch ( Exception ex )
-        {
-            throw new FauxjoException( ex );
+            try
+            {
+                field.setAccessible( true );
+                field.set( this, value );
+                return;
+            }
+            catch ( Exception ex )
+            {
+                throw new FauxjoException( "Unable to write to field [" + field.getName() + "]", ex );
+            }
         }
 
-        Method writeMethod = cache._writeMethods.get( key );
+        Method writeMethod = beanDef.getWriteMethod( key );
         if ( writeMethod != null )
         {
             try
@@ -147,8 +180,7 @@ public abstract class FauxjoImpl implements Fauxjo
             int hashCode = 0;
             for ( Object item : keys )
             {
-                hashCode += item == null
-                    ? 0 : item.hashCode();
+                hashCode += item == null ? 0 : item.hashCode();
             }
 
             return hashCode;
@@ -223,16 +255,23 @@ public abstract class FauxjoImpl implements Fauxjo
     {
         try
         {
-            ColumnDefsCache cache = getColumnDefsCache();
-
             // Arbitrarily ordered by keys.
             TreeMap<String, Object> keys = new TreeMap<String, Object>();
 
-            for ( String key : getValueDefs().keySet() )
+            Map<String, FieldDef> map = getFieldDefs();
+            for ( String key : map.keySet() )
             {
-                if ( getValueDefs().get( key ).isPrimaryKey() )
+                FieldDef def = map.get( key );
+                if ( def.isPrimaryKey() )
                 {
-                    keys.put( key, cache._readMethods.get( key ).invoke( this, new Object[0] ) );
+                    if ( def.getField() != null )
+                    {
+                        keys.put( key, def.getField().get( this ) );
+                    }
+                    else
+                    {
+                        keys.put( key, def.getReadMethod().invoke( this, new Object[0] ) );
+                    }
                 }
             }
 
@@ -245,6 +284,11 @@ public abstract class FauxjoImpl implements Fauxjo
         }
         catch ( Exception ex )
         {
+            if ( ex instanceof FauxjoException )
+            {
+                throw (FauxjoException)ex;
+            }
+            
             throw new FauxjoException( ex );
         }
     }
@@ -275,107 +319,194 @@ public abstract class FauxjoImpl implements Fauxjo
         return false;
     }
 
-    protected ColumnDefsCache getColumnDefsCache()
+    protected FauxjoBeanDef getFauxjoBeanDef()
         throws FauxjoException, IntrospectionException
     {
-        if ( _caches == null )
+        FauxjoBeanDef beanDef = _caches.get( getClass() );
+        if ( beanDef != null )
         {
-            _caches = new HashMap<Class<?>, ColumnDefsCache>();
-        }
-
-        ColumnDefsCache cache = _caches.get( getClass() );
-        if ( cache != null )
-        {
-            return cache;
+            return beanDef;
         }
 
         //
         // Was not cached, collect information.
         //
-        cache = new ColumnDefsCache();
-        _caches.put( getClass(), cache );
-        cache._columnDefs = new TreeMap<String, ValueDef>();
-        cache._writeMethods = new TreeMap<String, Method>();
-        cache._readMethods = new TreeMap<String, Method>();
-        BeanInfo info = Introspector.getBeanInfo( getClass() );
+        beanDef = new FauxjoBeanDef();
+        _caches.put( getClass(), beanDef );
 
+        for ( Field field : getFauxjoFields( getClass() ) )
+        {
+            FauxjoField ann = field.getAnnotation( FauxjoField.class );
+            String key = ann.value();
+
+            beanDef.addField( key, field );
+
+            //
+            // Check if FauxjoPrimaryKey.
+            //
+            if ( field.isAnnotationPresent( FauxjoPrimaryKey.class ) )
+            {
+                beanDef.getFieldDef( key ).setPrimaryKey( true );
+
+                FauxjoPrimaryKey pkAnn = (FauxjoPrimaryKey) field.getAnnotation( FauxjoPrimaryKey.class );
+                if ( pkAnn.value() != null && !pkAnn.value().trim().isEmpty() )
+                {
+                    beanDef.getFieldDef( key ).setPrimaryKeySequenceName( pkAnn.value().trim() );
+                }
+            }
+        }
+
+        BeanInfo info = Introspector.getBeanInfo( getClass() );
         for ( PropertyDescriptor prop : info.getPropertyDescriptors() )
         {
             if ( prop.getWriteMethod() != null )
             {
-                String name = prop.getName();
-
-                //
-                // Check for override of column name in database for this setter method.
-                //
                 FauxjoSetter ann = prop.getWriteMethod().getAnnotation( FauxjoSetter.class );
                 if ( ann != null )
                 {
-                    name = ann.column();
-                }
-                String key = name.toLowerCase();
+                    String key = ann.value();
 
-                ValueDef def = cache._columnDefs.get( key );
-                if ( def == null )
-                {
-                    def = new ValueDef();
-                    def.setValueClass( prop.getWriteMethod().getParameterTypes()[0] );
-                    cache._columnDefs.put( key, def );
+                    Field field = beanDef.getField( key );
+                    if ( field != null )
+                    {
+                        throw new FauxjoException( "FauxjoSetter defined on method where a FauxjoField "
+                            + "already defines the link to the column [" + key + "]" );
+                    }
+
+                    beanDef.addWriteMethod( key, prop.getWriteMethod() );
                 }
-                cache._writeMethods.put( key, prop.getWriteMethod() );
             }
 
             if ( prop.getReadMethod() != null )
             {
-                String name = prop.getName();
-
-                //
-                // Check for override of column name in database for this getter method.
-                //
                 FauxjoGetter ann = prop.getReadMethod().getAnnotation( FauxjoGetter.class );
                 if ( ann != null )
                 {
-                    name = ann.column();
-                }
-                String key = name.toLowerCase();
+                    String key = ann.value();
 
-                ValueDef def = cache._columnDefs.get( key );
-                if ( def == null )
-                {
-                    def = new ValueDef();
-                    def.setValueClass( prop.getReadMethod().getReturnType() );
-                    cache._columnDefs.put( key, def );
-                }
-                cache._readMethods.put( key, prop.getReadMethod() );
-
-                //
-                // Check if FauxjoPrimaryKey.
-                //
-                if ( prop.getReadMethod().isAnnotationPresent( FauxjoPrimaryKey.class ) )
-                {
-                    def.setPrimaryKey( true );
-
-                    FauxjoPrimaryKey pkAnn = (FauxjoPrimaryKey) prop.getReadMethod().getAnnotation(
-                        FauxjoPrimaryKey.class );
-                    if ( pkAnn.value() != null && !pkAnn.value().trim().isEmpty() )
+                    Field field = beanDef.getField( key );
+                    if ( field != null )
                     {
-                        def.setPrimaryKeySequenceName( pkAnn.value().trim() );
+                        throw new FauxjoException( "FauxjoGetter defined on method where a FauxjoField "
+                            + "already defines the link to the column [" + key + "]" );
+                    }
+
+                    beanDef.addReadMethod( key, prop.getWriteMethod() );
+
+                    //
+                    // Check if FauxjoPrimaryKey.
+                    //
+                    if ( prop.getReadMethod().isAnnotationPresent( FauxjoPrimaryKey.class ) )
+                    {
+                        beanDef.getFieldDef( key ).setPrimaryKey( true );
+
+                        FauxjoPrimaryKey pkAnn = (FauxjoPrimaryKey) prop.getReadMethod().getAnnotation(
+                            FauxjoPrimaryKey.class );
+                        if ( pkAnn.value() != null && !pkAnn.value().trim().isEmpty() )
+                        {
+                            beanDef.getFieldDef( key ).setPrimaryKeySequenceName( pkAnn.value().trim() );
+                        }
                     }
                 }
             }
         }
 
-        return cache;
+        return beanDef;
+    }
+
+    // ----------
+    // private
+    // ----------
+
+    private Collection<Field> getFauxjoFields( Class<?> cls )
+    {
+        ArrayList<Field> list = new ArrayList<Field>();
+
+        if ( cls == null )
+        {
+            return list;
+        }
+
+        // Add super-classes fields first.
+        list.addAll( getFauxjoFields( cls.getSuperclass() ) );
+
+        for ( Field field : cls.getDeclaredFields() )
+        {
+            if ( field.isAnnotationPresent( FauxjoField.class ) )
+            {
+                list.add( field );
+            }
+        }
+
+        return list;
     }
 
     // ============================================================
     // Inner Classes
     // ============================================================
 
-    private static class ColumnDefsCache
+    private static class FauxjoBeanDef
     {
-        public Map<String, ValueDef> _columnDefs;
-        public Map<String, Method> _writeMethods;
-        public Map<String, Method> _readMethods;
+        private Map<String, FieldDef> _cache;
+
+        public FauxjoBeanDef()
+        {
+            _cache = new TreeMap<String, FieldDef>();
+        }
+
+        public void addField( String key, Field field ) throws FauxjoException
+        {
+            getFieldDef( key ).setField( field );
+        }
+
+        public Field getField( String key )
+        {
+            return getFieldDef( key ).getField();
+        }
+
+        public void addReadMethod( String key, Method method ) throws FauxjoException
+        {
+            getFieldDef( key ).setReadMethod( method );
+        }
+
+        public Method getReadMethod( String key )
+        {
+            return getFieldDef( key ).getReadMethod();
+        }
+
+        public void addWriteMethod( String key, Method method )
+            throws FauxjoException
+        {
+            getFieldDef( key ).setWriteMethod( method );
+        }
+
+        public Method getWriteMethod( String key )
+        {
+            return getFieldDef( key ).getWriteMethod();
+        }
+
+        private Map<String, FieldDef> getFieldDefs()
+        {
+            TreeMap<String, FieldDef> map = new TreeMap<String, FieldDef>();
+
+            for ( String key : _cache.keySet() )
+            {
+                map.put( key, getFieldDef( key ) );
+            }
+
+            return map;
+        }
+
+        private FieldDef getFieldDef( String key )
+        {
+            FieldDef def = _cache.get( key.toLowerCase() );
+            if ( def == null )
+            {
+                def = new FieldDef();
+                _cache.put( key.toLowerCase(), def );
+            }
+
+            return def;
+        }
     }
 }

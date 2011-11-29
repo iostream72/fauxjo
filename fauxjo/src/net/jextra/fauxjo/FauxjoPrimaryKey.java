@@ -34,7 +34,8 @@ import java.lang.annotation.*;
  * </p>
  */
 @Retention( RetentionPolicy.RUNTIME )
-@Target( ElementType.METHOD )
+@Target(
+{ ElementType.METHOD, ElementType.FIELD } )
 public @interface FauxjoPrimaryKey
 {
     // This is the sequence name to get new unique value.
