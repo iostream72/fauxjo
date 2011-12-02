@@ -221,7 +221,6 @@ public class SQLTableProcessor<T extends Fauxjo> extends AbstractSQLProcessor<T>
             }
 
             String sql = "update " + getQualifiedName( _tableName ) + " set " + setterClause + " where " + whereClause;
-            System.out.println( sql );
             PreparedStatement statement = getConnection().prepareStatement( sql );
             int propIndex = 1;
             for ( DataValue value : values )

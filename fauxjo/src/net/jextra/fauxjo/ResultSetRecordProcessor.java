@@ -118,7 +118,7 @@ public class ResultSetRecordProcessor<T extends Fauxjo>
             throw new FauxjoException( ex );
         }
 
-        Map<String, FieldDef> fieldDefs = getBeanFieldDefs( bean );
+        Map<String, FieldDef> fieldDefs = new HashMap<String, FieldDef>( getBeanFieldDefs( bean ) );
         for ( String key : record.keySet() )
         {
             FieldDef fieldDef = fieldDefs.get( key );
