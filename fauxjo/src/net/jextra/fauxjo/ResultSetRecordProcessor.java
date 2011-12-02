@@ -118,10 +118,15 @@ public class ResultSetRecordProcessor<T extends Fauxjo>
             throw new FauxjoException( ex );
         }
 
+        Map<String, FieldDef> fieldDefs = getBeanFieldDefs( bean );
         for ( String key : record.keySet() )
         {
-            FieldDef fieldDef = getBeanFieldDefs( bean ).get( key );
-            // TODO: If column in database but not in bean, what to do?
+            FieldDef fieldDef = fieldDefs.get( key );
+
+            // Remove key from fieldDefs in order to take inventory to check later that all were used.
+            fieldDefs.remove( key );
+
+            // If column in database but not in bean, assumed OK, ignore.
             if ( fieldDef != null )
             {
                 Object value = record.get( key );
@@ -141,6 +146,13 @@ public class ResultSetRecordProcessor<T extends Fauxjo>
 
                 bean.writeValue( key, value );
             }
+        }
+
+        // If any of the columns was not accounted for, throw an Exception
+        if ( !fieldDefs.isEmpty() )
+        {
+            throw new FauxjoException( "Missing column [" + fieldDefs.keySet().iterator().next()
+                + "] in ResultSet for Fauxjo [" + _beanClass.getCanonicalName() + "]" );
         }
 
         return bean;

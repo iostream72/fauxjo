@@ -78,9 +78,9 @@ public abstract class FauxjoImpl implements Fauxjo
         {
             if ( ex instanceof FauxjoException )
             {
-                throw (FauxjoException)ex;
+                throw (FauxjoException) ex;
             }
-            
+
             throw new FauxjoException( ex );
         }
     }
@@ -90,7 +90,7 @@ public abstract class FauxjoImpl implements Fauxjo
     {
         try
         {
-            FauxjoBeanDef beanDef = _caches.get( getClass() );
+            FauxjoBeanDef beanDef = getFauxjoBeanDef();
 
             Field field = beanDef.getField( key );
             if ( field != null )
@@ -109,9 +109,9 @@ public abstract class FauxjoImpl implements Fauxjo
         {
             if ( ex instanceof FauxjoException )
             {
-                throw (FauxjoException)ex;
+                throw (FauxjoException) ex;
             }
-            
+
             throw new FauxjoException( ex );
         }
 
@@ -121,34 +121,46 @@ public abstract class FauxjoImpl implements Fauxjo
     public void writeValue( String key, Object value )
         throws FauxjoException
     {
-        FauxjoBeanDef beanDef = _caches.get( getClass() );
-
-        Field field = beanDef.getField( key );
-        if ( field != null )
+        try
         {
-            try
+            FauxjoBeanDef beanDef = getFauxjoBeanDef();
+
+            Field field = beanDef.getField( key );
+            if ( field != null )
             {
-                field.setAccessible( true );
-                field.set( this, value );
-                return;
+                try
+                {
+                    field.setAccessible( true );
+                    field.set( this, value );
+                    return;
+                }
+                catch ( Exception ex )
+                {
+                    throw new FauxjoException( "Unable to write to field [" + field.getName() + "]", ex );
+                }
             }
-            catch ( Exception ex )
+
+            Method writeMethod = beanDef.getWriteMethod( key );
+            if ( writeMethod != null )
             {
-                throw new FauxjoException( "Unable to write to field [" + field.getName() + "]", ex );
+                try
+                {
+                    writeMethod.invoke( this, value );
+                }
+                catch ( Exception ex )
+                {
+                    throw new FauxjoException( "Unable to invoke write method [" + writeMethod.getName() + "]", ex );
+                }
             }
         }
-
-        Method writeMethod = beanDef.getWriteMethod( key );
-        if ( writeMethod != null )
+        catch ( Exception ex )
         {
-            try
+            if ( ex instanceof FauxjoException )
             {
-                writeMethod.invoke( this, value );
+                throw (FauxjoException) ex;
             }
-            catch ( Exception ex )
-            {
-                throw new FauxjoException( "Unable to invoke write method [" + writeMethod.getName() + "]", ex );
-            }
+
+            throw new FauxjoException( ex );
         }
     }
 
@@ -180,7 +192,8 @@ public abstract class FauxjoImpl implements Fauxjo
             int hashCode = 0;
             for ( Object item : keys )
             {
-                hashCode += item == null ? 0 : item.hashCode();
+                hashCode += item == null
+                    ? 0 : item.hashCode();
             }
 
             return hashCode;
@@ -286,9 +299,9 @@ public abstract class FauxjoImpl implements Fauxjo
         {
             if ( ex instanceof FauxjoException )
             {
-                throw (FauxjoException)ex;
+                throw (FauxjoException) ex;
             }
-            
+
             throw new FauxjoException( ex );
         }
     }
@@ -454,7 +467,8 @@ public abstract class FauxjoImpl implements Fauxjo
             _cache = new TreeMap<String, FieldDef>();
         }
 
-        public void addField( String key, Field field ) throws FauxjoException
+        public void addField( String key, Field field )
+            throws FauxjoException
         {
             getFieldDef( key ).setField( field );
         }
@@ -464,7 +478,8 @@ public abstract class FauxjoImpl implements Fauxjo
             return getFieldDef( key ).getField();
         }
 
-        public void addReadMethod( String key, Method method ) throws FauxjoException
+        public void addReadMethod( String key, Method method )
+            throws FauxjoException
         {
             getFieldDef( key ).setReadMethod( method );
         }
