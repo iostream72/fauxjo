@@ -225,7 +225,15 @@ public class SQLTableProcessor<T extends Fauxjo> extends AbstractSQLProcessor<T>
             int propIndex = 1;
             for ( DataValue value : values )
             {
-                statement.setObject( propIndex, value.getValue(), value.getSqlType() );
+            	if (value.getSqlType() == java.sql.Types.ARRAY)
+            	{
+            		Array array = getConnection().createArrayOf( "varchar", (Object[])value.getValue() );
+            		statement.setArray( propIndex, array );
+            	}
+            	else
+            	{
+            		statement.setObject( propIndex, value.getValue(), value.getSqlType() );
+            	}
                 propIndex++;
             }
             for ( DataValue value : keyValues )

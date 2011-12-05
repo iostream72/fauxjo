@@ -89,7 +89,7 @@ public class Coercer
         {
             return null;
         }
-
+        
         if ( destClass.isPrimitive() )
         {
             if ( destClass == Boolean.TYPE )
