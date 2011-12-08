@@ -23,11 +23,8 @@
 
 package net.jextra.fauxjo;
 
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.sql.*;
+import java.util.*;
 
 /**
  * SQLProcessor implementation that handles multiple tables representing a single {@link Fauxjo} class. This typically

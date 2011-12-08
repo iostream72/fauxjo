@@ -23,9 +23,8 @@
 
 package net.jextra.fauxjo;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.List;
+import java.sql.*;
+import java.util.*;
 
 public interface SQLProcessor<T extends Fauxjo>
 {

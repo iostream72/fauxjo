@@ -23,10 +23,8 @@
 
 package net.jextra.fauxjo;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
+import java.sql.*;
+import java.util.*;
 
 /**
  * AbstractSQLProcessor is a base class of the various SQLProcessor classes and does all the shared stuff that doesn't
