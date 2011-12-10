@@ -70,6 +70,18 @@ public interface SQLProcessor<T extends Fauxjo>
     public List<T> getList( ResultSet rs, int maxNumItems )
     	throws SQLException;
 
+    /**
+     * Convert each row in the result to an item and return as a Set.
+     */
+    public Set<T> getSet( ResultSet rs )
+    	throws SQLException;
+
+    /**
+     * Convert each row in the result set limited to maxNumItems and return as a Set.
+     */
+    public Set<T> getSet( ResultSet rs, int maxNumItems )
+    	throws SQLException;
+
     public ResultSetIterator<T> getIterator( ResultSet rs )
     	throws SQLException;
 

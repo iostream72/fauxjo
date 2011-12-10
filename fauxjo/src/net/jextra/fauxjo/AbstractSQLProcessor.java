@@ -89,7 +89,8 @@ public abstract class AbstractSQLProcessor<T extends Fauxjo> implements SQLProce
 	public T getFirst( ResultSet rs, boolean errorIfEmpty, boolean errorIfNotUnique )
 		throws SQLException
 	{
-		List<T> beans = processResultSet( rs, 2 );
+		ArrayList<T> beans = new ArrayList<T>();
+		processResultSet( beans, rs, 2 );
         if ( beans == null || beans.isEmpty() )
         {
             if ( errorIfEmpty )
@@ -119,7 +120,25 @@ public abstract class AbstractSQLProcessor<T extends Fauxjo> implements SQLProce
 	public List<T> getList( ResultSet rs, int maxNumItems )
 		throws SQLException
 	{
-		return processResultSet( rs, maxNumItems );
+		ArrayList<T> result = new ArrayList<T>();
+		processResultSet( result, rs, maxNumItems );
+		return result;
+	}
+
+	@Override
+	public Set<T> getSet( ResultSet rs )
+		throws SQLException
+	{
+		return getSet( rs, Integer.MAX_VALUE );
+	}
+
+	@Override
+	public Set<T> getSet(ResultSet rs, int maxNumItems)
+		throws SQLException
+	{
+		LinkedHashSet<T> result = new LinkedHashSet<T>();
+		processResultSet( result, rs, maxNumItems );
+		return result;
 	}
 
 	@Override
@@ -135,20 +154,16 @@ public abstract class AbstractSQLProcessor<T extends Fauxjo> implements SQLProce
     // protected
     // ----------
 
-	protected List<T> processResultSet( ResultSet rs, int numRows )
+	protected void processResultSet( Collection<T> collection, ResultSet rs, int numRows )
 		throws SQLException
     {
-        List<T> list = new ArrayList<T>();
-
         int counter = 0;
         while ( rs.next() && ( counter < numRows ) )
         {
-            list.add( _recordProcessor.convertResultSetRow( rs ) );
+        	collection.add( _recordProcessor.convertResultSetRow( rs ) );
             counter++;
         }
         rs.close();
-
-        return list;
     }
 
 	protected ResultSetRecordProcessor<T> getResultSetRecordProcessor()
