@@ -162,7 +162,7 @@ public class SQLTableProcessor<T extends Fauxjo> extends AbstractSQLProcessor<T>
             {
                 throw (FauxjoException)ex;
             }
-            
+
             throw new FauxjoException( ex );
         }
     }
@@ -227,8 +227,15 @@ public class SQLTableProcessor<T extends Fauxjo> extends AbstractSQLProcessor<T>
             {
             	if (value.getSqlType() == java.sql.Types.ARRAY)
             	{
-            		Array array = getConnection().createArrayOf( "varchar", (Object[])value.getValue() );
-            		statement.setArray( propIndex, array );
+            	    if ( value.getValue() == null )
+            	    {
+            	        statement.setNull( propIndex, value.getSqlType() );
+            	    }
+            	    else
+            	    {
+            	        Array array = getConnection().createArrayOf( "varchar", (Object[])value.getValue() );
+            	        statement.setArray( propIndex, array );
+            	    }
             	}
             	else
             	{
@@ -250,7 +257,7 @@ public class SQLTableProcessor<T extends Fauxjo> extends AbstractSQLProcessor<T>
             {
                 throw (FauxjoException)ex;
             }
-            
+
             throw new FauxjoException( ex );
         }
     }
@@ -305,7 +312,7 @@ public class SQLTableProcessor<T extends Fauxjo> extends AbstractSQLProcessor<T>
             {
                 throw (FauxjoException)ex;
             }
-            
+
             throw new FauxjoException( ex );
         }
     }
