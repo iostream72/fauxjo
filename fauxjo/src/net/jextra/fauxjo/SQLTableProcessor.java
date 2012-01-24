@@ -59,7 +59,6 @@ public class SQLTableProcessor<T extends Fauxjo> extends AbstractSQLProcessor<T>
         _schema = schema;
         _tableName = tableName;
         _coercer = new Coercer();
-        init();
     }
 
     // ============================================================
@@ -129,6 +128,7 @@ public class SQLTableProcessor<T extends Fauxjo> extends AbstractSQLProcessor<T>
             }
             String sql = "insert into " + getQualifiedName( _tableName ) + " (" + columns + ") values ("
                 + questionMarks + ")";
+            System.out.println( sql );
             PreparedStatement statement = getConnection().prepareStatement( sql );
             int propIndex = 1;
             for ( DataValue value : values )
@@ -236,6 +236,7 @@ public class SQLTableProcessor<T extends Fauxjo> extends AbstractSQLProcessor<T>
             }
 
             String sql = "update " + getQualifiedName( _tableName ) + " set " + setterClause + " where " + whereClause;
+            System.out.println( sql );
             PreparedStatement statement = getConnection().prepareStatement( sql );
             int propIndex = 1;
             for ( DataValue value : values )
@@ -391,12 +392,6 @@ public class SQLTableProcessor<T extends Fauxjo> extends AbstractSQLProcessor<T>
     // ----------
     // private
     // ----------
-
-    private void init()
-        throws SQLException
-    {
-        cacheColumnInfos( false );
-    }
 
     private Map<String, ColumnInfo> getDBColumnInfos()
         throws SQLException
