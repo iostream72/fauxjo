@@ -27,5 +27,5 @@ import java.sql.*;
 
 public interface FauxjoConnectionProvider
 {
-	public Connection getConnection();
+    public Connection getConnection();
 }

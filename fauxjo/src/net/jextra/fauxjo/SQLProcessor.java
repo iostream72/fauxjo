@@ -28,86 +28,86 @@ import java.util.*;
 
 public interface SQLProcessor<T extends Fauxjo>
 {
-	/**
+    /**
      * Create an item from the first row in the ResultSet or return null if empty ResultSet.
      */
-	public T getFirst( ResultSet rs )
-		throws SQLException;
+    T getFirst( ResultSet rs )
+        throws SQLException;
 
-	/**
+    /**
      * Create an item from the first row in the ResultSet or return null or throw exception if empty ResultSet.
      */
-	public T getFirst( ResultSet rs, boolean errorIfEmpty )
-    	throws SQLException;
+    T getFirst( ResultSet rs, boolean errorIfEmpty )
+        throws SQLException;
 
-	/**
+    /**
      * Create ONLY item from the ResultSet or return null if empty ResultSet.
      */
-    public T getUnique( ResultSet rs )
+    T getUnique( ResultSet rs )
         throws SQLException;
 
     /**
      * Create ONLY item from the ResultSet or return null or throw exception if empty ResultSet.
      */
-    public T getUnique( ResultSet rs, boolean errorIfEmpty )
+    T getUnique( ResultSet rs, boolean errorIfEmpty )
         throws SQLException;
 
     /**
      * Get first item from result-set.
      */
-    public T getFirst( ResultSet rs, boolean errorIfEmpty, boolean errorIfNotUnique )
+    T getFirst( ResultSet rs, boolean errorIfEmpty, boolean errorIfNotUnique )
         throws SQLException;
 
     /**
      * Convert each row in the result set to an item.
      */
-    public List<T> getList( ResultSet rs )
+    List<T> getList( ResultSet rs )
         throws SQLException;
 
     /**
      * Convert each row in the result set to an item, limited to maxNumItems.
      */
-    public List<T> getList( ResultSet rs, int maxNumItems )
-    	throws SQLException;
+    List<T> getList( ResultSet rs, int maxNumItems )
+        throws SQLException;
 
     /**
      * Convert each row in the result to an item and return as a Set.
      */
-    public Set<T> getSet( ResultSet rs )
-    	throws SQLException;
+    Set<T> getSet( ResultSet rs )
+        throws SQLException;
 
     /**
      * Convert each row in the result set limited to maxNumItems and return as a Set.
      */
-    public Set<T> getSet( ResultSet rs, int maxNumItems )
-    	throws SQLException;
+    Set<T> getSet( ResultSet rs, int maxNumItems )
+        throws SQLException;
 
-    public ResultSetIterator<T> getIterator( ResultSet rs )
-    	throws SQLException;
+    ResultSetIterator<T> getIterator( ResultSet rs )
+        throws SQLException;
 
     /**
      * Convert the bean into an insert statement and execute it.
      */
-    public boolean insert( T bean )
+    boolean insert( T bean )
         throws SQLException;
 
     /**
      * Convert the bean into an update statement and execute it.
      */
-    public int update( T bean )
+    int update( T bean )
         throws SQLException;
 
     /**
      * Convert the bean into an delete statement and execute it.
      */
-    public boolean delete( T bean )
+    boolean delete( T bean )
         throws SQLException;
 
     /**
      * Get the schema associated with this {@link SQLProcessor}.
      * @return
      */
-    public Schema getSchema();
+    Schema getSchema();
 
     /**
      * Build a basic select statement for the underlying table or tables with the given clause.
@@ -115,5 +115,8 @@ public interface SQLProcessor<T extends Fauxjo>
      * @return
      * @throws SQLException
      */
-    public String buildBasicSelect( String clause );
+    String buildBasicSelect( String clause );
+
+    T convertResultSetRow( ResultSet rs )
+        throws SQLException;
 }

@@ -133,7 +133,7 @@ public class SQLTableProcessor<T extends Fauxjo> extends AbstractSQLProcessor<T>
             int propIndex = 1;
             for ( DataValue value : values )
             {
-                if (value.getSqlType() == java.sql.Types.ARRAY)
+                if ( value.getSqlType() == java.sql.Types.ARRAY )
                 {
                     if ( value.getValue() == null )
                     {
@@ -141,7 +141,7 @@ public class SQLTableProcessor<T extends Fauxjo> extends AbstractSQLProcessor<T>
                     }
                     else
                     {
-                        Array array = getConnection().createArrayOf( "varchar", (Object[])value.getValue() );
+                        Array array = getConnection().createArrayOf( "varchar", (Object[]) value.getValue() );
                         statement.setArray( propIndex, array );
                     }
                 }
@@ -175,7 +175,7 @@ public class SQLTableProcessor<T extends Fauxjo> extends AbstractSQLProcessor<T>
         {
             if ( ex instanceof FauxjoException )
             {
-                throw (FauxjoException)ex;
+                throw (FauxjoException) ex;
             }
 
             throw new FauxjoException( ex );
@@ -241,22 +241,22 @@ public class SQLTableProcessor<T extends Fauxjo> extends AbstractSQLProcessor<T>
             int propIndex = 1;
             for ( DataValue value : values )
             {
-            	if (value.getSqlType() == java.sql.Types.ARRAY)
-            	{
-            	    if ( value.getValue() == null )
-            	    {
-            	        statement.setNull( propIndex, value.getSqlType() );
-            	    }
-            	    else
-            	    {
-            	        Array array = getConnection().createArrayOf( "varchar", (Object[])value.getValue() );
-            	        statement.setArray( propIndex, array );
-            	    }
-            	}
-            	else
-            	{
-            		statement.setObject( propIndex, value.getValue(), value.getSqlType() );
-            	}
+                if ( value.getSqlType() == java.sql.Types.ARRAY )
+                {
+                    if ( value.getValue() == null )
+                    {
+                        statement.setNull( propIndex, value.getSqlType() );
+                    }
+                    else
+                    {
+                        Array array = getConnection().createArrayOf( "varchar", (Object[]) value.getValue() );
+                        statement.setArray( propIndex, array );
+                    }
+                }
+                else
+                {
+                    statement.setObject( propIndex, value.getValue(), value.getSqlType() );
+                }
                 propIndex++;
             }
             for ( DataValue value : keyValues )
@@ -271,7 +271,7 @@ public class SQLTableProcessor<T extends Fauxjo> extends AbstractSQLProcessor<T>
         {
             if ( ex instanceof FauxjoException )
             {
-                throw (FauxjoException)ex;
+                throw (FauxjoException) ex;
             }
 
             throw new FauxjoException( ex );
@@ -326,7 +326,7 @@ public class SQLTableProcessor<T extends Fauxjo> extends AbstractSQLProcessor<T>
         {
             if ( ex instanceof FauxjoException )
             {
-                throw (FauxjoException)ex;
+                throw (FauxjoException) ex;
             }
 
             throw new FauxjoException( ex );
@@ -374,6 +374,12 @@ public class SQLTableProcessor<T extends Fauxjo> extends AbstractSQLProcessor<T>
         return rs.getLong( 1 );
     }
 
+    public T convertResultSetRow( ResultSet rs )
+        throws SQLException
+    {
+        return getResultSetRecordProcessor().convertResultSetRow( rs );
+    }
+
     // ----------
     // protected
     // ----------
@@ -384,14 +390,14 @@ public class SQLTableProcessor<T extends Fauxjo> extends AbstractSQLProcessor<T>
         return _schema.getConnection();
     }
 
+    // ----------
+    // private
+    // ----------
+
     private String getQualifiedName( String name )
     {
         return _schema.getQualifiedName( name );
     }
-
-    // ----------
-    // private
-    // ----------
 
     private Map<String, ColumnInfo> getDBColumnInfos()
         throws SQLException
