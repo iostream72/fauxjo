@@ -24,7 +24,7 @@
 package net.jextra.fauxjo;
 
 import java.sql.*;
-import java.util.*;
+import java.util.concurrent.*;
 
 public abstract class Schema
 {
@@ -32,7 +32,7 @@ public abstract class Schema
     // Fields
     // ============================================================
 
-    private HashMap<Class<?>,Home<?>> _homes;
+    private ConcurrentMap<Class<?>,Home<?>> _homes;
     private String _schemaName;
 
     // ============================================================
@@ -41,7 +41,7 @@ public abstract class Schema
 
     public Schema()
     {
-        _homes = new HashMap<Class<?>,Home<?>>();
+        _homes = new ConcurrentHashMap<Class<?>,Home<?>>();
     }
 
     // ============================================================
@@ -90,20 +90,14 @@ public abstract class Schema
         }
     }
 
-    /**
-     * @deprecated Having Schema know how to cache Home objects is no longer recommended.
-     */
-    public void addHome( Class<?> beanType, Home<?> home )
+    public void addHome( Class<?> homeClass, Home<?> home )
     {
-        _homes.put( beanType, home );
+        _homes.put( homeClass, home );
     }
 
-    /**
-     * @deprecated Having Schema know how to cache Home objects is no longer recommended.
-     */
-    public Home<?> getHome( Class<?> beanClass )
+    public <T> T getHome( Class<T> homeClass )
     {
-        return _homes.get( beanClass );
+        return homeClass.cast( _homes.get( homeClass ) );
     }
 }
 
