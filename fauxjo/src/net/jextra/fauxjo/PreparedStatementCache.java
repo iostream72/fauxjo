@@ -1,6 +1,25 @@
 //
 // PreparedStatementCache
 //
+// Copyright (C) jextra.net.
+//
+//  This file is part of the Fauxjo Library.
+//
+//  The Fauxjo Library is free software; you can redistribute it and/or
+//  modify it under the terms of the GNU Lesser General Public
+//  License as published by the Free Software Foundation; either
+//  version 2.1 of the License, or (at your option) any later version.
+//
+//  The Fauxjo Library is distributed in the hope that it will be useful,
+//  but WITHOUT ANY WARRANTY; without even the implied warranty of
+//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+//  Lesser General Public License for more details.
+//
+//  You should have received a copy of the GNU Lesser General Public
+//  License along with the Fauxjo Library; if not, write to the Free
+//  Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+//  02111-1307 USA.
+//
 
 package net.jextra.fauxjo;
 
@@ -26,11 +45,11 @@ public class PreparedStatementCache
     // Fields
     // ============================================================
 
-    private WeakHashMap<Thread,PreparedStatementCacheThreadData> _cache;
+    private WeakHashMap<Thread, PreparedStatementCacheThreadData> _cache;
 
     // A listener thread that waits for Thread to finish then throws away the
     // PreparedStatements for that Thread.
-    private HashMap<Thread,Thread> _listenerMap;
+    private HashMap<Thread, Thread> _listenerMap;
 
     // ============================================================
     // Constructors
@@ -38,8 +57,8 @@ public class PreparedStatementCache
 
     public PreparedStatementCache()
     {
-        _cache = new WeakHashMap<Thread,PreparedStatementCacheThreadData>();
-        _listenerMap = new HashMap<Thread,Thread>();
+        _cache = new WeakHashMap<Thread, PreparedStatementCacheThreadData>();
+        _listenerMap = new HashMap<Thread, Thread>();
     }
 
     // ============================================================
@@ -50,12 +69,10 @@ public class PreparedStatementCache
     // public
     // ----------
 
-
     public PreparedStatement prepareStatement( Connection connection, String sql )
         throws SQLException
     {
-        PreparedStatementCacheThreadData threadData = getOrCreateThreadData(
-            Thread.currentThread() );
+        PreparedStatementCacheThreadData threadData = getOrCreateThreadData( Thread.currentThread() );
 
         PreparedStatementGroup group = threadData.get( connection );
         if ( group == null )
@@ -70,8 +87,7 @@ public class PreparedStatementCache
     public CallableStatement prepareCall( Connection connection, String sql )
         throws SQLException
     {
-        PreparedStatementCacheThreadData threadData = getOrCreateThreadData(
-            Thread.currentThread() );
+        PreparedStatementCacheThreadData threadData = getOrCreateThreadData( Thread.currentThread() );
 
         PreparedStatementGroup group = threadData.get( connection );
         if ( group == null )
@@ -162,8 +178,8 @@ public class PreparedStatementCache
             Thread listenerThread = _listenerMap.get( Thread.currentThread() );
             if ( listenerThread == null )
             {
-                PreparedStatementCacheThreadListener threadListener =
-                    new PreparedStatementCacheThreadListener( Thread.currentThread() );
+                PreparedStatementCacheThreadListener threadListener = new PreparedStatementCacheThreadListener(
+                    Thread.currentThread() );
                 listenerThread = new Thread( threadListener );
                 listenerThread.setDaemon( true );
                 _listenerMap.put( Thread.currentThread(), listenerThread );
@@ -205,8 +221,7 @@ public class PreparedStatementCache
         }
     }
 
-    private class PreparedStatementCacheThreadData
-        extends WeakHashMap<Connection,PreparedStatementGroup>
+    private class PreparedStatementCacheThreadData extends WeakHashMap<Connection, PreparedStatementGroup>
     {
     }
 
@@ -214,11 +229,11 @@ public class PreparedStatementCache
     {
         // Cached prepared statements for connections.
         // key = sql String
-        private Map<String,SoftReference<PreparedStatement>> _map;
+        private Map<String, SoftReference<PreparedStatement>> _map;
 
         public PreparedStatementGroup()
         {
-            _map = new HashMap<String,SoftReference<PreparedStatement>>();
+            _map = new HashMap<String, SoftReference<PreparedStatement>>();
         }
 
         public PreparedStatement getPreparedStatement( Connection conn, String sql )
@@ -249,7 +264,7 @@ public class PreparedStatementCache
             }
             else
             {
-                return (CallableStatement)ref.get();
+                return (CallableStatement) ref.get();
             }
         }
 
@@ -267,4 +282,3 @@ public class PreparedStatementCache
         }
     }
 }
-
