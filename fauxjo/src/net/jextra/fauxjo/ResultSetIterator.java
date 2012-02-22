@@ -61,11 +61,13 @@ public class ResultSetIterator < T extends Fauxjo > implements Iterator<T>, Iter
     // public
     // ----------
 
+    @Override
     public boolean hasNext()
     {
         return _hasNext;
     }
 
+    @Override
     public T next()
     {
         if ( !_hasNext )
@@ -90,6 +92,7 @@ public class ResultSetIterator < T extends Fauxjo > implements Iterator<T>, Iter
         }
     }
 
+    @Override
     public void remove()
     {
         throw new UnsupportedOperationException( "Remove is not supported for " +
@@ -114,6 +117,7 @@ public class ResultSetIterator < T extends Fauxjo > implements Iterator<T>, Iter
         super.finalize();
     }
 
+    @Override
     public Iterator<T> iterator()
     {
         return this;

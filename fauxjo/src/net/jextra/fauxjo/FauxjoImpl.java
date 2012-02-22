@@ -65,6 +65,7 @@ public abstract class FauxjoImpl implements Fauxjo
     // public
     // ----------
 
+    @Override
     public Map<String, FieldDef> getFieldDefs()
         throws FauxjoException
     {
@@ -85,6 +86,7 @@ public abstract class FauxjoImpl implements Fauxjo
         }
     }
 
+    @Override
     public Object readValue( String key )
         throws FauxjoException
     {
@@ -118,6 +120,7 @@ public abstract class FauxjoImpl implements Fauxjo
         return null;
     }
 
+    @Override
     public void writeValue( String key, Object value )
         throws FauxjoException
     {
@@ -169,6 +172,7 @@ public abstract class FauxjoImpl implements Fauxjo
      *         {@link #hasEmptyPrimaryKey(Fauxjo)}. This should be overridden if that is not accurate for this Fauxjo
      *         bean.
      */
+    @Override
     public boolean isInDatabase()
         throws FauxjoException
     {

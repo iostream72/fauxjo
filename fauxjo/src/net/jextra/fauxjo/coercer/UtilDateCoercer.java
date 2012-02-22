@@ -36,6 +36,7 @@ public class UtilDateCoercer implements TypeCoercer < java.util.Date >
     // public
     // ----------
 
+    @Override
     public Object coerce( java.util.Date value, Class<?> destClass )
         throws FauxjoException
     {

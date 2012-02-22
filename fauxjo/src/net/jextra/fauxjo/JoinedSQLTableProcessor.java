@@ -85,6 +85,7 @@ public class JoinedSQLTableProcessor<T extends Fauxjo> extends AbstractSQLProces
         return this;
     }
 
+    @Override
     public boolean insert( T bean )
         throws SQLException
     {
@@ -98,6 +99,7 @@ public class JoinedSQLTableProcessor<T extends Fauxjo> extends AbstractSQLProces
         return success;
     };
 
+    @Override
     public boolean delete( T bean )
         throws SQLException
     {
@@ -113,6 +115,7 @@ public class JoinedSQLTableProcessor<T extends Fauxjo> extends AbstractSQLProces
         return success;
     }
 
+    @Override
     public int update( T bean )
         throws SQLException
     {
@@ -126,6 +129,7 @@ public class JoinedSQLTableProcessor<T extends Fauxjo> extends AbstractSQLProces
         return n;
     }
 
+    @Override
     public String buildBasicSelect( String clause )
     {
         String c = "";
@@ -169,6 +173,7 @@ public class JoinedSQLTableProcessor<T extends Fauxjo> extends AbstractSQLProces
         return _schema;
     }
 
+    @Override
     public T convertResultSetRow( ResultSet rs )
         throws SQLException
     {

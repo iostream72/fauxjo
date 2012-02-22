@@ -1,5 +1,5 @@
 //
-// FauxjoConnectionProvider
+// SimpleConnectionSupplier
 //
 // Copyright (C) jextra.net.
 //
@@ -21,11 +21,37 @@
 //  02111-1307 USA.
 //
 
-package net.jextra.fauxjo;
+package net.jextra.fauxjo.connectionsupplier;
 
 import java.sql.*;
 
-public interface FauxjoConnectionProvider
+/**
+ * Essentially a pass-through {@link ConnectionSupplier} for a single {@link Connection} object.
+ */
+public class SimpleConnectionSupplier implements ConnectionSupplier
 {
-    public Connection getConnection();
+    // ============================================================
+    // Fields
+    // ============================================================
+
+    private Connection _connection;
+
+    // ============================================================
+    // Methods
+    // ============================================================
+
+    // ----------
+    // public
+    // ----------
+
+    public void setConnection( Connection conn )
+    {
+        _connection = conn;
+    }
+
+    @Override
+    public Connection getConnection()
+    {
+        return _connection;
+    }
 }

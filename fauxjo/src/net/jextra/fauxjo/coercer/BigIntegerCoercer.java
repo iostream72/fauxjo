@@ -36,6 +36,7 @@ public class BigIntegerCoercer implements TypeCoercer<BigInteger>
     // public
     // ----------
 
+    @Override
     public Object coerce( BigInteger value, Class<?> destClass )
         throws FauxjoException
     {

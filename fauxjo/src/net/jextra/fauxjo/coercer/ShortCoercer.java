@@ -35,6 +35,7 @@ public class ShortCoercer implements TypeCoercer<Short>
     // public
     // ----------
 
+    @Override
     public Object coerce( Short value, Class<?> destClass )
         throws FauxjoException
     {

@@ -36,6 +36,7 @@ public class SQLTimestampCoercer implements TypeCoercer<Timestamp>
     // public
     // ----------
 
+    @Override
     public Object coerce( Timestamp value, Class<?> destClass )
         throws FauxjoException
     {

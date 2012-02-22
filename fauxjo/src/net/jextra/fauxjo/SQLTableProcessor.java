@@ -374,6 +374,7 @@ public class SQLTableProcessor<T extends Fauxjo> extends AbstractSQLProcessor<T>
         return rs.getLong( 1 );
     }
 
+    @Override
     public T convertResultSetRow( ResultSet rs )
         throws SQLException
     {

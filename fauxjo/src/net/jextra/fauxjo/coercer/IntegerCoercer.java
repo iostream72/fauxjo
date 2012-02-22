@@ -35,6 +35,7 @@ public class IntegerCoercer implements TypeCoercer<Integer>
     // public
     // ----------
 
+    @Override
     public Object coerce( Integer value, Class<?> destClass )
         throws FauxjoException
     {

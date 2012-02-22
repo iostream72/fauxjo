@@ -33,9 +33,9 @@ public class ObjectCoercer implements TypeCoercer<Object>
     // public
     // ----------
 
+    @Override
     public Object coerce( Object value, Class<?> destClass )
     {
-
         //
         // Basically a pass thru if the destClass is the same as the value class, then cast it and
         // set it.

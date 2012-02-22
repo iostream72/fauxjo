@@ -35,6 +35,7 @@ public class FloatCoercer implements TypeCoercer<Float>
     // public
     // ----------
 
+    @Override
     public Object coerce( Float value, Class<?> destClass )
         throws FauxjoException
     {

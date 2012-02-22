@@ -36,6 +36,7 @@ public class SQLDateCoercer implements TypeCoercer < java.sql.Date >
     // public
     // ----------
 
+    @Override
     public Object coerce( java.sql.Date value, Class<?> destClass )
         throws FauxjoException
     {

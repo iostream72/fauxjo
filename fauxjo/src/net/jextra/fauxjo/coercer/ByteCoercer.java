@@ -35,6 +35,7 @@ public class ByteCoercer implements TypeCoercer<Byte>
     // public
     // ----------
 
+    @Override
     public Object coerce( Byte value, Class<?> destClass )
         throws FauxjoException
     {

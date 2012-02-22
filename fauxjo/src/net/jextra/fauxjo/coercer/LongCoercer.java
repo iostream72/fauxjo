@@ -35,6 +35,7 @@ public class LongCoercer implements TypeCoercer<Long>
     // public
     // ----------
 
+    @Override
     public Object coerce( Long value, Class<?> destClass )
         throws FauxjoException
     {

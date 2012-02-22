@@ -1,5 +1,5 @@
 //
-// UUIDCoercer
+// ConnectionSupplier
 //
 // Copyright (C) jextra.net.
 //
@@ -21,35 +21,17 @@
 //  02111-1307 USA.
 //
 
-package net.jextra.fauxjo.coercer;
+package net.jextra.fauxjo.connectionsupplier;
 
-import java.util.*;
-import net.jextra.fauxjo.*;
+import java.sql.*;
 
-public class UUIDCoercer implements TypeCoercer<UUID>
+/**
+ * Recommended to be used to pass to {@link FauxjoSchema}'s instead of passing Connection directly. This is so
+ * that the connections can be managed external from fauxjo in a context appropriate manner. An example of this
+ * is for connection caches in web-sites.
+ */
+public interface ConnectionSupplier
 {
-    // ============================================================
-    // Methods
-    // ============================================================
-
-    // ----------
-    // public
-    // ----------
-
-    @Override
-    public Object coerce( UUID value, Class<?> destClass )
-        throws FauxjoException
-    {
-        if ( destClass.equals( String.class ) )
-        {
-            return value.toString();
-        }
-        else if ( destClass.equals( Object.class ) )
-        {
-            return value;
-        }
-
-        throw new FauxjoException( "The UUIDCoercer does not know how to convert to type " + destClass );
-    }
-
+    public Connection getConnection()
+        throws Exception;
 }
