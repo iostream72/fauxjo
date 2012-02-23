@@ -33,5 +33,5 @@ import java.sql.*;
 public interface ConnectionSupplier
 {
     public Connection getConnection()
-        throws Exception;
+        throws SQLException;
 }
