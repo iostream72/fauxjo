@@ -32,7 +32,7 @@ public abstract class Schema
     // Fields
     // ============================================================
 
-    private ConcurrentMap<Class<?>,Home<?>> _homes;
+    private ConcurrentMap<Class<?>, Home<?>> _homes;
     private String _schemaName;
 
     // ============================================================
@@ -41,7 +41,7 @@ public abstract class Schema
 
     public Schema()
     {
-        _homes = new ConcurrentHashMap<Class<?>,Home<?>>();
+        _homes = new ConcurrentHashMap<Class<?>, Home<?>>();
     }
 
     // ============================================================
@@ -95,9 +95,8 @@ public abstract class Schema
         _homes.put( homeClass, home );
     }
 
-    public <T> T getHome( Class<T> homeClass )
+    public <T> T getHomeByClass( Class<T> homeClass )
     {
         return homeClass.cast( _homes.get( homeClass ) );
     }
 }
-

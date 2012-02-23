@@ -23,6 +23,7 @@
 
 package net.jextra.fauxjo;
 
+import com.amirsys.crackamirsys.*;
 import net.jextra.crack.*;
 import net.jextra.crack.java.*;
 import net.jextra.crackdep.*;
@@ -31,27 +32,37 @@ import net.jextra.crackeclipse.*;
 public class Build extends CrackBuild
 {
     // ============================================================
+    // Fields
+    // ============================================================
+
+    private AmirsysBasicParams _params;
+
+    // ============================================================
     // Constructors
     // ============================================================
 
     public Build()
         throws Exception
     {
-        Params params = new Params();
-
-        addCommands( new JavaKnob( params ) );
-
-        addCommands( new DepKnob( params ) );
-
-        addCommands( "eclipse.", new EclipseKnob( params ) );
-        createCommandAlias( "eclipse.createProject", "prj" );
+//        Params params = new Params();
+//
+//        addCommands( new JavaKnob( params ) );
+//
+//        addCommands( new DepKnob( params ) );
+//
+//        addCommands( "eclipse.", new EclipseKnob( params ) );
+//        createCommandAlias( "eclipse.createProject", "prj" );
+        
+        _params = new AmirsysBasicParams();
+        AmirsysBasicBuilder builder = new AmirsysBasicBuilder( _params );
+        builder.init( this );
     }
 
     // ============================================================
     // Inner Classes
     // ============================================================
 
-    public static class Params extends StandardDepParams implements EclipseKnobParams
+    public static class Params extends MavenConventionDepParams implements JavaKnobParams, EclipseKnobParams
     {
     }
 }
