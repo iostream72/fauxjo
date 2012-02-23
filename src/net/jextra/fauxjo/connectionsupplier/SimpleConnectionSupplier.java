@@ -37,6 +37,19 @@ public class SimpleConnectionSupplier implements ConnectionSupplier
     private Connection _connection;
 
     // ============================================================
+    // Constructors
+    // ============================================================
+
+    public SimpleConnectionSupplier()
+    {
+    }
+
+    public SimpleConnectionSupplier( Connection conn )
+    {
+        _connection = conn;
+    }
+
+    // ============================================================
     // Methods
     // ============================================================
 
