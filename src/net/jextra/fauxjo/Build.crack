@@ -35,7 +35,7 @@ public class Build extends CrackBuild
     // Fields
     // ============================================================
 
-    private AmirsysBasicParams _params;
+    private AmirsysBasicParams params;
 
     // ============================================================
     // Constructors
@@ -53,8 +53,8 @@ public class Build extends CrackBuild
 //        addCommands( "eclipse.", new EclipseKnob( params ) );
 //        createCommandAlias( "eclipse.createProject", "prj" );
         
-        _params = new AmirsysBasicParams();
-        AmirsysBasicBuilder builder = new AmirsysBasicBuilder( _params );
+        params = new AmirsysBasicParams();
+        AmirsysBasicBuilder builder = new AmirsysBasicBuilder( params );
         builder.init( this );
     }
 
