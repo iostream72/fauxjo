@@ -53,7 +53,6 @@ public class SQLTableProcessor<T extends Fauxjo> extends AbstractSQLProcessor<T>
     // ============================================================
 
     public SQLTableProcessor( Schema schema, String tableName, Class<T> beanClass )
-        throws SQLException
     {
         super( new ResultSetRecordProcessor<T>( beanClass ) );
         _schema = schema;

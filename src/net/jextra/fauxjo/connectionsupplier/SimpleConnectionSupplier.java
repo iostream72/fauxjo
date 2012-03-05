@@ -24,9 +24,15 @@
 package net.jextra.fauxjo.connectionsupplier;
 
 import java.sql.*;
+import sun.jdbc.odbc.ee.*;
 
 /**
- * Essentially a pass-through {@link ConnectionSupplier} for a single {@link Connection} object.
+ * <p>
+ * Essentially a pass-through {@link ConnectionSupplier} for a single {@link Connection} object. 
+ * </p><p>
+ * This is useful
+ * for thick Swing applications where Swing threads should get same connection as the main thread.
+ * </p>
  */
 public class SimpleConnectionSupplier implements ConnectionSupplier
 {
@@ -34,7 +40,7 @@ public class SimpleConnectionSupplier implements ConnectionSupplier
     // Fields
     // ============================================================
 
-    private Connection _connection;
+    private Connection connection;
 
     // ============================================================
     // Constructors
@@ -46,7 +52,13 @@ public class SimpleConnectionSupplier implements ConnectionSupplier
 
     public SimpleConnectionSupplier( Connection conn )
     {
-        _connection = conn;
+        connection = conn;
+    }
+
+    public SimpleConnectionSupplier( DataSource ds )
+        throws SQLException
+    {
+        connection = ds.getConnection();
     }
 
     // ============================================================
@@ -59,12 +71,12 @@ public class SimpleConnectionSupplier implements ConnectionSupplier
 
     public void setConnection( Connection conn )
     {
-        _connection = conn;
+        connection = conn;
     }
 
     @Override
     public Connection getConnection()
     {
-        return _connection;
+        return connection;
     }
 }

@@ -1,5 +1,5 @@
 //
-// ThreadLocalConnectionSupplier
+// PooledConnectionSupplier
 //
 // Copyright (C) jextra.net.
 //
@@ -24,6 +24,7 @@
 package net.jextra.fauxjo.connectionsupplier;
 
 import java.sql.*;
+import javax.sql.*;
 
 /**
  * <p>
@@ -33,31 +34,37 @@ import java.sql.*;
  * <pre>
  *    InitialContext cxt = new InitialContext();
  *    DataSource ds = (DataSource) cxt.lookup( "java:/comp/env/jdbc/xyz/abc" );
- *    Connection conn = ds.getConnection();
- *    connectionProvider.setConnection( conn );
+ *    connectionSupplier = new PooledConnectionSupplier( ds );
  * </pre>
  * Example cleanup:
  * <pre>
- *    connectionProvider.getConnection().close();
- *    connectionProvider.removeConnection();
+ *    connectionProvider.clear();
  * </pre>
  * </p>
  */
-public class ThreadLocalConnectionSupplier implements ConnectionSupplier
+public class PooledConnectionSupplier implements ConnectionSupplier
 {
     // ============================================================
     // Fields
     // ============================================================
 
-    private ThreadLocal<Connection> _connections;
+    private DataSource dataSource;
+    private boolean closeConnectionOnClear = true;
+    private ThreadLocal<Connection> threadConnection;
 
     // ============================================================
     // Constructors
     // ============================================================
 
-    public ThreadLocalConnectionSupplier()
+    public PooledConnectionSupplier()
     {
-        _connections = new ThreadLocal<Connection>();
+        threadConnection = new ThreadLocal<Connection>();
+    }
+
+    public PooledConnectionSupplier( DataSource ds )
+    {
+        dataSource = ds;
+        threadConnection = new ThreadLocal<Connection>();
     }
 
     // ============================================================
@@ -68,26 +75,46 @@ public class ThreadLocalConnectionSupplier implements ConnectionSupplier
     // public
     // ----------
 
-    public void setConnection( Connection conn )
-    {
-        if ( conn == null )
-        {
-            removeConnection();
-        }
-        else
-        {
-            _connections.set( conn );
-        }
-    }
-
-    public void removeConnection()
-    {
-        _connections.remove();
-    }
-
     @Override
     public Connection getConnection()
+        throws SQLException
     {
-        return _connections.get();
+        Connection cnx = null;
+        if ( threadConnection.get() == null )
+        {
+            threadConnection.set( dataSource.getConnection() );
+        }
+
+        cnx = threadConnection.get();
+
+        return cnx;
+    }
+
+    public void setCloseConnectionOnClear( boolean value )
+    {
+        closeConnectionOnClear = value;
+    }
+
+    public void setDataSource( DataSource dataSource )
+    {
+        this.dataSource = dataSource;
+    }
+
+    public void clear()
+    {
+        try
+        {
+            if ( closeConnectionOnClear && threadConnection.get() != null )
+            {
+                threadConnection.get().close();
+            }
+        }
+        catch ( SQLException ignore )
+        {
+        }
+        finally
+        {
+            threadConnection.set( null );
+        }
     }
 }

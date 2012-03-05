@@ -44,7 +44,6 @@ public class Home<T extends Fauxjo>
     // ============================================================
 
     public Home( Schema schema, Class<T> beanClass, String tableName )
-        throws SQLException
     {
         _sqlProcessor = new SQLTableProcessor<T>( schema, tableName, beanClass );
     }
