@@ -28,7 +28,7 @@ import sun.jdbc.odbc.ee.*;
 
 /**
  * <p>
- * Essentially a pass-through {@link ConnectionSupplier} for a single {@link Connection} object. 
+ * Essentially a pass-through {@link ConnectionSupplier} for a single {@link Connection} object.
  * </p><p>
  * This is useful
  * for thick Swing applications where Swing threads should get same connection as the main thread.
@@ -68,6 +68,11 @@ public class SimpleConnectionSupplier implements ConnectionSupplier
     // ----------
     // public
     // ----------
+
+    public void setDataSource( DataSource ds )
+    {
+        connection = ds.getConnection();
+    }
 
     public void setConnection( Connection conn )
     {
