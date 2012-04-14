@@ -34,6 +34,5 @@ import java.lang.annotation.*;
 @Target( ElementType.METHOD )
 public @interface TextIndexedColumn
 {
-    String textIndexMetaColumn()default "";
+    String textIndexMetaColumn() default "";
 }
-

@@ -29,7 +29,7 @@ import java.util.*;
 /**
  * Mapping between SQL type and Java type. It is intended to go from SQL type -> Java type.
  */
-public class SQLTypeMapper extends HashMap<Integer,Class<?>>
+public class SQLTypeMapper extends HashMap<Integer, Class<?>>
 {
     // ============================================================
     // Fields
@@ -109,4 +109,3 @@ public class SQLTypeMapper extends HashMap<Integer,Class<?>>
         return get( sqlType );
     }
 }
-

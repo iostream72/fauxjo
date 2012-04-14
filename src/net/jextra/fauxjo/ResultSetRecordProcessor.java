@@ -73,20 +73,20 @@ public class ResultSetRecordProcessor<T extends Fauxjo>
             Map<String, Object> record = new HashMap<String, Object>();
             for ( int i = 1; i <= columnCount; i++ )
             {
-            	if (meta.getColumnType(i) == java.sql.Types.ARRAY)
-            	{
-            		Array array = rs.getArray( i );
-            		Object actualArray = null;
-            		if ( array != null )
-            		{
-            			actualArray = array.getArray();
-            		}
-            		record.put( meta.getColumnName( i ).toLowerCase(), actualArray );
-            	}
-            	else
-            	{
-            		record.put( meta.getColumnName( i ).toLowerCase(), rs.getObject( i ) );
-            	}
+                if ( meta.getColumnType( i ) == java.sql.Types.ARRAY )
+                {
+                    Array array = rs.getArray( i );
+                    Object actualArray = null;
+                    if ( array != null )
+                    {
+                        actualArray = array.getArray();
+                    }
+                    record.put( meta.getColumnName( i ).toLowerCase(), actualArray );
+                }
+                else
+                {
+                    record.put( meta.getColumnName( i ).toLowerCase(), rs.getObject( i ) );
+                }
             }
 
             return processRecord( record );

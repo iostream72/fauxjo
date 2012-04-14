@@ -48,4 +48,3 @@ public class ObjectCoercer implements TypeCoercer<Object>
         return value;
     }
 }
-

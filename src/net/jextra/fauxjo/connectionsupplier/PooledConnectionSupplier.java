@@ -90,6 +90,23 @@ public class PooledConnectionSupplier implements ConnectionSupplier
         return cnx;
     }
 
+    @Override
+    public boolean closeConnection()
+        throws SQLException
+    {
+        Connection cnx = null;
+        if ( threadConnection.get() == null )
+        {
+            return false;
+        }
+
+        cnx = threadConnection.get();
+        cnx.close();
+        threadConnection.set( null );
+
+        return true;
+    }
+
     public void setCloseConnectionOnClear( boolean value )
     {
         closeConnectionOnClear = value;

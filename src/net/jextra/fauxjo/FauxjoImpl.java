@@ -196,8 +196,7 @@ public abstract class FauxjoImpl implements Fauxjo
             int hashCode = 0;
             for ( Object item : keys )
             {
-                hashCode += item == null
-                    ? 0 : item.hashCode();
+                hashCode += item == null ? 0 : item.hashCode();
             }
 
             return hashCode;

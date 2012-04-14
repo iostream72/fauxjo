@@ -53,8 +53,7 @@ public class ShortCoercer implements TypeCoercer<Short>
             return value.longValue();
         }
 
-        throw new FauxjoException( "The ShortCoercer does not know how to convert to type " +
-            destClass.getCanonicalName() );
+        throw new FauxjoException( "The ShortCoercer does not know how to convert to type "
+            + destClass.getCanonicalName() );
     }
 }
-

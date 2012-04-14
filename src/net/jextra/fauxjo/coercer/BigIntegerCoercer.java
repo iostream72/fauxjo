@@ -57,9 +57,7 @@ public class BigIntegerCoercer implements TypeCoercer<BigInteger>
             return value.longValue();
         }
 
-        throw new FauxjoException( "The BigInteger does not know how to convert to type " +
-            destClass );
+        throw new FauxjoException( "The BigInteger does not know how to convert to type " + destClass );
     }
 
 }
-

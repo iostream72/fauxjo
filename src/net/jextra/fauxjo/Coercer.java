@@ -37,7 +37,7 @@ public class Coercer
     // Fields
     // ============================================================
 
-    private Map<Class<?>,TypeCoercer<?>> _coercerMap = new HashMap<Class<?>,TypeCoercer<?>>();
+    private Map<Class<?>, TypeCoercer<?>> _coercerMap = new HashMap<Class<?>, TypeCoercer<?>>();
 
     // ============================================================
     // Constructors
@@ -68,20 +68,19 @@ public class Coercer
     // public
     // ----------
 
-
-    public < T > void addTypeCoercer( Class<T> coercerClass, TypeCoercer<T> coercer )
+    public <T> void addTypeCoercer( Class<T> coercerClass, TypeCoercer<T> coercer )
     {
-        _coercerMap.put( ( Class<?> ) coercerClass, ( TypeCoercer<?> ) coercer );
+        _coercerMap.put( (Class<?>) coercerClass, (TypeCoercer<?>) coercer );
     }
 
     @SuppressWarnings( "unchecked" )
-    public < T > TypeCoercer<T> getTypeCoercer( Class<T> coercerClass )
+    public <T> TypeCoercer<T> getTypeCoercer( Class<T> coercerClass )
     {
-        return( TypeCoercer<T> ) _coercerMap.get( coercerClass );
+        return (TypeCoercer<T>) _coercerMap.get( coercerClass );
     }
 
     @SuppressWarnings( "unchecked" )
-    public < T > Object coerce( T value, Class<?> destClass )
+    public <T> Object coerce( T value, Class<?> destClass )
         throws FauxjoException
     {
         // Null values are just null values.
@@ -89,7 +88,7 @@ public class Coercer
         {
             return null;
         }
-        
+
         if ( destClass.isPrimitive() )
         {
             if ( destClass == Boolean.TYPE )
@@ -132,15 +131,14 @@ public class Coercer
             return value;
         }
 
-        TypeCoercer<T> coercer = ( TypeCoercer<T> ) _coercerMap.get( value.getClass() );
+        TypeCoercer<T> coercer = (TypeCoercer<T>) _coercerMap.get( value.getClass() );
 
         // use default coercer if none is found
         if ( coercer == null )
         {
-            coercer = ( TypeCoercer<T> ) _coercerMap.get( Object.class );
+            coercer = (TypeCoercer<T>) _coercerMap.get( Object.class );
         }
 
         return coercer.coerce( value, destClass );
     }
 }
-

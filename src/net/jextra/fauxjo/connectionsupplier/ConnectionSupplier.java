@@ -34,4 +34,7 @@ public interface ConnectionSupplier
 {
     public Connection getConnection()
         throws SQLException;
+
+    public boolean closeConnection()
+        throws SQLException;
 }

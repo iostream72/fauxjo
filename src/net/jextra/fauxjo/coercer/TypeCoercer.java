@@ -44,4 +44,3 @@ public interface TypeCoercer<T>
     public Object coerce( T value, Class<?> destClass )
         throws FauxjoException;
 }
-

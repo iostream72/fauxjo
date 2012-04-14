@@ -44,9 +44,7 @@ public class DoubleCoercer implements TypeCoercer<Float>
             return value.floatValue();
         }
 
-        throw new FauxjoException( "The DoubleCoercer does not know how to convert to type " +
-            destClass );
+        throw new FauxjoException( "The DoubleCoercer does not know how to convert to type " + destClass );
     }
 
 }
-

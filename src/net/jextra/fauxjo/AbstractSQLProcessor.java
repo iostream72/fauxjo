@@ -38,16 +38,16 @@ public abstract class AbstractSQLProcessor<T extends Fauxjo> implements SQLProce
     // Fields
     // ============================================================
 
-	private ResultSetRecordProcessor<T> _recordProcessor;
+    private ResultSetRecordProcessor<T> _recordProcessor;
 
     // ============================================================
     // Constructors
     // ============================================================
 
-	public AbstractSQLProcessor( ResultSetRecordProcessor<T> recordProcessor )
-	{
-		_recordProcessor = recordProcessor;
-	}
+    public AbstractSQLProcessor( ResultSetRecordProcessor<T> recordProcessor )
+    {
+        _recordProcessor = recordProcessor;
+    }
 
     // ============================================================
     // Methods
@@ -57,40 +57,40 @@ public abstract class AbstractSQLProcessor<T extends Fauxjo> implements SQLProce
     // public
     // ----------
 
-	@Override
-	public T getFirst( ResultSet rs )
-		throws SQLException
-	{
-		return getFirst( rs, false, false );
-	}
+    @Override
+    public T getFirst( ResultSet rs )
+        throws SQLException
+    {
+        return getFirst( rs, false, false );
+    }
 
-	@Override
-	public T getFirst( ResultSet rs, boolean errorIfEmpty )
-		throws SQLException
-	{
-		return getFirst( rs, errorIfEmpty, false );
-	}
+    @Override
+    public T getFirst( ResultSet rs, boolean errorIfEmpty )
+        throws SQLException
+    {
+        return getFirst( rs, errorIfEmpty, false );
+    }
 
-	@Override
-	public T getUnique( ResultSet rs )
-		throws SQLException
-	{
-		return getFirst( rs, false, true );
-	}
+    @Override
+    public T getUnique( ResultSet rs )
+        throws SQLException
+    {
+        return getFirst( rs, false, true );
+    }
 
-	@Override
-	public T getUnique( ResultSet rs, boolean errorIfEmpty )
-		throws SQLException
-	{
-		return getFirst( rs, errorIfEmpty, true );
-	}
+    @Override
+    public T getUnique( ResultSet rs, boolean errorIfEmpty )
+        throws SQLException
+    {
+        return getFirst( rs, errorIfEmpty, true );
+    }
 
-	@Override
-	public T getFirst( ResultSet rs, boolean errorIfEmpty, boolean errorIfNotUnique )
-		throws SQLException
-	{
-		ArrayList<T> beans = new ArrayList<T>();
-		processResultSet( beans, rs, 2 );
+    @Override
+    public T getFirst( ResultSet rs, boolean errorIfEmpty, boolean errorIfNotUnique )
+        throws SQLException
+    {
+        ArrayList<T> beans = new ArrayList<T>();
+        processResultSet( beans, rs, 2 );
         if ( beans == null || beans.isEmpty() )
         {
             if ( errorIfEmpty )
@@ -107,41 +107,41 @@ public abstract class AbstractSQLProcessor<T extends Fauxjo> implements SQLProce
         }
 
         return beans.get( 0 );
-	}
+    }
 
-	@Override
-	public List<T> getList( ResultSet rs )
-		throws SQLException
-	{
-		return getList( rs, Integer.MAX_VALUE );
-	}
+    @Override
+    public List<T> getList( ResultSet rs )
+        throws SQLException
+    {
+        return getList( rs, Integer.MAX_VALUE );
+    }
 
-	@Override
-	public List<T> getList( ResultSet rs, int maxNumItems )
-		throws SQLException
-	{
-		ArrayList<T> result = new ArrayList<T>();
-		processResultSet( result, rs, maxNumItems );
-		return result;
-	}
+    @Override
+    public List<T> getList( ResultSet rs, int maxNumItems )
+        throws SQLException
+    {
+        ArrayList<T> result = new ArrayList<T>();
+        processResultSet( result, rs, maxNumItems );
+        return result;
+    }
 
-	@Override
-	public Set<T> getSet( ResultSet rs )
-		throws SQLException
-	{
-		return getSet( rs, Integer.MAX_VALUE );
-	}
+    @Override
+    public Set<T> getSet( ResultSet rs )
+        throws SQLException
+    {
+        return getSet( rs, Integer.MAX_VALUE );
+    }
 
-	@Override
-	public Set<T> getSet(ResultSet rs, int maxNumItems)
-		throws SQLException
-	{
-		LinkedHashSet<T> result = new LinkedHashSet<T>();
-		processResultSet( result, rs, maxNumItems );
-		return result;
-	}
+    @Override
+    public Set<T> getSet( ResultSet rs, int maxNumItems )
+        throws SQLException
+    {
+        LinkedHashSet<T> result = new LinkedHashSet<T>();
+        processResultSet( result, rs, maxNumItems );
+        return result;
+    }
 
-	@Override
+    @Override
     public ResultSetIterator<T> getIterator( ResultSet rs )
         throws SQLException
     {
@@ -154,20 +154,20 @@ public abstract class AbstractSQLProcessor<T extends Fauxjo> implements SQLProce
     // protected
     // ----------
 
-	protected void processResultSet( Collection<T> collection, ResultSet rs, int numRows )
-		throws SQLException
+    protected void processResultSet( Collection<T> collection, ResultSet rs, int numRows )
+        throws SQLException
     {
         int counter = 0;
         while ( rs.next() && ( counter < numRows ) )
         {
-        	collection.add( _recordProcessor.convertResultSetRow( rs ) );
+            collection.add( _recordProcessor.convertResultSetRow( rs ) );
             counter++;
         }
         rs.close();
     }
 
-	protected ResultSetRecordProcessor<T> getResultSetRecordProcessor()
-	{
-		return _recordProcessor;
-	}
+    protected ResultSetRecordProcessor<T> getResultSetRecordProcessor()
+    {
+        return _recordProcessor;
+    }
 }

@@ -36,7 +36,7 @@ public interface Fauxjo
      * tells if the column is a primary key or not and what Class the Fauxjo bean expects the
      * value to be.
      */
-    public Map<String,FieldDef> getFieldDefs()
+    public Map<String, FieldDef> getFieldDefs()
         throws FauxjoException;
 
     /**
@@ -61,4 +61,3 @@ public interface Fauxjo
     public boolean isInDatabase()
         throws FauxjoException;
 }
-

@@ -70,6 +70,7 @@ public class SimpleConnectionSupplier implements ConnectionSupplier
     // ----------
 
     public void setDataSource( DataSource ds )
+        throws SQLException
     {
         connection = ds.getConnection();
     }
@@ -83,5 +84,20 @@ public class SimpleConnectionSupplier implements ConnectionSupplier
     public Connection getConnection()
     {
         return connection;
+    }
+
+    @Override
+    public boolean closeConnection()
+        throws SQLException
+    {
+        if ( connection == null )
+        {
+            return false;
+        }
+
+        connection.close();
+        connection = null;
+
+        return true;
     }
 }

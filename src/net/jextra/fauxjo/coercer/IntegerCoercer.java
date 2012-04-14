@@ -58,9 +58,7 @@ public class IntegerCoercer implements TypeCoercer<Integer>
             return value.toString();
         }
 
-        throw new FauxjoException( "The IntegerCoercer does not know how to convert to type " +
-            destClass );
+        throw new FauxjoException( "The IntegerCoercer does not know how to convert to type " + destClass );
     }
 
 }
-

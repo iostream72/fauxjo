@@ -31,7 +31,7 @@ import java.util.*;
  * Fauxjo bean. This is used primarily to iterate over a large number records without having to
  * load them all into memory.
  */
-public class ResultSetIterator < T extends Fauxjo > implements Iterator<T>, Iterable<T>
+public class ResultSetIterator<T extends Fauxjo> implements Iterator<T>, Iterable<T>
 {
     // ============================================================
     // Fields
@@ -95,8 +95,7 @@ public class ResultSetIterator < T extends Fauxjo > implements Iterator<T>, Iter
     @Override
     public void remove()
     {
-        throw new UnsupportedOperationException( "Remove is not supported for " +
-            "ResultSetIterators." );
+        throw new UnsupportedOperationException( "Remove is not supported for " + "ResultSetIterators." );
     }
 
     public void close()
@@ -123,4 +122,3 @@ public class ResultSetIterator < T extends Fauxjo > implements Iterator<T>, Iter
         return this;
     }
 }
-

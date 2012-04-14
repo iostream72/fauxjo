@@ -172,15 +172,15 @@ public class Home<T extends Fauxjo>
     }
 
     public Set<T> getSet( ResultSet rs )
-    	throws SQLException
+        throws SQLException
     {
-    	return _sqlProcessor.getSet( rs );
+        return _sqlProcessor.getSet( rs );
     }
 
     public Set<T> getSet( ResultSet rs, int maxNumRows )
-    	throws SQLException
+        throws SQLException
     {
-    	return _sqlProcessor.getSet( rs, maxNumRows );
+        return _sqlProcessor.getSet( rs, maxNumRows );
     }
 
     public ResultSetIterator<T> getIterator( ResultSet rs )

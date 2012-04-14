@@ -41,4 +41,3 @@ public @interface FauxjoSetter
     // Column in the database from select statement.
     String value();
 }
-

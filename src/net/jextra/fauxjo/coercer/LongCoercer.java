@@ -55,9 +55,7 @@ public class LongCoercer implements TypeCoercer<Long>
             return value.intValue();
         }
 
-        throw new FauxjoException( "The LongCoercer does not know how to convert to type " +
-            destClass );
+        throw new FauxjoException( "The LongCoercer does not know how to convert to type " + destClass );
     }
 
 }
-
