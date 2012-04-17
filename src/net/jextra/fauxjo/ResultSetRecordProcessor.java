@@ -107,7 +107,7 @@ public class ResultSetRecordProcessor<T extends Fauxjo>
     {
         if ( _fieldDefs == null )
         {
-            _fieldDefs = bean.getFieldDefs();
+            _fieldDefs = bean.extractFieldDefs();
         }
 
         return _fieldDefs;

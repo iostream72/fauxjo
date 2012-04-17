@@ -66,7 +66,7 @@ public abstract class FauxjoImpl implements Fauxjo
     // ----------
 
     @Override
-    public Map<String, FieldDef> getFieldDefs()
+    public Map<String, FieldDef> extractFieldDefs()
         throws FauxjoException
     {
         try
@@ -196,7 +196,8 @@ public abstract class FauxjoImpl implements Fauxjo
             int hashCode = 0;
             for ( Object item : keys )
             {
-                hashCode += item == null ? 0 : item.hashCode();
+                hashCode += item == null
+                    ? 0 : item.hashCode();
             }
 
             return hashCode;
@@ -274,7 +275,7 @@ public abstract class FauxjoImpl implements Fauxjo
             // Arbitrarily ordered by keys.
             TreeMap<String, Object> keys = new TreeMap<String, Object>();
 
-            Map<String, FieldDef> map = getFieldDefs();
+            Map<String, FieldDef> map = extractFieldDefs();
             for ( String key : map.keySet() )
             {
                 FieldDef def = map.get( key );

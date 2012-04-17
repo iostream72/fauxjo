@@ -36,14 +36,14 @@ public interface Fauxjo
      * tells if the column is a primary key or not and what Class the Fauxjo bean expects the
      * value to be.
      */
-    public Map<String, FieldDef> getFieldDefs()
+    Map<String, FieldDef> extractFieldDefs()
         throws FauxjoException;
 
     /**
      * @return Value from the bean for the given "key" = lowercase database column name. The Object
      * Class should be same as returned from {@link getValueDefs} for the given key.
      */
-    public Object readValue( String key )
+    Object readValue( String key )
         throws FauxjoException;
 
     /**
@@ -51,13 +51,13 @@ public interface Fauxjo
      * Object Class will be the equal to whatever was returned from {@link getValueDefs} for the
      * given key.
      */
-    public void writeValue( String key, Object value )
+    void writeValue( String key, Object value )
         throws FauxjoException;
 
     /**
      * Tells whether or not this Fauxjo bean is already in the database or not. This is usually
      * done by checking the primary keys for null values.
      */
-    public boolean isInDatabase()
+    boolean isInDatabase()
         throws FauxjoException;
 }
