@@ -408,7 +408,7 @@ public abstract class FauxjoImpl implements Fauxjo
                             + "already defines the link to the column [" + key + "]" );
                     }
 
-                    beanDef.addReadMethod( key, prop.getWriteMethod() );
+                    beanDef.addReadMethod( key, prop.getReadMethod() );
 
                     //
                     // Check if FauxjoPrimaryKey.
