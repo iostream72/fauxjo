@@ -24,7 +24,7 @@
 package net.jextra.fauxjo.connectionsupplier;
 
 import java.sql.*;
-import sun.jdbc.odbc.ee.*;
+import javax.sql.*;
 
 /**
  * <p>
