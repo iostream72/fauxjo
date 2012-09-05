@@ -38,7 +38,7 @@ public abstract class AbstractSQLProcessor<T extends Fauxjo> implements SQLProce
     // Fields
     // ============================================================
 
-    private ResultSetRecordProcessor<T> _recordProcessor;
+    private ResultSetRecordProcessor<T> recordProcessor;
 
     // ============================================================
     // Constructors
@@ -46,7 +46,7 @@ public abstract class AbstractSQLProcessor<T extends Fauxjo> implements SQLProce
 
     public AbstractSQLProcessor( ResultSetRecordProcessor<T> recordProcessor )
     {
-        _recordProcessor = recordProcessor;
+        this.recordProcessor = recordProcessor;
     }
 
     // ============================================================
@@ -145,7 +145,7 @@ public abstract class AbstractSQLProcessor<T extends Fauxjo> implements SQLProce
     public ResultSetIterator<T> getIterator( ResultSet rs )
         throws SQLException
     {
-        ResultSetIterator<T> iterator = new ResultSetIterator<T>( _recordProcessor, rs );
+        ResultSetIterator<T> iterator = new ResultSetIterator<T>( recordProcessor, rs );
 
         return iterator;
     }
@@ -160,7 +160,7 @@ public abstract class AbstractSQLProcessor<T extends Fauxjo> implements SQLProce
         int counter = 0;
         while ( rs.next() && ( counter < numRows ) )
         {
-            collection.add( _recordProcessor.convertResultSetRow( rs ) );
+            collection.add( recordProcessor.convertResultSetRow( rs ) );
             counter++;
         }
         rs.close();
@@ -168,6 +168,6 @@ public abstract class AbstractSQLProcessor<T extends Fauxjo> implements SQLProce
 
     protected ResultSetRecordProcessor<T> getResultSetRecordProcessor()
     {
-        return _recordProcessor;
+        return recordProcessor;
     }
 }

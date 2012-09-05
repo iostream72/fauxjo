@@ -39,14 +39,14 @@ public class SQLTableProcessor<T extends Fauxjo> extends AbstractSQLProcessor<T>
     private static final String COLUMN_NAME = "COLUMN_NAME";
     private static final String DATA_TYPE = "DATA_TYPE";
 
-    private Schema _schema;
-    private String _tableName;
+    private Schema schema;
+    private String tableName;
 
-    private Coercer _coercer;
+    private Coercer coercer;
 
     // Key = Lowercase column name (in code known as the "key").
     // Value = Name of column used by the database and SQL type.
-    private Map<String, ColumnInfo> _dbColumnInfos;
+    private Map<String, ColumnInfo> dbColumnInfos;
 
     // ============================================================
     // Constructors
@@ -55,9 +55,9 @@ public class SQLTableProcessor<T extends Fauxjo> extends AbstractSQLProcessor<T>
     public SQLTableProcessor( Schema schema, String tableName, Class<T> beanClass )
     {
         super( new ResultSetRecordProcessor<T>( beanClass ) );
-        _schema = schema;
-        _tableName = tableName;
-        _coercer = new Coercer();
+        this.schema = schema;
+        this.tableName = tableName;
+        this.coercer = new Coercer();
     }
 
     // ============================================================
@@ -70,7 +70,7 @@ public class SQLTableProcessor<T extends Fauxjo> extends AbstractSQLProcessor<T>
 
     public Coercer getCoercer()
     {
-        return _coercer;
+        return coercer;
     }
 
     /**
@@ -95,12 +95,12 @@ public class SQLTableProcessor<T extends Fauxjo> extends AbstractSQLProcessor<T>
                 Object val = bean.readValue( key );
                 try
                 {
-                    val = _coercer.coerce( val, destClass );
+                    val = coercer.coerce( val, destClass );
                 }
                 catch ( FauxjoException ex )
                 {
-                    throw new FauxjoException( "Failed to coerce " + getQualifiedName( _tableName ) + "."
-                        + columnInfo.getRealName() + " for insert: " + key + ":" + columnInfo.getRealName(), ex );
+                    throw new FauxjoException( "Failed to coerce " + getQualifiedName( tableName ) + "." +
+                        columnInfo.getRealName() + " for insert: " + key + ":" + columnInfo.getRealName(), ex );
                 }
 
                 // If this is a primary key and it is null, try to get sequence name from
@@ -125,8 +125,8 @@ public class SQLTableProcessor<T extends Fauxjo> extends AbstractSQLProcessor<T>
                 questionMarks.append( "?" );
                 values.add( new DataValue( val, columnInfo.getSQLType() ) );
             }
-            String sql = "insert into " + getQualifiedName( _tableName ) + " (" + columns + ") values ("
-                + questionMarks + ")";
+            String sql = "insert into " + getQualifiedName( tableName ) + " (" + columns + ") values (" +
+                questionMarks + ")";
             PreparedStatement statement = getConnection().prepareStatement( sql );
             int propIndex = 1;
             for ( DataValue value : values )
@@ -157,8 +157,8 @@ public class SQLTableProcessor<T extends Fauxjo> extends AbstractSQLProcessor<T>
             for ( String key : generatedKeys.keySet() )
             {
                 Statement gkStatement = getConnection().createStatement();
-                ResultSet rs = gkStatement.executeQuery( "select currval('"
-                    + getQualifiedName( generatedKeys.get( key ) ) + "')" );
+                ResultSet rs = gkStatement.executeQuery( "select currval('" +
+                    getQualifiedName( generatedKeys.get( key ) ) + "')" );
                 rs.next();
                 Object value = rs.getObject( 1 );
                 rs.close();
@@ -201,12 +201,12 @@ public class SQLTableProcessor<T extends Fauxjo> extends AbstractSQLProcessor<T>
                 Object val = bean.readValue( key );
                 try
                 {
-                    val = _coercer.coerce( val, destClass );
+                    val = coercer.coerce( val, destClass );
                 }
                 catch ( FauxjoException ex )
                 {
-                    throw new FauxjoException( "Failed to coerce " + getQualifiedName( _tableName ) + "."
-                        + columnInfo.getRealName() + " for insert: " + key + ":" + columnInfo.getRealName(), ex );
+                    throw new FauxjoException( "Failed to coerce " + getQualifiedName( tableName ) + "." +
+                        columnInfo.getRealName() + " for insert: " + key + ":" + columnInfo.getRealName(), ex );
                 }
 
                 FieldDef fieldDef = getResultSetRecordProcessor().getBeanFieldDefs( bean ).get( key );
@@ -233,7 +233,7 @@ public class SQLTableProcessor<T extends Fauxjo> extends AbstractSQLProcessor<T>
                 }
             }
 
-            String sql = "update " + getQualifiedName( _tableName ) + " set " + setterClause + " where " + whereClause;
+            String sql = "update " + getQualifiedName( tableName ) + " set " + setterClause + " where " + whereClause;
             PreparedStatement statement = getConnection().prepareStatement( sql );
             int propIndex = 1;
             for ( DataValue value : values )
@@ -299,7 +299,7 @@ public class SQLTableProcessor<T extends Fauxjo> extends AbstractSQLProcessor<T>
                 Class<?> destClass = SQLTypeMapper.getInstance().getJavaClass( columnInfo.getSQLType() );
 
                 Object val = bean.readValue( key );
-                val = _coercer.coerce( val, destClass );
+                val = coercer.coerce( val, destClass );
 
                 if ( whereClause.length() > 0 )
                 {
@@ -309,7 +309,7 @@ public class SQLTableProcessor<T extends Fauxjo> extends AbstractSQLProcessor<T>
                 primaryKeyValues.add( new DataValue( val, columnInfo.getSQLType() ) );
             }
 
-            String sql = "delete from " + getQualifiedName( _tableName ) + " where " + whereClause;
+            String sql = "delete from " + getQualifiedName( tableName ) + " where " + whereClause;
             PreparedStatement statement = getConnection().prepareStatement( sql );
             int propIndex = 1;
             for ( DataValue value : primaryKeyValues )
@@ -338,18 +338,19 @@ public class SQLTableProcessor<T extends Fauxjo> extends AbstractSQLProcessor<T>
         {
             c = clause;
         }
-        return "select * from " + _schema.getQualifiedName( _tableName ) + " " + c;
+
+        return "select * from " + schema.getQualifiedName( tableName ) + " " + c;
     }
 
     @Override
     public Schema getSchema()
     {
-        return _schema;
+        return schema;
     }
 
     public String getTableName()
     {
-        return _tableName;
+        return tableName;
     }
 
     /**
@@ -385,7 +386,7 @@ public class SQLTableProcessor<T extends Fauxjo> extends AbstractSQLProcessor<T>
     protected Connection getConnection()
         throws SQLException
     {
-        return _schema.getConnection();
+        return schema.getConnection();
     }
 
     // ----------
@@ -394,18 +395,18 @@ public class SQLTableProcessor<T extends Fauxjo> extends AbstractSQLProcessor<T>
 
     private String getQualifiedName( String name )
     {
-        return _schema.getQualifiedName( name );
+        return schema.getQualifiedName( name );
     }
 
     private Map<String, ColumnInfo> getDBColumnInfos()
         throws SQLException
     {
-        if ( _dbColumnInfos == null )
+        if ( dbColumnInfos == null )
         {
             cacheColumnInfos( true );
         }
 
-        return _dbColumnInfos;
+        return dbColumnInfos;
     }
 
     /**
@@ -414,7 +415,7 @@ public class SQLTableProcessor<T extends Fauxjo> extends AbstractSQLProcessor<T>
     private void cacheColumnInfos( boolean throwException )
         throws SQLException
     {
-        String realTableName = getRealTableName( _tableName );
+        String realTableName = getRealTableName( tableName );
 
         //
         // If the table does not actually exist optionally throw exception.
@@ -423,7 +424,7 @@ public class SQLTableProcessor<T extends Fauxjo> extends AbstractSQLProcessor<T>
         {
             if ( throwException )
             {
-                throw new FauxjoException( String.format( "Table %s does not exist.", getQualifiedName( _tableName ) ) );
+                throw new FauxjoException( String.format( "Table %s does not exist.", getQualifiedName( tableName ) ) );
             }
             else
             {
@@ -431,17 +432,20 @@ public class SQLTableProcessor<T extends Fauxjo> extends AbstractSQLProcessor<T>
             }
         }
 
-        _dbColumnInfos = new HashMap<String, ColumnInfo>();
+        HashMap<String, ColumnInfo> map = new HashMap<String, ColumnInfo>();
 
-        ResultSet rs = getConnection().getMetaData().getColumns( null, _schema.getSchemaName(), realTableName, null );
+        ResultSet rs = getConnection().getMetaData().getColumns( null, schema.getSchemaName(), realTableName, null );
         while ( rs.next() )
         {
             String realName = rs.getString( COLUMN_NAME );
             Integer type = rs.getInt( DATA_TYPE );
 
-            _dbColumnInfos.put( realName.toLowerCase(), new ColumnInfo( realName, type ) );
+            map.put( realName.toLowerCase(), new ColumnInfo( realName, type ) );
         }
         rs.close();
+
+        // Only set field if all went well
+        dbColumnInfos = map;
     }
 
     /**
@@ -463,7 +467,7 @@ public class SQLTableProcessor<T extends Fauxjo> extends AbstractSQLProcessor<T>
         }
         rs.close();
 
-        rs = getConnection().getMetaData().getTables( null, _schema.getSchemaName(), null,
+        rs = getConnection().getMetaData().getTables( null, schema.getSchemaName(), null,
             tableTypes.toArray( new String[0] ) );
 
         while ( rs.next() )
@@ -486,55 +490,55 @@ public class SQLTableProcessor<T extends Fauxjo> extends AbstractSQLProcessor<T>
 
     public static class ColumnInfo
     {
-        private String _realName;
-        private int _sqlType;
+        private String realName;
+        private int sqlType;
 
         public ColumnInfo( String realName, int sqlType )
         {
-            _realName = realName;
-            _sqlType = sqlType;
+            this.realName = realName;
+            this.sqlType = sqlType;
         }
 
         public String getRealName()
         {
-            return _realName;
+            return realName;
         }
 
         public void setRealName( String realName )
         {
-            _realName = realName;
+            this.realName = realName;
         }
 
         public int getSQLType()
         {
-            return _sqlType;
+            return sqlType;
         }
 
         public void setSQLType( int sqlType )
         {
-            _sqlType = sqlType;
+            this.sqlType = sqlType;
         }
     }
 
     private class DataValue
     {
-        private Object _value;
-        private int _sqlType;
+        private Object value;
+        private int sqlType;
 
         public DataValue( Object value, int sqlType )
         {
-            _value = value;
-            _sqlType = sqlType;
+            this.value = value;
+            this.sqlType = sqlType;
         }
 
         public Object getValue()
         {
-            return _value;
+            return value;
         }
 
         public int getSqlType()
         {
-            return _sqlType;
+            return sqlType;
         }
     }
 }

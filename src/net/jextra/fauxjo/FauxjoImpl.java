@@ -46,7 +46,7 @@ public abstract class FauxjoImpl implements Fauxjo
     // Fields
     // ============================================================
 
-    private static HashMap<Class<?>, FauxjoBeanDef> _caches;
+    private static HashMap<Class<?>, FauxjoBeanDef> caches;
 
     // ============================================================
     // Constructors
@@ -54,7 +54,7 @@ public abstract class FauxjoImpl implements Fauxjo
 
     static
     {
-        _caches = new HashMap<Class<?>, FauxjoBeanDef>();
+        caches = new HashMap<Class<?>, FauxjoBeanDef>();
     }
 
     // ============================================================
@@ -196,8 +196,7 @@ public abstract class FauxjoImpl implements Fauxjo
             int hashCode = 0;
             for ( Object item : keys )
             {
-                hashCode += item == null
-                    ? 0 : item.hashCode();
+                hashCode += item == null ? 0 : item.hashCode();
             }
 
             return hashCode;
@@ -339,7 +338,7 @@ public abstract class FauxjoImpl implements Fauxjo
     protected FauxjoBeanDef getFauxjoBeanDef()
         throws FauxjoException, IntrospectionException
     {
-        FauxjoBeanDef beanDef = _caches.get( getClass() );
+        FauxjoBeanDef beanDef = caches.get( getClass() );
         if ( beanDef != null )
         {
             return beanDef;
@@ -349,7 +348,6 @@ public abstract class FauxjoImpl implements Fauxjo
         // Was not cached, collect information.
         //
         beanDef = new FauxjoBeanDef();
-        _caches.put( getClass(), beanDef );
 
         for ( Field field : getFauxjoFields( getClass() ) )
         {
@@ -386,8 +384,8 @@ public abstract class FauxjoImpl implements Fauxjo
                     Field field = beanDef.getField( key );
                     if ( field != null )
                     {
-                        throw new FauxjoException( "FauxjoSetter defined on method where a FauxjoField "
-                            + "already defines the link to the column [" + key + "]" );
+                        throw new FauxjoException( "FauxjoSetter defined on method where a FauxjoField " +
+                            "already defines the link to the column [" + key + "]" );
                     }
 
                     beanDef.addWriteMethod( key, prop.getWriteMethod() );
@@ -404,8 +402,8 @@ public abstract class FauxjoImpl implements Fauxjo
                     Field field = beanDef.getField( key );
                     if ( field != null )
                     {
-                        throw new FauxjoException( "FauxjoGetter defined on method where a FauxjoField "
-                            + "already defines the link to the column [" + key + "]" );
+                        throw new FauxjoException( "FauxjoGetter defined on method where a FauxjoField " +
+                            "already defines the link to the column [" + key + "]" );
                     }
 
                     beanDef.addReadMethod( key, prop.getReadMethod() );
@@ -427,6 +425,9 @@ public abstract class FauxjoImpl implements Fauxjo
                 }
             }
         }
+
+        // Put in cacche 
+        caches.put( getClass(), beanDef );
 
         return beanDef;
     }
@@ -464,11 +465,11 @@ public abstract class FauxjoImpl implements Fauxjo
 
     private static class FauxjoBeanDef
     {
-        private Map<String, FieldDef> _cache;
+        private Map<String, FieldDef> cache;
 
         public FauxjoBeanDef()
         {
-            _cache = new TreeMap<String, FieldDef>();
+            cache = new TreeMap<String, FieldDef>();
         }
 
         public void addField( String key, Field field )
@@ -508,7 +509,7 @@ public abstract class FauxjoImpl implements Fauxjo
         {
             TreeMap<String, FieldDef> map = new TreeMap<String, FieldDef>();
 
-            for ( String key : _cache.keySet() )
+            for ( String key : cache.keySet() )
             {
                 map.put( key, getFieldDef( key ) );
             }
@@ -518,11 +519,11 @@ public abstract class FauxjoImpl implements Fauxjo
 
         private FieldDef getFieldDef( String key )
         {
-            FieldDef def = _cache.get( key.toLowerCase() );
+            FieldDef def = cache.get( key.toLowerCase() );
             if ( def == null )
             {
                 def = new FieldDef();
-                _cache.put( key.toLowerCase(), def );
+                cache.put( key.toLowerCase(), def );
             }
 
             return def;

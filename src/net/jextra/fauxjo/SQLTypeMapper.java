@@ -35,7 +35,7 @@ public class SQLTypeMapper extends HashMap<Integer, Class<?>>
     // Fields
     // ============================================================
 
-    private static SQLTypeMapper _instance;
+    private static SQLTypeMapper instance;
 
     // ============================================================
     // Constructors
@@ -91,12 +91,12 @@ public class SQLTypeMapper extends HashMap<Integer, Class<?>>
 
     public static SQLTypeMapper getInstance()
     {
-        if ( _instance == null )
+        if ( instance == null )
         {
-            _instance = new SQLTypeMapper();
+            instance = new SQLTypeMapper();
         }
 
-        return _instance;
+        return instance;
     }
 
     public Class<?> putType( int sqlType, Class<?> javaClass )

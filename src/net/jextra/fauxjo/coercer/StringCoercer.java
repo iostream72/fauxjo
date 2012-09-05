@@ -69,7 +69,7 @@ public class StringCoercer implements TypeCoercer<String>
             return Timestamp.valueOf( value );
         }
 
-        throw new FauxjoException( "The StringCoercer does not know how to convert to type "
-            + destClass.getCanonicalName() );
+        throw new FauxjoException( "The StringCoercer does not know how to convert to type " +
+            destClass.getCanonicalName() );
     }
 }

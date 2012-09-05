@@ -37,7 +37,7 @@ public class Home<T extends Fauxjo>
     // Fields
     // ============================================================
 
-    private SQLProcessor<T> _sqlProcessor;
+    private SQLProcessor<T> sqlProcessor;
 
     // ============================================================
     // Constructors
@@ -45,12 +45,12 @@ public class Home<T extends Fauxjo>
 
     public Home( Schema schema, Class<T> beanClass, String tableName )
     {
-        _sqlProcessor = new SQLTableProcessor<T>( schema, tableName, beanClass );
+        sqlProcessor = new SQLTableProcessor<T>( schema, tableName, beanClass );
     }
 
     public Home( Schema schema, Class<T> beanClass, SQLProcessor<T> sqlProcessor )
     {
-        _sqlProcessor = sqlProcessor;
+        this.sqlProcessor = sqlProcessor;
     }
 
     // ============================================================
@@ -70,9 +70,9 @@ public class Home<T extends Fauxjo>
     @Deprecated
     public String getTableName()
     {
-        if ( _sqlProcessor instanceof SQLTableProcessor<?> )
+        if ( sqlProcessor instanceof SQLTableProcessor<?> )
         {
-            return ( (SQLTableProcessor<?>) _sqlProcessor ).getTableName();
+            return ( (SQLTableProcessor<?>) sqlProcessor ).getTableName();
         }
 
         return null;
@@ -97,19 +97,19 @@ public class Home<T extends Fauxjo>
     public boolean insert( T bean )
         throws SQLException
     {
-        return _sqlProcessor.insert( bean );
+        return sqlProcessor.insert( bean );
     }
 
     public int update( T bean )
         throws SQLException
     {
-        return _sqlProcessor.update( bean );
+        return sqlProcessor.update( bean );
     }
 
     public boolean delete( T bean )
         throws SQLException
     {
-        return _sqlProcessor.delete( bean );
+        return sqlProcessor.delete( bean );
     }
 
     public boolean save( T bean )
@@ -138,60 +138,60 @@ public class Home<T extends Fauxjo>
     public T getFirst( ResultSet rs )
         throws SQLException
     {
-        return _sqlProcessor.getFirst( rs );
+        return sqlProcessor.getFirst( rs );
     }
 
     public T getFirst( ResultSet rs, boolean errorIfEmpty )
         throws SQLException
     {
-        return _sqlProcessor.getFirst( rs, errorIfEmpty );
+        return sqlProcessor.getFirst( rs, errorIfEmpty );
     }
 
     public T getUnique( ResultSet rs )
         throws SQLException
     {
-        return _sqlProcessor.getUnique( rs );
+        return sqlProcessor.getUnique( rs );
     }
 
     public T getUnique( ResultSet rs, boolean errorIfEmpty )
         throws SQLException
     {
-        return _sqlProcessor.getUnique( rs, errorIfEmpty );
+        return sqlProcessor.getUnique( rs, errorIfEmpty );
     }
 
     public List<T> getList( ResultSet rs )
         throws SQLException
     {
-        return _sqlProcessor.getList( rs );
+        return sqlProcessor.getList( rs );
     }
 
     public List<T> getList( ResultSet rs, int maxNumRows )
         throws SQLException
     {
-        return _sqlProcessor.getList( rs, maxNumRows );
+        return sqlProcessor.getList( rs, maxNumRows );
     }
 
     public Set<T> getSet( ResultSet rs )
         throws SQLException
     {
-        return _sqlProcessor.getSet( rs );
+        return sqlProcessor.getSet( rs );
     }
 
     public Set<T> getSet( ResultSet rs, int maxNumRows )
         throws SQLException
     {
-        return _sqlProcessor.getSet( rs, maxNumRows );
+        return sqlProcessor.getSet( rs, maxNumRows );
     }
 
     public ResultSetIterator<T> getIterator( ResultSet rs )
         throws SQLException
     {
-        return _sqlProcessor.getIterator( rs );
+        return sqlProcessor.getIterator( rs );
     }
 
     public String buildBasicSelect( String clause )
     {
-        return _sqlProcessor.buildBasicSelect( clause );
+        return sqlProcessor.buildBasicSelect( clause );
     }
 
     // ----------
@@ -200,7 +200,7 @@ public class Home<T extends Fauxjo>
 
     protected Schema getSchema()
     {
-        return _sqlProcessor.getSchema();
+        return sqlProcessor.getSchema();
     }
 
     protected Connection getConnection()
@@ -211,12 +211,12 @@ public class Home<T extends Fauxjo>
 
     protected SQLProcessor<T> getSQLProcessor()
     {
-        return _sqlProcessor;
+        return sqlProcessor;
     }
 
     @Deprecated
     protected SQLProcessor<T> getSQLTableProcessor()
     {
-        return _sqlProcessor;
+        return sqlProcessor;
     }
 }

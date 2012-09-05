@@ -28,8 +28,9 @@ import java.util.*;
 
 /**
  * Class that's responsible for converting a result set into a {@link Fauxjo} bean.
- *
- * @param <T> The {@link Fauxjo} bean this instance handles conversions for.
+ * 
+ * @param <T>
+ *            The {@link Fauxjo} bean this instance handles conversions for.
  */
 public class ResultSetRecordProcessor<T extends Fauxjo>
 {
@@ -37,12 +38,12 @@ public class ResultSetRecordProcessor<T extends Fauxjo>
     // Fields
     // ============================================================
 
-    private Class<T> _beanClass;
-    private Coercer _coercer;
+    private Class<T> beanClass;
+    private Coercer coercer;
 
     // Key = Lowercase column name (in code known as the "key").
     // Value = Information about the bean property.
-    private Map<String, FieldDef> _fieldDefs;
+    private Map<String, FieldDef> fieldDefs;
 
     // ============================================================
     // Constructors
@@ -50,8 +51,8 @@ public class ResultSetRecordProcessor<T extends Fauxjo>
 
     public ResultSetRecordProcessor( Class<T> beanClass )
     {
-        _beanClass = beanClass;
-        _coercer = new Coercer();
+        this.beanClass = beanClass;
+        coercer = new Coercer();
     }
 
     // ============================================================
@@ -105,12 +106,12 @@ public class ResultSetRecordProcessor<T extends Fauxjo>
     public Map<String, FieldDef> getBeanFieldDefs( Fauxjo bean )
         throws FauxjoException
     {
-        if ( _fieldDefs == null )
+        if ( fieldDefs == null )
         {
-            _fieldDefs = bean.extractFieldDefs();
+            fieldDefs = bean.extractFieldDefs();
         }
 
-        return _fieldDefs;
+        return fieldDefs;
     }
 
     // ----------
@@ -124,7 +125,7 @@ public class ResultSetRecordProcessor<T extends Fauxjo>
 
         try
         {
-            bean = (T) _beanClass.newInstance();
+            bean = (T) beanClass.newInstance();
         }
         catch ( Exception ex )
         {
@@ -149,7 +150,7 @@ public class ResultSetRecordProcessor<T extends Fauxjo>
                     if ( value != null )
                     {
                         Class<?> destClass = fieldDef.getValueClass();
-                        value = _coercer.coerce( value, destClass );
+                        value = coercer.coerce( value, destClass );
                     }
                 }
                 catch ( FauxjoException ex )
@@ -164,8 +165,8 @@ public class ResultSetRecordProcessor<T extends Fauxjo>
         // If any of the columns was not accounted for, throw an Exception
         if ( !fieldDefs.isEmpty() )
         {
-            throw new FauxjoException( "Missing column [" + fieldDefs.keySet().iterator().next()
-                + "] in ResultSet for Fauxjo [" + _beanClass.getCanonicalName() + "]" );
+            throw new FauxjoException( "Missing column [" + fieldDefs.keySet().iterator().next() +
+                "] in ResultSet for Fauxjo [" + beanClass.getCanonicalName() + "]" );
         }
 
         return bean;

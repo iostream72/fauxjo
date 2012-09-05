@@ -45,11 +45,11 @@ public class PreparedStatementCache
     // Fields
     // ============================================================
 
-    private WeakHashMap<Thread, PreparedStatementCacheThreadData> _cache;
+    private WeakHashMap<Thread, PreparedStatementCacheThreadData> cache;
 
     // A listener thread that waits for Thread to finish then throws away the
     // PreparedStatements for that Thread.
-    private HashMap<Thread, Thread> _listenerMap;
+    private HashMap<Thread, Thread> listenerMap;
 
     // ============================================================
     // Constructors
@@ -57,8 +57,8 @@ public class PreparedStatementCache
 
     public PreparedStatementCache()
     {
-        _cache = new WeakHashMap<Thread, PreparedStatementCacheThreadData>();
-        _listenerMap = new HashMap<Thread, Thread>();
+        cache = new WeakHashMap<Thread, PreparedStatementCacheThreadData>();
+        listenerMap = new HashMap<Thread, Thread>();
     }
 
     // ============================================================
@@ -106,7 +106,7 @@ public class PreparedStatementCache
     public void clearAll()
         throws SQLException
     {
-        for ( Thread thread : _cache.keySet() )
+        for ( Thread thread : cache.keySet() )
         {
             clearThread( thread );
         }
@@ -123,8 +123,8 @@ public class PreparedStatementCache
         //
         // Kill any ThreadListeners associated with this thread.
         //
-        Thread listenerThread = _listenerMap.get( thread );
-        _listenerMap.remove( thread );
+        Thread listenerThread = listenerMap.get( thread );
+        listenerMap.remove( thread );
         if ( listenerThread != null )
         {
             // Force a stop on the listening thread.
@@ -134,7 +134,7 @@ public class PreparedStatementCache
         //
         // Remove any PreparedStatements associated with this Thread
         //
-        PreparedStatementCacheThreadData threadData = _cache.get( thread );
+        PreparedStatementCacheThreadData threadData = cache.get( thread );
         if ( threadData != null )
         {
             for ( PreparedStatementGroup group : threadData.values() )
@@ -142,7 +142,7 @@ public class PreparedStatementCache
                 group.close();
             }
         }
-        _cache.remove( thread );
+        cache.remove( thread );
     }
 
     @Override
@@ -168,21 +168,21 @@ public class PreparedStatementCache
      */
     protected PreparedStatementCacheThreadData getOrCreateThreadData( Thread thread )
     {
-        PreparedStatementCacheThreadData threadData = _cache.get( thread );
+        PreparedStatementCacheThreadData threadData = cache.get( thread );
         if ( threadData == null )
         {
             threadData = new PreparedStatementCacheThreadData();
-            _cache.put( thread, threadData );
+            cache.put( thread, threadData );
 
             // Listen to the Thread and close PreparedStatement when it is gone.
-            Thread listenerThread = _listenerMap.get( Thread.currentThread() );
+            Thread listenerThread = listenerMap.get( Thread.currentThread() );
             if ( listenerThread == null )
             {
                 PreparedStatementCacheThreadListener threadListener = new PreparedStatementCacheThreadListener(
                     Thread.currentThread() );
                 listenerThread = new Thread( threadListener );
                 listenerThread.setDaemon( true );
-                _listenerMap.put( Thread.currentThread(), listenerThread );
+                listenerMap.put( Thread.currentThread(), listenerThread );
                 listenerThread.start();
             }
         }
@@ -196,11 +196,11 @@ public class PreparedStatementCache
 
     private class PreparedStatementCacheThreadListener implements Runnable
     {
-        Thread _thread;
+        Thread thread;
 
         public PreparedStatementCacheThreadListener( Thread thread )
         {
-            _thread = thread;
+            this.thread = thread;
         }
 
         @Override
@@ -209,10 +209,10 @@ public class PreparedStatementCache
             try
             {
                 // Wait for the parent thread to finish.
-                _thread.join();
+                thread.join();
 
-                _listenerMap.remove( _thread );
-                clearThread( _thread );
+                listenerMap.remove( thread );
+                clearThread( thread );
             }
             catch ( Exception ex )
             {
@@ -229,21 +229,21 @@ public class PreparedStatementCache
     {
         // Cached prepared statements for connections.
         // key = sql String
-        private Map<String, SoftReference<PreparedStatement>> _map;
+        private Map<String, SoftReference<PreparedStatement>> map;
 
         public PreparedStatementGroup()
         {
-            _map = new HashMap<String, SoftReference<PreparedStatement>>();
+            map = new HashMap<String, SoftReference<PreparedStatement>>();
         }
 
         public PreparedStatement getPreparedStatement( Connection conn, String sql )
             throws SQLException
         {
-            SoftReference<PreparedStatement> ref = _map.get( sql );
+            SoftReference<PreparedStatement> ref = map.get( sql );
             if ( ref == null || ref.get() == null )
             {
                 PreparedStatement statement = conn.prepareStatement( sql );
-                _map.put( sql, new SoftReference<PreparedStatement>( statement ) );
+                map.put( sql, new SoftReference<PreparedStatement>( statement ) );
                 return statement;
             }
             else
@@ -255,11 +255,11 @@ public class PreparedStatementCache
         public CallableStatement getCallableStatement( Connection conn, String sql )
             throws SQLException
         {
-            SoftReference<PreparedStatement> ref = _map.get( sql );
+            SoftReference<PreparedStatement> ref = map.get( sql );
             if ( ref == null || ref.get() == null )
             {
                 CallableStatement statement = conn.prepareCall( sql );
-                _map.put( sql, new SoftReference<PreparedStatement>( statement ) );
+                map.put( sql, new SoftReference<PreparedStatement>( statement ) );
                 return statement;
             }
             else
@@ -271,7 +271,7 @@ public class PreparedStatementCache
         public void close()
             throws SQLException
         {
-            for ( SoftReference<PreparedStatement> ref : _map.values() )
+            for ( SoftReference<PreparedStatement> ref : map.values() )
             {
                 PreparedStatement statement = ref.get();
                 if ( statement != null )

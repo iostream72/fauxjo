@@ -37,9 +37,9 @@ public class ResultSetIterator<T extends Fauxjo> implements Iterator<T>, Iterabl
     // Fields
     // ============================================================
 
-    private ResultSetRecordProcessor<T> _sqlProcessor;
-    private ResultSet _resultSet;
-    private boolean _hasNext;
+    private ResultSetRecordProcessor<T> sqlProcessor;
+    private ResultSet resultSet;
+    private boolean hasNext;
 
     // ============================================================
     // Constructors
@@ -48,9 +48,9 @@ public class ResultSetIterator<T extends Fauxjo> implements Iterator<T>, Iterabl
     public ResultSetIterator( ResultSetRecordProcessor<T> sqlProcessor, ResultSet resultSet )
         throws SQLException
     {
-        _sqlProcessor = sqlProcessor;
-        _resultSet = resultSet;
-        _hasNext = _resultSet.next();
+        this.sqlProcessor = sqlProcessor;
+        this.resultSet = resultSet;
+        hasNext = resultSet.next();
     }
 
     // ============================================================
@@ -64,22 +64,22 @@ public class ResultSetIterator<T extends Fauxjo> implements Iterator<T>, Iterabl
     @Override
     public boolean hasNext()
     {
-        return _hasNext;
+        return hasNext;
     }
 
     @Override
     public T next()
     {
-        if ( !_hasNext )
+        if ( !hasNext )
         {
             return null;
         }
 
         try
         {
-            T object = _sqlProcessor.convertResultSetRow( _resultSet );
-            _hasNext = _resultSet.next();
-            if ( !_hasNext )
+            T object = sqlProcessor.convertResultSetRow( resultSet );
+            hasNext = resultSet.next();
+            if ( !hasNext )
             {
                 close();
             }
@@ -101,10 +101,10 @@ public class ResultSetIterator<T extends Fauxjo> implements Iterator<T>, Iterabl
     public void close()
         throws SQLException
     {
-        if ( _resultSet != null )
+        if ( resultSet != null )
         {
-            _resultSet.close();
-            _resultSet = null;
+            resultSet.close();
+            resultSet = null;
         }
     }
 

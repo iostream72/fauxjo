@@ -30,12 +30,12 @@ public class FieldDef
     // Fields
     // ============================================================
 
-    private Field _field;
-    private Method _writeMethod;
-    private Method _readMethod;
-    private Class<?> _valueClass;
-    private boolean _primaryKey;
-    private String _primaryKeySequenceName;
+    private Field field;
+    private Method writeMethod;
+    private Method readMethod;
+    private Class<?> valueClass;
+    private boolean primaryKey;
+    private String primaryKeySequenceName;
 
     // ============================================================
     // Constructors
@@ -43,7 +43,7 @@ public class FieldDef
 
     public Field getField()
     {
-        return _field;
+        return field;
     }
 
     // ============================================================
@@ -57,97 +57,97 @@ public class FieldDef
     public void setField( Field field )
         throws FauxjoException
     {
-        _field = field;
+        this.field = field;
 
-        if ( _valueClass == null )
+        if ( valueClass == null )
         {
-            _valueClass = field.getType();
+            valueClass = field.getType();
         }
         else
         {
-            if ( !_valueClass.equals( field.getType() ) )
+            if ( !valueClass.equals( field.getType() ) )
             {
-                throw new FauxjoException( "Field [" + field.getName() + "] must have type of ["
-                    + _valueClass.getCanonicalName() + "]" );
+                throw new FauxjoException( "Field [" + field.getName() + "] must have type of [" +
+                    valueClass.getCanonicalName() + "]" );
             }
         }
     }
 
     public Method getWriteMethod()
     {
-        return _writeMethod;
+        return writeMethod;
     }
 
     public void setWriteMethod( Method writeMethod )
         throws FauxjoException
     {
-        _writeMethod = writeMethod;
+        this.writeMethod = writeMethod;
 
-        if ( _valueClass == null )
+        if ( valueClass == null )
         {
-            _valueClass = writeMethod.getParameterTypes()[0];
+            valueClass = writeMethod.getParameterTypes()[0];
         }
         else
         {
-            if ( !_valueClass.equals( writeMethod.getParameterTypes()[0] ) )
+            if ( !valueClass.equals( writeMethod.getParameterTypes()[0] ) )
             {
-                throw new FauxjoException( "Write method [" + writeMethod.getName()
-                    + "] must have first argument of type [" + _valueClass.getCanonicalName() + "]" );
+                throw new FauxjoException( "Write method [" + writeMethod.getName() +
+                    "] must have first argument of type [" + valueClass.getCanonicalName() + "]" );
             }
         }
     }
 
     public Method getReadMethod()
     {
-        return _readMethod;
+        return readMethod;
     }
 
     public void setReadMethod( Method readMethod )
         throws FauxjoException
     {
-        _readMethod = readMethod;
+        this.readMethod = readMethod;
 
-        if ( _valueClass == null )
+        if ( valueClass == null )
         {
-            _valueClass = readMethod.getReturnType();
+            valueClass = readMethod.getReturnType();
         }
         else
         {
-            if ( !_valueClass.equals( readMethod.getReturnType() ) )
+            if ( !valueClass.equals( readMethod.getReturnType() ) )
             {
-                throw new FauxjoException( "Read method [" + readMethod.getName() + "] must have return type of ["
-                    + _valueClass.getCanonicalName() + "]" );
+                throw new FauxjoException( "Read method [" + readMethod.getName() + "] must have return type of [" +
+                    valueClass.getCanonicalName() + "]" );
             }
         }
     }
 
     public boolean isPrimaryKey()
     {
-        return _primaryKey;
+        return primaryKey;
     }
 
     public void setPrimaryKey( boolean primaryKey )
     {
-        _primaryKey = primaryKey;
+        this.primaryKey = primaryKey;
     }
 
     public String getPrimaryKeySequenceName()
     {
-        return _primaryKeySequenceName;
+        return primaryKeySequenceName;
     }
 
     public void setPrimaryKeySequenceName( String primaryKeySequenceName )
     {
-        _primaryKeySequenceName = primaryKeySequenceName;
+        this.primaryKeySequenceName = primaryKeySequenceName;
     }
 
     public Class<?> getValueClass()
     {
-        return _valueClass;
+        return valueClass;
     }
 
     public void setValueClass( Class<?> valueClass )
     {
-        _valueClass = valueClass;
+        this.valueClass = valueClass;
     }
 }

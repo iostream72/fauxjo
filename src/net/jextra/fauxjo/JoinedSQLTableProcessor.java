@@ -28,10 +28,11 @@ import java.util.*;
 
 /**
  * SQLProcessor implementation that handles multiple tables representing a single {@link Fauxjo} class. This typically
- * will be used when you have a parent table which represents a base class with multiple child tables representing
- * the subclasses. Note that this implementation uses the SQLTableProcessor underneath to do single table operations.
- *
- * @param <T> The {@link Fauxjo} bean class represented by the underlying tables.
+ * will be used when you have a parent table which represents a base class with multiple child tables representing the
+ * subclasses. Note that this implementation uses the SQLTableProcessor underneath to do single table operations.
+ * 
+ * @param <T>
+ *            The {@link Fauxjo} bean class represented by the underlying tables.
  */
 public class JoinedSQLTableProcessor<T extends Fauxjo> extends AbstractSQLProcessor<T>
 {
@@ -39,10 +40,10 @@ public class JoinedSQLTableProcessor<T extends Fauxjo> extends AbstractSQLProces
     // Fields
     // ============================================================
 
-    private Schema _schema;
-    private Table _rootTable;
-    private List<Join> _joinedTables = new ArrayList<Join>();
-    private Map<Class<? extends Fauxjo>, SQLTableProcessor<? extends Fauxjo>> _sqlTableProcessors = new HashMap<Class<? extends Fauxjo>, SQLTableProcessor<? extends Fauxjo>>();
+    private Schema schema;
+    private Table rootTable;
+    private List<Join> joinedTables = new ArrayList<Join>();
+    private Map<Class<? extends Fauxjo>, SQLTableProcessor<? extends Fauxjo>> sqlTableProcessors = new HashMap<Class<? extends Fauxjo>, SQLTableProcessor<? extends Fauxjo>>();
 
     // ============================================================
     // Constructors
@@ -51,7 +52,7 @@ public class JoinedSQLTableProcessor<T extends Fauxjo> extends AbstractSQLProces
     public JoinedSQLTableProcessor( Class<T> beanClass, Schema schema )
     {
         super( new ResultSetRecordProcessor<T>( beanClass ) );
-        _schema = schema;
+        this.schema = schema;
     }
 
     // ============================================================
@@ -68,8 +69,8 @@ public class JoinedSQLTableProcessor<T extends Fauxjo> extends AbstractSQLProces
         String tableAlias )
         throws SQLException
     {
-        _rootTable = new Table( beanClass, _schema.getQualifiedName( tableName ), tableAlias );
-        _sqlTableProcessors.put( beanClass, new SQLTableProcessor( _schema, tableName, beanClass ) );
+        rootTable = new Table( beanClass, schema.getQualifiedName( tableName ), tableAlias );
+        sqlTableProcessors.put( beanClass, new SQLTableProcessor( schema, tableName, beanClass ) );
         return this;
     }
 
@@ -79,9 +80,9 @@ public class JoinedSQLTableProcessor<T extends Fauxjo> extends AbstractSQLProces
         String tableName, String tableAlias, String joinCriteria )
         throws SQLException
     {
-        _joinedTables.add( new Join( new Table( beanClass, _schema.getQualifiedName( tableName ), tableAlias ),
+        joinedTables.add( new Join( new Table( beanClass, schema.getQualifiedName( tableName ), tableAlias ),
             joinCriteria ) );
-        _sqlTableProcessors.put( beanClass, new SQLTableProcessor( schema, tableName, beanClass ) );
+        sqlTableProcessors.put( beanClass, new SQLTableProcessor( schema, tableName, beanClass ) );
         return this;
     }
 
@@ -90,10 +91,10 @@ public class JoinedSQLTableProcessor<T extends Fauxjo> extends AbstractSQLProces
         throws SQLException
     {
         boolean success = true;
-        success &= _sqlTableProcessors.get( _rootTable.getBeanClass() ).insert( bean );
-        for ( Join join : _joinedTables )
+        success &= sqlTableProcessors.get( rootTable.getBeanClass() ).insert( bean );
+        for ( Join join : joinedTables )
         {
-            success &= _sqlTableProcessors.get( join.getTable().getBeanClass() ).insert( bean );
+            success &= sqlTableProcessors.get( join.getTable().getBeanClass() ).insert( bean );
         }
 
         return success;
@@ -104,13 +105,13 @@ public class JoinedSQLTableProcessor<T extends Fauxjo> extends AbstractSQLProces
         throws SQLException
     {
         boolean success = true;
-        for ( int i = _joinedTables.size() - 1; i >= 0; --i )
+        for ( int i = joinedTables.size() - 1; i >= 0; --i )
         {
-            Join join = _joinedTables.get( i );
-            success &= _sqlTableProcessors.get( join.getTable().getBeanClass() ).delete( bean );
+            Join join = joinedTables.get( i );
+            success &= sqlTableProcessors.get( join.getTable().getBeanClass() ).delete( bean );
         }
 
-        success &= _sqlTableProcessors.get( _rootTable.getBeanClass() ).delete( bean );
+        success &= sqlTableProcessors.get( rootTable.getBeanClass() ).delete( bean );
 
         return success;
     }
@@ -120,10 +121,10 @@ public class JoinedSQLTableProcessor<T extends Fauxjo> extends AbstractSQLProces
         throws SQLException
     {
         int n = 0;
-        n += _sqlTableProcessors.get( _rootTable.getBeanClass() ).update( bean );
-        for ( Join join : _joinedTables )
+        n += sqlTableProcessors.get( rootTable.getBeanClass() ).update( bean );
+        for ( Join join : joinedTables )
         {
-            n += _sqlTableProcessors.get( join.getTable().getBeanClass() ).update( bean );
+            n += sqlTableProcessors.get( join.getTable().getBeanClass() ).update( bean );
         }
 
         return n;
@@ -139,18 +140,18 @@ public class JoinedSQLTableProcessor<T extends Fauxjo> extends AbstractSQLProces
         }
 
         StringBuilder builder = new StringBuilder( "select " );
-        builder.append( _rootTable.getSelectClause() );
-        for ( Join join : _joinedTables )
+        builder.append( rootTable.getSelectClause() );
+        for ( Join join : joinedTables )
         {
             builder.append( ", " );
             builder.append( join.getTable().getSelectClause() );
         }
 
         builder.append( "\nfrom\n" );
-        builder.append( _rootTable.getQualifiedName() );
+        builder.append( rootTable.getQualifiedName() );
         builder.append( " as " );
-        builder.append( _rootTable.getAlias() );
-        for ( Join join : _joinedTables )
+        builder.append( rootTable.getAlias() );
+        for ( Join join : joinedTables )
         {
             builder.append( "\njoin " );
             builder.append( join.getTable().getQualifiedName() );
@@ -170,7 +171,7 @@ public class JoinedSQLTableProcessor<T extends Fauxjo> extends AbstractSQLProces
     @Override
     public Schema getSchema()
     {
-        return _schema;
+        return schema;
     }
 
     @Override
@@ -186,57 +187,57 @@ public class JoinedSQLTableProcessor<T extends Fauxjo> extends AbstractSQLProces
 
     private static final class Join
     {
-        private Table _table;
-        private String _joinCriteria;
+        private Table table;
+        private String joinCriteria;
 
         public Join( Table table, String joinCriteria )
         {
-            _table = table;
-            _joinCriteria = joinCriteria;
+            this.table = table;
+            this.joinCriteria = joinCriteria;
         }
 
         public Table getTable()
         {
-            return _table;
+            return table;
         }
 
         public String getJoinCriteria()
         {
-            return _joinCriteria;
+            return joinCriteria;
         }
     }
 
     private static final class Table
     {
-        private Class<? extends Fauxjo> _beanClass;
-        private String _qualifiedName;
-        private String _alias;
+        private Class<? extends Fauxjo> beanClass;
+        private String qualifiedName;
+        private String alias;
 
         public Table( Class<? extends Fauxjo> beanClass, String qualifiedName, String alias )
         {
-            _beanClass = beanClass;
-            _qualifiedName = qualifiedName;
-            _alias = alias;
+            this.beanClass = beanClass;
+            this.qualifiedName = qualifiedName;
+            this.alias = alias;
         }
 
         public Class<? extends Fauxjo> getBeanClass()
         {
-            return _beanClass;
+            return beanClass;
         }
 
         public String getAlias()
         {
-            return _alias;
+            return alias;
         }
 
         public String getSelectClause()
         {
-            return _alias + ".*";
+            return alias + ".*";
         }
 
         public String getQualifiedName()
         {
-            return _qualifiedName;
+            return qualifiedName;
         }
     }
 }

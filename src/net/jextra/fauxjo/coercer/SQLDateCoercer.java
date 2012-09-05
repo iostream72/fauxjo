@@ -49,7 +49,7 @@ public class SQLDateCoercer implements TypeCoercer<java.sql.Date>
             return new Timestamp( value.getTime() );
         }
 
-        throw new FauxjoException( "The SQLDateCoercer does not know how to convert to type "
-            + destClass.getCanonicalName() );
+        throw new FauxjoException( "The SQLDateCoercer does not know how to convert to type " +
+            destClass.getCanonicalName() );
     }
 }

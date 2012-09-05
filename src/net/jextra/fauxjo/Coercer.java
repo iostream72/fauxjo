@@ -37,7 +37,7 @@ public class Coercer
     // Fields
     // ============================================================
 
-    private Map<Class<?>, TypeCoercer<?>> _coercerMap = new HashMap<Class<?>, TypeCoercer<?>>();
+    private Map<Class<?>, TypeCoercer<?>> coercerMap = new HashMap<Class<?>, TypeCoercer<?>>();
 
     // ============================================================
     // Constructors
@@ -45,19 +45,19 @@ public class Coercer
 
     public Coercer()
     {
-        _coercerMap.put( Object.class, new ObjectCoercer() );
-        _coercerMap.put( String.class, new StringCoercer() );
-        _coercerMap.put( Byte.class, new ByteCoercer() );
-        _coercerMap.put( Short.class, new ShortCoercer() );
-        _coercerMap.put( Integer.class, new IntegerCoercer() );
-        _coercerMap.put( Long.class, new LongCoercer() );
-        _coercerMap.put( BigInteger.class, new BigIntegerCoercer() );
-        _coercerMap.put( Float.class, new FloatCoercer() );
-        _coercerMap.put( Double.class, new DoubleCoercer() );
-        _coercerMap.put( java.util.Date.class, new UtilDateCoercer() );
-        _coercerMap.put( java.sql.Date.class, new SQLDateCoercer() );
-        _coercerMap.put( java.sql.Timestamp.class, new SQLTimestampCoercer() );
-        _coercerMap.put( UUID.class, new UUIDCoercer() );
+        coercerMap.put( Object.class, new ObjectCoercer() );
+        coercerMap.put( String.class, new StringCoercer() );
+        coercerMap.put( Byte.class, new ByteCoercer() );
+        coercerMap.put( Short.class, new ShortCoercer() );
+        coercerMap.put( Integer.class, new IntegerCoercer() );
+        coercerMap.put( Long.class, new LongCoercer() );
+        coercerMap.put( BigInteger.class, new BigIntegerCoercer() );
+        coercerMap.put( Float.class, new FloatCoercer() );
+        coercerMap.put( Double.class, new DoubleCoercer() );
+        coercerMap.put( java.util.Date.class, new UtilDateCoercer() );
+        coercerMap.put( java.sql.Date.class, new SQLDateCoercer() );
+        coercerMap.put( java.sql.Timestamp.class, new SQLTimestampCoercer() );
+        coercerMap.put( UUID.class, new UUIDCoercer() );
     }
 
     // ============================================================
@@ -70,13 +70,13 @@ public class Coercer
 
     public <T> void addTypeCoercer( Class<T> coercerClass, TypeCoercer<T> coercer )
     {
-        _coercerMap.put( (Class<?>) coercerClass, (TypeCoercer<?>) coercer );
+        coercerMap.put( (Class<?>) coercerClass, (TypeCoercer<?>) coercer );
     }
 
     @SuppressWarnings( "unchecked" )
     public <T> TypeCoercer<T> getTypeCoercer( Class<T> coercerClass )
     {
-        return (TypeCoercer<T>) _coercerMap.get( coercerClass );
+        return (TypeCoercer<T>) coercerMap.get( coercerClass );
     }
 
     @SuppressWarnings( "unchecked" )
@@ -131,12 +131,12 @@ public class Coercer
             return value;
         }
 
-        TypeCoercer<T> coercer = (TypeCoercer<T>) _coercerMap.get( value.getClass() );
+        TypeCoercer<T> coercer = (TypeCoercer<T>) coercerMap.get( value.getClass() );
 
         // use default coercer if none is found
         if ( coercer == null )
         {
-            coercer = (TypeCoercer<T>) _coercerMap.get( Object.class );
+            coercer = (TypeCoercer<T>) coercerMap.get( Object.class );
         }
 
         return coercer.coerce( value, destClass );

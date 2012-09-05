@@ -32,8 +32,8 @@ public abstract class Schema
     // Fields
     // ============================================================
 
-    private ConcurrentMap<Class<?>, Home<?>> _homes;
-    private String _schemaName;
+    private ConcurrentMap<Class<?>, Home<?>> homes;
+    private String schemaName;
 
     // ============================================================
     // Constructors
@@ -41,7 +41,7 @@ public abstract class Schema
 
     public Schema()
     {
-        _homes = new ConcurrentHashMap<Class<?>, Home<?>>();
+        homes = new ConcurrentHashMap<Class<?>, Home<?>>();
     }
 
     // ============================================================
@@ -65,12 +65,12 @@ public abstract class Schema
 
     public String getSchemaName()
     {
-        return _schemaName;
+        return schemaName;
     }
 
     public void setSchemaName( String schemaName )
     {
-        _schemaName = schemaName;
+        this.schemaName = schemaName;
     }
 
     /**
@@ -80,23 +80,23 @@ public abstract class Schema
      */
     public String getQualifiedName( String name )
     {
-        if ( _schemaName == null || _schemaName.equals( "" ) )
+        if ( schemaName == null || schemaName.equals( "" ) )
         {
             return name;
         }
         else
         {
-            return _schemaName + "." + name;
+            return schemaName + "." + name;
         }
     }
 
     public void addHome( Class<?> homeClass, Home<?> home )
     {
-        _homes.put( homeClass, home );
+        homes.put( homeClass, home );
     }
 
     public <T> T getHomeByClass( Class<T> homeClass )
     {
-        return homeClass.cast( _homes.get( homeClass ) );
+        return homeClass.cast( homes.get( homeClass ) );
     }
 }
