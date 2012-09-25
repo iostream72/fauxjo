@@ -37,4 +37,7 @@ public interface ConnectionSupplier
 
     public boolean closeConnection()
         throws SQLException;
+    
+    public PreparedStatement prepareStatement( String sql )
+        throws SQLException;
 }

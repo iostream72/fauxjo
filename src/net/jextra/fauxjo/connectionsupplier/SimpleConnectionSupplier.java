@@ -24,14 +24,15 @@
 package net.jextra.fauxjo.connectionsupplier;
 
 import java.sql.*;
+import java.util.*;
 import javax.sql.*;
 
 /**
  * <p>
  * Essentially a pass-through {@link ConnectionSupplier} for a single {@link Connection} object.
- * </p><p>
- * This is useful
- * for thick Swing applications where Swing threads should get same connection as the main thread.
+ * </p>
+ * <p>
+ * This is useful for thick Swing applications where Swing threads should get same connection as the main thread.
  * </p>
  */
 public class SimpleConnectionSupplier implements ConnectionSupplier
@@ -41,6 +42,7 @@ public class SimpleConnectionSupplier implements ConnectionSupplier
     // ============================================================
 
     private Connection connection;
+    private HashMap<String, PreparedStatement> preparedStatements;
 
     // ============================================================
     // Constructors
@@ -48,16 +50,19 @@ public class SimpleConnectionSupplier implements ConnectionSupplier
 
     public SimpleConnectionSupplier()
     {
+        preparedStatements = new HashMap<String, PreparedStatement>();
     }
 
     public SimpleConnectionSupplier( Connection conn )
     {
+        this();
         connection = conn;
     }
 
     public SimpleConnectionSupplier( DataSource ds )
         throws SQLException
     {
+        this();
         connection = ds.getConnection();
     }
 
@@ -90,6 +95,15 @@ public class SimpleConnectionSupplier implements ConnectionSupplier
     public boolean closeConnection()
         throws SQLException
     {
+        for ( PreparedStatement statement : preparedStatements.values() )
+        {
+            if ( !statement.isClosed() )
+            {
+                statement.close();
+            }
+        }
+        preparedStatements.clear();
+
         if ( connection == null )
         {
             return false;
@@ -99,5 +113,19 @@ public class SimpleConnectionSupplier implements ConnectionSupplier
         connection = null;
 
         return true;
+    }
+
+    @Override
+    public PreparedStatement prepareStatement( String sql )
+        throws SQLException
+    {
+        PreparedStatement statement = preparedStatements.get( sql );
+        if ( statement == null || statement.isClosed() )
+        {
+            statement = connection.prepareStatement( sql );
+            preparedStatements.put( sql, statement );
+        }
+
+        return statement;
     }
 }

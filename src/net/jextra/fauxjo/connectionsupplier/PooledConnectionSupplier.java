@@ -24,22 +24,28 @@
 package net.jextra.fauxjo.connectionsupplier;
 
 import java.sql.*;
+import java.util.*;
 import javax.sql.*;
 
 /**
  * <p>
  * Stored an independent {@link Connection} for each {@link Thread}. Useful for web-development which uses caches.
- * </p><p>
+ * </p>
+ * <p>
  * Example setup:
+ * 
  * <pre>
- *    InitialContext cxt = new InitialContext();
- *    DataSource ds = (DataSource) cxt.lookup( "java:/comp/env/jdbc/xyz/abc" );
- *    connectionSupplier = new PooledConnectionSupplier( ds );
+ * InitialContext cxt = new InitialContext();
+ * DataSource ds = (DataSource) cxt.lookup( &quot;java:/comp/env/jdbc/xyz/abc&quot; );
+ * connectionSupplier = new PooledConnectionSupplier( ds );
  * </pre>
+ * 
  * Example cleanup:
+ * 
  * <pre>
- *    connectionProvider.clear();
+ * connectionProvider.clear();
  * </pre>
+ * 
  * </p>
  */
 public class PooledConnectionSupplier implements ConnectionSupplier
@@ -49,8 +55,8 @@ public class PooledConnectionSupplier implements ConnectionSupplier
     // ============================================================
 
     private DataSource dataSource;
-    private boolean closeConnectionOnClear = true;
     private ThreadLocal<Connection> threadConnection;
+    private HashMap<String, ThreadLocal<PreparedStatement>> preparedStatements;
 
     // ============================================================
     // Constructors
@@ -59,12 +65,13 @@ public class PooledConnectionSupplier implements ConnectionSupplier
     public PooledConnectionSupplier()
     {
         threadConnection = new ThreadLocal<Connection>();
+        preparedStatements = new HashMap<String, ThreadLocal<PreparedStatement>>();
     }
 
     public PooledConnectionSupplier( DataSource ds )
     {
+        this();
         dataSource = ds;
-        threadConnection = new ThreadLocal<Connection>();
     }
 
     // ============================================================
@@ -94,6 +101,21 @@ public class PooledConnectionSupplier implements ConnectionSupplier
     public boolean closeConnection()
         throws SQLException
     {
+        for ( ThreadLocal<PreparedStatement> statement : preparedStatements.values() )
+        {
+            if ( statement.get() == null )
+            {
+                continue;
+            }
+
+            if ( !statement.get().isClosed() )
+            {
+                statement.get().close();
+            }
+
+            statement.remove();
+        }
+
         Connection cnx = null;
         if ( threadConnection.get() == null )
         {
@@ -102,14 +124,9 @@ public class PooledConnectionSupplier implements ConnectionSupplier
 
         cnx = threadConnection.get();
         cnx.close();
-        threadConnection.set( null );
+        threadConnection.remove();
 
         return true;
-    }
-
-    public void setCloseConnectionOnClear( boolean value )
-    {
-        closeConnectionOnClear = value;
     }
 
     public void setDataSource( DataSource dataSource )
@@ -117,21 +134,41 @@ public class PooledConnectionSupplier implements ConnectionSupplier
         this.dataSource = dataSource;
     }
 
-    public void clear()
+    // public void clear()
+    // {
+    // try
+    // {
+    // if ( closeConnectionOnClear && threadConnection.get() != null )
+    // {
+    // threadConnection.get().close();
+    // }
+    // }
+    // catch ( SQLException ignore )
+    // {
+    // }
+    // finally
+    // {
+    // threadConnection.set( null );
+    // }
+    // }
+
+    @Override
+    public PreparedStatement prepareStatement( String sql )
+        throws SQLException
     {
-        try
+        ThreadLocal<PreparedStatement> statement = preparedStatements.get( sql );
+
+        if ( statement == null || statement.get() == null || statement.get().isClosed() )
         {
-            if ( closeConnectionOnClear && threadConnection.get() != null )
+            PreparedStatement s = getConnection().prepareStatement( sql );
+            if ( statement == null )
             {
-                threadConnection.get().close();
+                statement = new ThreadLocal<PreparedStatement>();
+                preparedStatements.put( sql, statement );
             }
+            statement.set( s );
         }
-        catch ( SQLException ignore )
-        {
-        }
-        finally
-        {
-            threadConnection.set( null );
-        }
+
+        return statement.get();
     }
 }
