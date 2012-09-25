@@ -23,7 +23,7 @@
 
 package net.jextra.fauxjo;
 
-import java.lang.ref.*;
+import java.lang.ref.SoftReference;
 import java.sql.*;
 import java.util.*;
 
@@ -35,7 +35,7 @@ import java.util.*;
  * {@link PreparedStatement}'s are not thread-safe and certainly can not be shared between
  * {@link Connection}s.
  * {@link Connection}s on-the-other-hand may be thread-safe (depends on implementation).
- * Therefore, in order to guarentee thread and connection boundary safety, both are used as keys
+ * Therefore, in order to guarantee thread and connection boundary safety, both are used as keys
  * in the cache.
  * </p>
  */
@@ -45,11 +45,11 @@ public class PreparedStatementCache
     // Fields
     // ============================================================
 
-    private WeakHashMap<Thread, PreparedStatementCacheThreadData> cache;
+    private WeakHashMap<Thread, PreparedStatementCacheThreadData> cache = new WeakHashMap<Thread, PreparedStatementCacheThreadData>();
 
     // A listener thread that waits for Thread to finish then throws away the
     // PreparedStatements for that Thread.
-    private HashMap<Thread, Thread> listenerMap;
+    private HashMap<Thread, Thread> listenerMap = new HashMap<Thread, Thread>();
 
     // ============================================================
     // Constructors
@@ -57,8 +57,6 @@ public class PreparedStatementCache
 
     public PreparedStatementCache()
     {
-        cache = new WeakHashMap<Thread, PreparedStatementCacheThreadData>();
-        listenerMap = new HashMap<Thread, Thread>();
     }
 
     // ============================================================
@@ -116,20 +114,20 @@ public class PreparedStatementCache
      * Used to close any connections for a particular thread.
      * @throws SQLException
      */
-    @SuppressWarnings( "deprecation" )
+//    @SuppressWarnings( "deprecation" )
     public void clearThread( Thread thread )
         throws SQLException
     {
         //
         // Kill any ThreadListeners associated with this thread.
         //
-        Thread listenerThread = listenerMap.get( thread );
-        listenerMap.remove( thread );
-        if ( listenerThread != null )
-        {
-            // Force a stop on the listening thread.
-            listenerThread.stop();
-        }
+//        Thread listenerThread = listenerMap.get( thread );
+//        listenerMap.remove( thread );
+//        if ( listenerThread != null )
+//        {
+//            // Force a stop on the listening thread.
+//            listenerThread.stop();
+//        }
 
         //
         // Remove any PreparedStatements associated with this Thread
@@ -175,14 +173,14 @@ public class PreparedStatementCache
             cache.put( thread, threadData );
 
             // Listen to the Thread and close PreparedStatement when it is gone.
-            Thread listenerThread = listenerMap.get( Thread.currentThread() );
+            Thread listenerThread = listenerMap.get( thread );
             if ( listenerThread == null )
             {
                 PreparedStatementCacheThreadListener threadListener = new PreparedStatementCacheThreadListener(
-                    Thread.currentThread() );
+                        thread );
                 listenerThread = new Thread( threadListener );
                 listenerThread.setDaemon( true );
-                listenerMap.put( Thread.currentThread(), listenerThread );
+                listenerMap.put( thread, listenerThread );
                 listenerThread.start();
             }
         }
