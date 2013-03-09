@@ -112,29 +112,6 @@ public class Home<T extends FauxjoInterface>
         return sqlProcessor.delete( bean );
     }
 
-    public boolean save( T bean )
-        throws SQLException
-    {
-        // If has empty PK, assumed to be new.
-        if ( !bean.isInDatabase() )
-        {
-            return insert( bean );
-        }
-        else
-        {
-            // Attempt to do an update
-            int numRowsUpdated = update( bean );
-
-            // If no rows were actually updated, assume must actually be new.
-            if ( numRowsUpdated == 0 )
-            {
-                return insert( bean );
-            }
-        }
-
-        return true;
-    }
-
     public T getFirst( ResultSet rs )
         throws SQLException
     {

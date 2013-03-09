@@ -20,9 +20,11 @@
 //  Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
 //  02111-1307 USA.
 //
-package net.jextra.fauxjo;
+
+package net.jextra.fauxjo.beandef;
 
 import java.lang.reflect.*;
+import net.jextra.fauxjo.*;
 
 public class FieldDef
 {
@@ -35,7 +37,6 @@ public class FieldDef
     private Method readMethod;
     private Class<?> valueClass;
     private boolean primaryKey;
-    private String primaryKeySequenceName;
 
     // ============================================================
     // Constructors
@@ -128,18 +129,6 @@ public class FieldDef
     public void setPrimaryKey( boolean primaryKey )
     {
         this.primaryKey = primaryKey;
-    }
-
-    @Deprecated
-    public String getPrimaryKeySequenceName()
-    {
-        return primaryKeySequenceName;
-    }
-
-    @Deprecated
-    public void setPrimaryKeySequenceName( String primaryKeySequenceName )
-    {
-        this.primaryKeySequenceName = primaryKeySequenceName;
     }
 
     public Class<?> getValueClass()

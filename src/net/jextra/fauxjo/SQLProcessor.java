@@ -126,7 +126,19 @@ public interface SQLProcessor<T extends FauxjoInterface>
     PreparedStatement getInsertStatement()
         throws SQLException;
 
-    Map<String, String> setInsertValues( PreparedStatement statement, FauxjoInterface bean )
+    void setInsertValues( PreparedStatement statement, T bean )
+        throws SQLException;
+
+    PreparedStatement getUpdateStatement()
+        throws SQLException;
+
+    void setUpdateValues( PreparedStatement statement, T bean )
+        throws SQLException;
+
+    PreparedStatement getDeleteStatement()
+        throws SQLException;
+
+    void setDeleteValues( PreparedStatement statement, T bean )
         throws SQLException;
 
 }

@@ -25,12 +25,10 @@ package net.jextra.fauxjo;
 
 import java.sql.*;
 import java.util.*;
+import net.jextra.fauxjo.beandef.*;
 
 /**
  * Class that's responsible for converting a result set into a {@link FauxjoInterface} bean.
- * 
- * @param <T>
- *            The {@link FauxjoInterface} bean this instance handles conversions for.
  */
 public class ResultSetRecordProcessor<T extends FauxjoInterface>
 {
@@ -103,12 +101,12 @@ public class ResultSetRecordProcessor<T extends FauxjoInterface>
         }
     }
 
-    public Map<String, FieldDef> getBeanFieldDefs( FauxjoInterface bean )
+    public Map<String, FieldDef> getBeanFieldDefs( Class<? extends FauxjoInterface> beanClass )
         throws FauxjoException
     {
         if ( fieldDefs == null )
         {
-            fieldDefs = bean.extractFieldDefs();
+            fieldDefs = BeanDefCache.getFieldDefs( beanClass );
         }
 
         return fieldDefs;
@@ -132,7 +130,7 @@ public class ResultSetRecordProcessor<T extends FauxjoInterface>
             throw new FauxjoException( ex );
         }
 
-        Map<String, FieldDef> fieldDefs = new HashMap<String, FieldDef>( getBeanFieldDefs( bean ) );
+        Map<String, FieldDef> fieldDefs = new HashMap<String, FieldDef>( getBeanFieldDefs( beanClass ) );
         for ( String key : record.keySet() )
         {
             FieldDef fieldDef = fieldDefs.get( key );

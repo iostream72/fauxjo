@@ -23,36 +23,21 @@
 
 package net.jextra.fauxjo;
 
-import java.beans.*;
 import java.lang.reflect.*;
 import java.util.*;
+import net.jextra.fauxjo.beandef.*;
 
 /**
  * <p>
- * Concrete implementation of {@link FauxjoInterface} interface that is {@link FauxjoPrimaryKey} annotation aware.
+ * Concrete implementation of {@link FauxjoInterface} interface that is {@link FauxjoField} annotation aware.
  * </p>
  * <p>
- * Note: This implementation overrides the {@code hashCode} and {@code equals} methods in order to compare rows in the database properly (e.g. same
- * primary key).
+ * Note: This implementation overrides the {@code hashCode} and {@code equals} methods in order to properly compare Fauxjo's properly (e.g. same
+ * primary key) when placed in Collections, etc.
  * </p>
  */
 public abstract class Fauxjo implements FauxjoInterface
 {
-    // ============================================================
-    // Fields
-    // ============================================================
-
-    private static HashMap<Class<?>, FauxjoBeanDef> caches;
-
-    // ============================================================
-    // Constructors
-    // ============================================================
-
-    static
-    {
-        caches = new HashMap<Class<?>, FauxjoBeanDef>();
-    }
-
     // ============================================================
     // Methods
     // ============================================================
@@ -62,33 +47,12 @@ public abstract class Fauxjo implements FauxjoInterface
     // ----------
 
     @Override
-    public Map<String, FieldDef> extractFieldDefs()
-        throws FauxjoException
-    {
-        try
-        {
-            FauxjoBeanDef beanDef = getFauxjoBeanDef();
-
-            return beanDef.getFieldDefs();
-        }
-        catch ( Exception ex )
-        {
-            if ( ex instanceof FauxjoException )
-            {
-                throw (FauxjoException) ex;
-            }
-
-            throw new FauxjoException( ex );
-        }
-    }
-
-    @Override
     public Object readValue( String key )
         throws FauxjoException
     {
         try
         {
-            FauxjoBeanDef beanDef = getFauxjoBeanDef();
+            BeanDef beanDef = BeanDefCache.getBeanDef( getClass() );
 
             Field field = beanDef.getField( key );
             if ( field != null )
@@ -122,7 +86,7 @@ public abstract class Fauxjo implements FauxjoInterface
     {
         try
         {
-            FauxjoBeanDef beanDef = getFauxjoBeanDef();
+            BeanDef beanDef = BeanDefCache.getBeanDef( getClass() );
 
             Field field = beanDef.getField( key );
             if ( field != null )
@@ -161,17 +125,6 @@ public abstract class Fauxjo implements FauxjoInterface
 
             throw new FauxjoException( ex );
         }
-    }
-
-    /**
-     * @return true if object is already in the database. The default behavior is to return the inverse value of
-     *         {@link #hasEmptyPrimaryKey(FauxjoInterface)}. This should be overridden if that is not accurate for this Fauxjo bean.
-     */
-    @Override
-    public boolean isInDatabase()
-        throws FauxjoException
-    {
-        return !hasEmptyPrimaryKey();
     }
 
     @Override
@@ -269,7 +222,7 @@ public abstract class Fauxjo implements FauxjoInterface
             // Arbitrarily ordered by keys.
             TreeMap<String, Object> keys = new TreeMap<String, Object>();
 
-            Map<String, FieldDef> map = extractFieldDefs();
+            Map<String, FieldDef> map = BeanDefCache.getBeanDef( getClass() ).getFieldDefs();
             for ( String key : map.keySet() )
             {
                 FieldDef def = map.get( key );
@@ -301,226 +254,6 @@ public abstract class Fauxjo implements FauxjoInterface
             }
 
             throw new FauxjoException( ex );
-        }
-    }
-
-    /**
-     * @return false if any of the primary key values are null. This is implied that it is not actually in the database.
-     */
-    protected boolean hasEmptyPrimaryKey()
-        throws FauxjoException
-    {
-        List<Object> keys = getPrimaryKeyValues();
-
-        // If no values, assume empty.
-        if ( keys == null || keys.isEmpty() )
-        {
-            return true;
-        }
-
-        // If any value is null, empty.
-        for ( Object key : keys )
-        {
-            if ( key == null )
-            {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    protected FauxjoBeanDef getFauxjoBeanDef()
-        throws FauxjoException, IntrospectionException
-    {
-        FauxjoBeanDef beanDef = caches.get( getClass() );
-        if ( beanDef != null )
-        {
-            return beanDef;
-        }
-
-        //
-        // Was not cached, collect information.
-        //
-        beanDef = new FauxjoBeanDef();
-
-        for ( Field field : getFauxjoFields( getClass() ) )
-        {
-            FauxjoField ann = field.getAnnotation( FauxjoField.class );
-            String key = ann.value();
-
-            beanDef.addField( key, field );
-
-            //
-            // Check if FauxjoPrimaryKey.
-            //
-            if ( field.isAnnotationPresent( FauxjoPrimaryKey.class ) )
-            {
-                beanDef.getFieldDef( key ).setPrimaryKey( true );
-
-                FauxjoPrimaryKey pkAnn = (FauxjoPrimaryKey) field.getAnnotation( FauxjoPrimaryKey.class );
-                if ( pkAnn.value() != null && !pkAnn.value().trim().isEmpty() )
-                {
-                    beanDef.getFieldDef( key ).setPrimaryKeySequenceName( pkAnn.value().trim() );
-                }
-            }
-        }
-
-        BeanInfo info = Introspector.getBeanInfo( getClass() );
-        for ( PropertyDescriptor prop : info.getPropertyDescriptors() )
-        {
-            if ( prop.getWriteMethod() != null )
-            {
-                FauxjoSetter ann = prop.getWriteMethod().getAnnotation( FauxjoSetter.class );
-                if ( ann != null )
-                {
-                    String key = ann.value();
-
-                    Field field = beanDef.getField( key );
-                    if ( field != null )
-                    {
-                        throw new FauxjoException( "FauxjoSetter defined on method where a FauxjoField " +
-                            "already defines the link to the column [" + key + "]" );
-                    }
-
-                    beanDef.addWriteMethod( key, prop.getWriteMethod() );
-                }
-            }
-
-            if ( prop.getReadMethod() != null )
-            {
-                FauxjoGetter ann = prop.getReadMethod().getAnnotation( FauxjoGetter.class );
-                if ( ann != null )
-                {
-                    String key = ann.value();
-
-                    Field field = beanDef.getField( key );
-                    if ( field != null )
-                    {
-                        throw new FauxjoException( "FauxjoGetter defined on method where a FauxjoField " +
-                            "already defines the link to the column [" + key + "]" );
-                    }
-
-                    beanDef.addReadMethod( key, prop.getReadMethod() );
-
-                    //
-                    // Check if FauxjoPrimaryKey.
-                    //
-                    if ( prop.getReadMethod().isAnnotationPresent( FauxjoPrimaryKey.class ) )
-                    {
-                        beanDef.getFieldDef( key ).setPrimaryKey( true );
-
-                        FauxjoPrimaryKey pkAnn = (FauxjoPrimaryKey) prop.getReadMethod().getAnnotation( FauxjoPrimaryKey.class );
-                        if ( pkAnn.value() != null && !pkAnn.value().trim().isEmpty() )
-                        {
-                            beanDef.getFieldDef( key ).setPrimaryKeySequenceName( pkAnn.value().trim() );
-                        }
-                    }
-                }
-            }
-        }
-
-        // Put in cacche 
-        caches.put( getClass(), beanDef );
-
-        return beanDef;
-    }
-
-    // ----------
-    // private
-    // ----------
-
-    private Collection<Field> getFauxjoFields( Class<?> cls )
-    {
-        ArrayList<Field> list = new ArrayList<Field>();
-
-        if ( cls == null )
-        {
-            return list;
-        }
-
-        // Add super-classes fields first.
-        list.addAll( getFauxjoFields( cls.getSuperclass() ) );
-
-        for ( Field field : cls.getDeclaredFields() )
-        {
-            if ( field.isAnnotationPresent( FauxjoField.class ) )
-            {
-                list.add( field );
-            }
-        }
-
-        return list;
-    }
-
-    // ============================================================
-    // Inner Classes
-    // ============================================================
-
-    private static class FauxjoBeanDef
-    {
-        private Map<String, FieldDef> cache;
-
-        public FauxjoBeanDef()
-        {
-            cache = new TreeMap<String, FieldDef>();
-        }
-
-        public void addField( String key, Field field )
-            throws FauxjoException
-        {
-            getFieldDef( key ).setField( field );
-        }
-
-        public Field getField( String key )
-        {
-            return getFieldDef( key ).getField();
-        }
-
-        public void addReadMethod( String key, Method method )
-            throws FauxjoException
-        {
-            getFieldDef( key ).setReadMethod( method );
-        }
-
-        public Method getReadMethod( String key )
-        {
-            return getFieldDef( key ).getReadMethod();
-        }
-
-        public void addWriteMethod( String key, Method method )
-            throws FauxjoException
-        {
-            getFieldDef( key ).setWriteMethod( method );
-        }
-
-        public Method getWriteMethod( String key )
-        {
-            return getFieldDef( key ).getWriteMethod();
-        }
-
-        private Map<String, FieldDef> getFieldDefs()
-        {
-            TreeMap<String, FieldDef> map = new TreeMap<String, FieldDef>();
-
-            for ( String key : cache.keySet() )
-            {
-                map.put( key, getFieldDef( key ) );
-            }
-
-            return map;
-        }
-
-        private FieldDef getFieldDef( String key )
-        {
-            FieldDef def = cache.get( key.toLowerCase() );
-            if ( def == null )
-            {
-                def = new FieldDef();
-                cache.put( key.toLowerCase(), def );
-            }
-
-            return def;
         }
     }
 }

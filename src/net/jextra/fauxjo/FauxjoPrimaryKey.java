@@ -27,9 +27,10 @@ import java.lang.annotation.*;
 
 /**
  * <p>
- * This annotation should be added to all getter methods of the Fauxjo bean in order to specify
- * the values that uniquely identify a row in the database.
- * </p><p>
+ * This annotation should be added to all getter methods of the Fauxjo bean in order to specify the values that uniquely identify a row in the
+ * database.
+ * </p>
+ * <p>
  * In particular this is used to auto-create insert, update, and delete SQL statements.
  * </p>
  */
@@ -38,6 +39,4 @@ import java.lang.annotation.*;
 { ElementType.METHOD, ElementType.FIELD } )
 public @interface FauxjoPrimaryKey
 {
-    // This is the sequence name to get new unique value.
-    String value() default "";
 }

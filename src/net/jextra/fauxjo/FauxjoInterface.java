@@ -1,5 +1,5 @@
 //
-// Fauxjo
+// FauxjoInterface
 //
 // Copyright (C) jextra.net.
 //
@@ -23,41 +23,35 @@
 
 package net.jextra.fauxjo;
 
-import java.util.*;
-
 /**
- * Absolute minimum required representation of a Fauxjo bean. A fauxjo bean is a class that
- * represents a row within a specific database table.
+ * Absolute minimum required representation of a Fauxjo bean. A fauxjo bean is a class that represents a row within a specific database table.
  */
 public interface FauxjoInterface
 {
     /**
-     * Return a Map of keys,ValueDef. The keys are the lowercase database column names. The ValueDef
-     * tells if the column is a primary key or not and what Class the Fauxjo bean expects the
-     * value to be.
+     * Return a Map of keys,ValueDef. The keys are the lowercase database column names. The ValueDef tells if the column is a primary key or not and
+     * what Class the Fauxjo bean expects the value to be.
      */
-    Map<String, FieldDef> extractFieldDefs()
-        throws FauxjoException;
+    //    Map<String, FieldDef> extractFieldDefs()
+    //        throws FauxjoException;
 
     /**
-     * @return Value from the bean for the given "key" = lowercase database column name. The Object
-     * Class should be same as returned from {@link getValueDefs} for the given key.
+     * @return Value from the bean for the given "key" = lowercase database column name. The Object Class should be same as returned from
+     *         {@link getValueDefs} for the given key.
      */
     Object readValue( String key )
         throws FauxjoException;
 
     /**
-     * Set a value in the Fauxjo bean with the given "key" = lowercase database column name. The
-     * Object Class will be the equal to whatever was returned from {@link getValueDefs} for the
-     * given key.
+     * Set a value in the Fauxjo bean with the given "key" = lowercase database column name. The Object Class will be the equal to whatever was
+     * returned from {@link getValueDefs} for the given key.
      */
     void writeValue( String key, Object value )
         throws FauxjoException;
 
     /**
-     * Tells whether or not this Fauxjo bean is already in the database or not. This is usually
-     * done by checking the primary keys for null values.
+     * Tells whether or not this Fauxjo bean is already in the database or not. This is usually done by checking the primary keys for null values.
      */
-    boolean isInDatabase()
-        throws FauxjoException;
+    //    boolean isInDatabase()
+    //        throws FauxjoException;
 }
