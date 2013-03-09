@@ -27,14 +27,14 @@ import java.sql.*;
 import java.util.*;
 
 /**
- * SQLProcessor implementation that handles multiple tables representing a single {@link Fauxjo} class. This typically
- * will be used when you have a parent table which represents a base class with multiple child tables representing the
- * subclasses. Note that this implementation uses the SQLTableProcessor underneath to do single table operations.
+ * SQLProcessor implementation that handles multiple tables representing a single {@link FauxjoInterface} class. This typically will be used when you
+ * have a parent table which represents a base class with multiple child tables representing the subclasses. Note that this implementation uses the
+ * SQLTableProcessor underneath to do single table operations.
  * 
  * @param <T>
- *            The {@link Fauxjo} bean class represented by the underlying tables.
+ *            The {@link FauxjoInterface} bean class represented by the underlying tables.
  */
-public class JoinedSQLTableProcessor<T extends Fauxjo> extends AbstractSQLProcessor<T>
+public class JoinedSQLTableProcessor<T extends FauxjoInterface> extends AbstractSQLProcessor<T>
 {
     // ============================================================
     // Fields
@@ -43,7 +43,7 @@ public class JoinedSQLTableProcessor<T extends Fauxjo> extends AbstractSQLProces
     private Schema schema;
     private Table rootTable;
     private List<Join> joinedTables = new ArrayList<Join>();
-    private Map<Class<? extends Fauxjo>, SQLTableProcessor<? extends Fauxjo>> sqlTableProcessors = new HashMap<Class<? extends Fauxjo>, SQLTableProcessor<? extends Fauxjo>>();
+    private Map<Class<? extends FauxjoInterface>, SQLTableProcessor<? extends FauxjoInterface>> sqlTableProcessors = new HashMap<Class<? extends FauxjoInterface>, SQLTableProcessor<? extends FauxjoInterface>>();
 
     // ============================================================
     // Constructors
@@ -65,8 +65,7 @@ public class JoinedSQLTableProcessor<T extends Fauxjo> extends AbstractSQLProces
 
     @SuppressWarnings(
     { "unchecked", "rawtypes" } )
-    public JoinedSQLTableProcessor<T> setRootTable( Class<? extends Fauxjo> beanClass, String tableName,
-        String tableAlias )
+    public JoinedSQLTableProcessor<T> setRootTable( Class<? extends FauxjoInterface> beanClass, String tableName, String tableAlias )
         throws SQLException
     {
         rootTable = new Table( beanClass, schema.getQualifiedName( tableName ), tableAlias );
@@ -76,12 +75,11 @@ public class JoinedSQLTableProcessor<T extends Fauxjo> extends AbstractSQLProces
 
     @SuppressWarnings(
     { "unchecked", "rawtypes" } )
-    public JoinedSQLTableProcessor<T> addChildTable( Class<? extends Fauxjo> beanClass, Schema schema,
-        String tableName, String tableAlias, String joinCriteria )
+    public JoinedSQLTableProcessor<T> addChildTable( Class<? extends FauxjoInterface> beanClass, Schema schema, String tableName, String tableAlias,
+        String joinCriteria )
         throws SQLException
     {
-        joinedTables.add( new Join( new Table( beanClass, schema.getQualifiedName( tableName ), tableAlias ),
-            joinCriteria ) );
+        joinedTables.add( new Join( new Table( beanClass, schema.getQualifiedName( tableName ), tableAlias ), joinCriteria ) );
         sqlTableProcessors.put( beanClass, new SQLTableProcessor( schema, tableName, beanClass ) );
         return this;
     }
@@ -181,6 +179,20 @@ public class JoinedSQLTableProcessor<T extends Fauxjo> extends AbstractSQLProces
         return getResultSetRecordProcessor().convertResultSetRow( rs );
     }
 
+    @Override
+    public PreparedStatement getInsertStatement()
+        throws SQLException
+    {
+        return sqlTableProcessors.get( rootTable.getBeanClass() ).getInsertStatement();
+    }
+
+    @Override
+    public Map<String, String> setInsertValues( PreparedStatement statement, FauxjoInterface bean )
+        throws SQLException
+    {
+        return sqlTableProcessors.get( rootTable.getBeanClass() ).setInsertValues( statement, bean );
+    }
+
     // ============================================================
     // Inner Classes
     // ============================================================
@@ -209,18 +221,18 @@ public class JoinedSQLTableProcessor<T extends Fauxjo> extends AbstractSQLProces
 
     private static final class Table
     {
-        private Class<? extends Fauxjo> beanClass;
+        private Class<? extends FauxjoInterface> beanClass;
         private String qualifiedName;
         private String alias;
 
-        public Table( Class<? extends Fauxjo> beanClass, String qualifiedName, String alias )
+        public Table( Class<? extends FauxjoInterface> beanClass, String qualifiedName, String alias )
         {
             this.beanClass = beanClass;
             this.qualifiedName = qualifiedName;
             this.alias = alias;
         }
 
-        public Class<? extends Fauxjo> getBeanClass()
+        public Class<? extends FauxjoInterface> getBeanClass()
         {
             return beanClass;
         }

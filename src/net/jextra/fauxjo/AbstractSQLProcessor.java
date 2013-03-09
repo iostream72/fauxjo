@@ -30,9 +30,9 @@ import java.util.*;
  * AbstractSQLProcessor is a base class of the various SQLProcessor classes and does all the shared stuff that doesn't
  * depend on the underlying table structure.
  *
- * @param <T> The {@link Fauxjo} bean class this processor works with.
+ * @param <T> The {@link FauxjoInterface} bean class this processor works with.
  */
-public abstract class AbstractSQLProcessor<T extends Fauxjo> implements SQLProcessor<T>
+public abstract class AbstractSQLProcessor<T extends FauxjoInterface> implements SQLProcessor<T>
 {
     // ============================================================
     // Fields

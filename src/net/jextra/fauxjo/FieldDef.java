@@ -67,8 +67,7 @@ public class FieldDef
         {
             if ( !valueClass.equals( field.getType() ) )
             {
-                throw new FauxjoException( "Field [" + field.getName() + "] must have type of [" +
-                    valueClass.getCanonicalName() + "]" );
+                throw new FauxjoException( "Field [" + field.getName() + "] must have type of [" + valueClass.getCanonicalName() + "]" );
             }
         }
     }
@@ -91,8 +90,8 @@ public class FieldDef
         {
             if ( !valueClass.equals( writeMethod.getParameterTypes()[0] ) )
             {
-                throw new FauxjoException( "Write method [" + writeMethod.getName() +
-                    "] must have first argument of type [" + valueClass.getCanonicalName() + "]" );
+                throw new FauxjoException( "Write method [" + writeMethod.getName() + "] must have first argument of type [" +
+                    valueClass.getCanonicalName() + "]" );
             }
         }
     }
@@ -115,8 +114,8 @@ public class FieldDef
         {
             if ( !valueClass.equals( readMethod.getReturnType() ) )
             {
-                throw new FauxjoException( "Read method [" + readMethod.getName() + "] must have return type of [" +
-                    valueClass.getCanonicalName() + "]" );
+                throw new FauxjoException( "Read method [" + readMethod.getName() + "] must have return type of [" + valueClass.getCanonicalName() +
+                    "]" );
             }
         }
     }
@@ -131,11 +130,13 @@ public class FieldDef
         this.primaryKey = primaryKey;
     }
 
+    @Deprecated
     public String getPrimaryKeySequenceName()
     {
         return primaryKeySequenceName;
     }
 
+    @Deprecated
     public void setPrimaryKeySequenceName( String primaryKeySequenceName )
     {
         this.primaryKeySequenceName = primaryKeySequenceName;

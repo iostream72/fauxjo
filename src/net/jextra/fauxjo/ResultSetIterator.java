@@ -31,7 +31,7 @@ import java.util.*;
  * Fauxjo bean. This is used primarily to iterate over a large number records without having to
  * load them all into memory.
  */
-public class ResultSetIterator<T extends Fauxjo> implements Iterator<T>, Iterable<T>
+public class ResultSetIterator<T extends FauxjoInterface> implements Iterator<T>, Iterable<T>
 {
     // ============================================================
     // Fields

@@ -27,12 +27,12 @@ import java.sql.*;
 import java.util.*;
 
 /**
- * Class that's responsible for converting a result set into a {@link Fauxjo} bean.
+ * Class that's responsible for converting a result set into a {@link FauxjoInterface} bean.
  * 
  * @param <T>
- *            The {@link Fauxjo} bean this instance handles conversions for.
+ *            The {@link FauxjoInterface} bean this instance handles conversions for.
  */
-public class ResultSetRecordProcessor<T extends Fauxjo>
+public class ResultSetRecordProcessor<T extends FauxjoInterface>
 {
     // ============================================================
     // Fields
@@ -103,7 +103,7 @@ public class ResultSetRecordProcessor<T extends Fauxjo>
         }
     }
 
-    public Map<String, FieldDef> getBeanFieldDefs( Fauxjo bean )
+    public Map<String, FieldDef> getBeanFieldDefs( FauxjoInterface bean )
         throws FauxjoException
     {
         if ( fieldDefs == null )
@@ -165,8 +165,8 @@ public class ResultSetRecordProcessor<T extends Fauxjo>
         // If any of the columns was not accounted for, throw an Exception
         if ( !fieldDefs.isEmpty() )
         {
-            throw new FauxjoException( "Missing column [" + fieldDefs.keySet().iterator().next() +
-                "] in ResultSet for Fauxjo [" + beanClass.getCanonicalName() + "]" );
+            throw new FauxjoException( "Missing column [" + fieldDefs.keySet().iterator().next() + "] in ResultSet for Fauxjo [" +
+                beanClass.getCanonicalName() + "]" );
         }
 
         return bean;

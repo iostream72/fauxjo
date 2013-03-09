@@ -29,7 +29,7 @@ import java.util.*;
 /**
  * Core Business logic for interacting with a single SQL database table.
  */
-public class SQLTableProcessor<T extends Fauxjo> extends AbstractSQLProcessor<T>
+public class SQLTableProcessor<T extends FauxjoInterface> extends AbstractSQLProcessor<T>
 {
     // ============================================================
     // Fields
@@ -47,6 +47,8 @@ public class SQLTableProcessor<T extends Fauxjo> extends AbstractSQLProcessor<T>
     // Key = Lowercase column name (in code known as the "key").
     // Value = Name of column used by the database and SQL type.
     private Map<String, ColumnInfo> dbColumnInfos;
+
+    private String insertSQL;
 
     // ============================================================
     // Constructors
@@ -77,78 +79,14 @@ public class SQLTableProcessor<T extends Fauxjo> extends AbstractSQLProcessor<T>
      * Convert the bean into an insert statement and execute it.
      */
     @Override
-    public boolean insert( Fauxjo bean )
+    public boolean insert( FauxjoInterface bean )
         throws SQLException
     {
         try
         {
-            StringBuilder columns = new StringBuilder();
-            StringBuilder questionMarks = new StringBuilder();
-            List<DataValue> values = new ArrayList<DataValue>();
-            HashMap<String, String> generatedKeys = new HashMap<String, String>();
+            PreparedStatement statement = getInsertStatement();
+            Map<String, String> generatedKeys = setInsertValues( statement, bean );
 
-            for ( String key : getDBColumnInfos().keySet() )
-            {
-                ColumnInfo columnInfo = getDBColumnInfos().get( key );
-                Class<?> destClass = SQLTypeMapper.getInstance().getJavaClass( columnInfo.getSQLType() );
-
-                Object val = bean.readValue( key );
-                try
-                {
-                    val = coercer.coerce( val, destClass );
-                }
-                catch ( FauxjoException ex )
-                {
-                    throw new FauxjoException( "Failed to coerce " + getQualifiedName( tableName ) + "." +
-                        columnInfo.getRealName() + " for insert: " + key + ":" + columnInfo.getRealName(), ex );
-                }
-
-                // If this is a primary key and it is null, try to get sequence name from
-                // annotation and not include this column in insert statement.
-                FieldDef fieldDef = getResultSetRecordProcessor().getBeanFieldDefs( bean ).get( key );
-                if ( fieldDef == null )
-                {
-                    continue;
-                }
-                else if ( fieldDef.isPrimaryKey() && val == null && fieldDef.getPrimaryKeySequenceName() != null )
-                {
-                    generatedKeys.put( key, fieldDef.getPrimaryKeySequenceName() );
-                    continue;
-                }
-
-                if ( columns.length() > 0 )
-                {
-                    columns.append( "," );
-                    questionMarks.append( "," );
-                }
-                columns.append( columnInfo.getRealName() );
-                questionMarks.append( "?" );
-                values.add( new DataValue( val, columnInfo.getSQLType() ) );
-            }
-            String sql = "insert into " + getQualifiedName( tableName ) + " (" + columns + ") values (" +
-                questionMarks + ")";
-            PreparedStatement statement = getConnection().prepareStatement( sql );
-            int propIndex = 1;
-            for ( DataValue value : values )
-            {
-                if ( value.getSqlType() == java.sql.Types.ARRAY )
-                {
-                    if ( value.getValue() == null )
-                    {
-                        statement.setNull( propIndex, value.getSqlType() );
-                    }
-                    else
-                    {
-                        Array array = getConnection().createArrayOf( "varchar", (Object[]) value.getValue() );
-                        statement.setArray( propIndex, array );
-                    }
-                }
-                else
-                {
-                    statement.setObject( propIndex, value.getValue(), value.getSqlType() );
-                }
-                propIndex++;
-            }
             boolean retVal = statement.execute();
 
             //
@@ -157,8 +95,7 @@ public class SQLTableProcessor<T extends Fauxjo> extends AbstractSQLProcessor<T>
             for ( String key : generatedKeys.keySet() )
             {
                 Statement gkStatement = getConnection().createStatement();
-                ResultSet rs = gkStatement.executeQuery( "select currval('" +
-                    getQualifiedName( generatedKeys.get( key ) ) + "')" );
+                ResultSet rs = gkStatement.executeQuery( "select currval('" + getQualifiedName( generatedKeys.get( key ) ) + "')" );
                 rs.next();
                 Object value = rs.getObject( 1 );
                 rs.close();
@@ -184,7 +121,7 @@ public class SQLTableProcessor<T extends Fauxjo> extends AbstractSQLProcessor<T>
      * Convert the bean into an update statement and execute it.
      */
     @Override
-    public int update( Fauxjo bean )
+    public int update( FauxjoInterface bean )
         throws SQLException
     {
         try
@@ -205,8 +142,8 @@ public class SQLTableProcessor<T extends Fauxjo> extends AbstractSQLProcessor<T>
                 }
                 catch ( FauxjoException ex )
                 {
-                    throw new FauxjoException( "Failed to coerce " + getQualifiedName( tableName ) + "." +
-                        columnInfo.getRealName() + " for insert: " + key + ":" + columnInfo.getRealName(), ex );
+                    throw new FauxjoException( "Failed to coerce " + getQualifiedName( tableName ) + "." + columnInfo.getRealName() +
+                        " for insert: " + key + ":" + columnInfo.getRealName(), ex );
                 }
 
                 FieldDef fieldDef = getResultSetRecordProcessor().getBeanFieldDefs( bean ).get( key );
@@ -279,7 +216,7 @@ public class SQLTableProcessor<T extends Fauxjo> extends AbstractSQLProcessor<T>
      * Convert the bean into an delete statement and execute it.
      */
     @Override
-    public boolean delete( Fauxjo bean )
+    public boolean delete( FauxjoInterface bean )
         throws SQLException
     {
         try
@@ -364,8 +301,7 @@ public class SQLTableProcessor<T extends Fauxjo> extends AbstractSQLProcessor<T>
             throw new FauxjoException( "Sequence name must not be null or empty." );
         }
 
-        PreparedStatement getKey = getConnection().prepareStatement(
-            "select nextval('" + getQualifiedName( sequenceName ) + "')" );
+        PreparedStatement getKey = getConnection().prepareStatement( "select nextval('" + getQualifiedName( sequenceName ) + "')" );
 
         ResultSet rs = getKey.executeQuery();
         rs.next();
@@ -377,6 +313,101 @@ public class SQLTableProcessor<T extends Fauxjo> extends AbstractSQLProcessor<T>
         throws SQLException
     {
         return getResultSetRecordProcessor().convertResultSetRow( rs );
+    }
+
+    @Override
+    public PreparedStatement getInsertStatement()
+        throws SQLException
+    {
+        if ( insertSQL != null )
+        {
+            return getConnection().prepareStatement( insertSQL );
+        }
+
+        StringBuilder columns = new StringBuilder();
+        StringBuilder questionMarks = new StringBuilder();
+
+        for ( String key : getDBColumnInfos().keySet() )
+        {
+            ColumnInfo columnInfo = getDBColumnInfos().get( key );
+
+            if ( columns.length() > 0 )
+            {
+                columns.append( "," );
+                questionMarks.append( "," );
+            }
+
+            columns.append( columnInfo.getRealName() );
+            questionMarks.append( "?" );
+        }
+
+        insertSQL = String.format( "insert into %s (%s) values (%s)", getQualifiedName( tableName ), columns, questionMarks );
+
+        return getConnection().prepareStatement( insertSQL );
+    }
+
+    @Override
+    public Map<String, String> setInsertValues( PreparedStatement statement, FauxjoInterface bean )
+        throws SQLException
+    {
+        HashMap<String, String> generatedKeys = new HashMap<String, String>();
+
+        int propIndex = 1;
+        for ( String key : getDBColumnInfos().keySet() )
+        {
+            ColumnInfo columnInfo = getDBColumnInfos().get( key );
+            Class<?> destClass = SQLTypeMapper.getInstance().getJavaClass( columnInfo.getSQLType() );
+
+            Object val = bean.readValue( key );
+            try
+            {
+                val = coercer.coerce( val, destClass );
+            }
+            catch ( FauxjoException ex )
+            {
+                throw new FauxjoException( "Failed to coerce " + getQualifiedName( tableName ) + "." + columnInfo.getRealName() + " for insert: " +
+                    key + ":" + columnInfo.getRealName(), ex );
+            }
+
+            // If this is a primary key and it is null, try to get sequence name from
+            // annotation and not include this column in insert statement.
+            //            FieldDef fieldDef = getResultSetRecordProcessor().getBeanFieldDefs( bean ).get( key );
+            //            if ( fieldDef == null )
+            //            {
+            //                continue;
+            //            }
+            //            else if ( fieldDef.isPrimaryKey() && val == null && fieldDef.getPrimaryKeySequenceName() != null )
+            //            {
+            //                generatedKeys.put( key, fieldDef.getPrimaryKeySequenceName() );
+            //                continue;
+            //            }
+
+            //
+            // Set in statement
+            //
+            int sqlType = columnInfo.getSQLType();
+
+            if ( sqlType == java.sql.Types.ARRAY )
+            {
+                if ( val == null )
+                {
+                    statement.setNull( propIndex, sqlType );
+                }
+                else
+                {
+                    Array array = getConnection().createArrayOf( "varchar", (Object[]) val );
+                    statement.setArray( propIndex, array );
+                }
+            }
+            else
+            {
+                statement.setObject( propIndex, val, sqlType );
+            }
+
+            propIndex++;
+        }
+
+        return generatedKeys;
     }
 
     // ----------
@@ -449,8 +480,7 @@ public class SQLTableProcessor<T extends Fauxjo> extends AbstractSQLProcessor<T>
     }
 
     /**
-     * This takes a case insensitive tableName and searches for it in the connection's meta data to find the connections
-     * case sensitive tableName.
+     * This takes a case insensitive tableName and searches for it in the connection's meta data to find the connections case sensitive tableName.
      */
     private String getRealTableName( String tableName )
         throws SQLException
@@ -467,8 +497,7 @@ public class SQLTableProcessor<T extends Fauxjo> extends AbstractSQLProcessor<T>
         }
         rs.close();
 
-        rs = getConnection().getMetaData().getTables( null, schema.getSchemaName(), null,
-            tableTypes.toArray( new String[0] ) );
+        rs = getConnection().getMetaData().getTables( null, schema.getSchemaName(), null, tableTypes.toArray( new String[0] ) );
 
         while ( rs.next() )
         {

@@ -26,7 +26,7 @@ package net.jextra.fauxjo;
 import java.sql.*;
 import java.util.*;
 
-public interface SQLProcessor<T extends Fauxjo>
+public interface SQLProcessor<T extends FauxjoInterface>
 {
     /**
      * Create an item from the first row in the ResultSet or return null if empty ResultSet.
@@ -105,13 +105,16 @@ public interface SQLProcessor<T extends Fauxjo>
 
     /**
      * Get the schema associated with this {@link SQLProcessor}.
+     * 
      * @return
      */
     Schema getSchema();
 
     /**
      * Build a basic select statement for the underlying table or tables with the given clause.
-     * @param clause The where clause to build the statement with.
+     * 
+     * @param clause
+     *            The where clause to build the statement with.
      * @return
      * @throws SQLException
      */
@@ -119,4 +122,11 @@ public interface SQLProcessor<T extends Fauxjo>
 
     T convertResultSetRow( ResultSet rs )
         throws SQLException;
+
+    PreparedStatement getInsertStatement()
+        throws SQLException;
+
+    Map<String, String> setInsertValues( PreparedStatement statement, FauxjoInterface bean )
+        throws SQLException;
+
 }

@@ -31,7 +31,7 @@ import java.util.*;
  * Default implementation of a Home object that represents a single table in the database.
  * </p>
  */
-public class Home<T extends Fauxjo>
+public class Home<T extends FauxjoInterface>
 {
     // ============================================================
     // Fields

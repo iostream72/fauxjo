@@ -52,8 +52,7 @@ public class ByteCoercer implements TypeCoercer<Byte>
             return value.longValue();
         }
 
-        throw new FauxjoException( "The ByteCoercer does not know how to convert to type " +
-            destClass.getCanonicalName() );
+        throw new FauxjoException( "The ByteCoercer does not know how to convert to type " + destClass.getCanonicalName() );
     }
 
 }
