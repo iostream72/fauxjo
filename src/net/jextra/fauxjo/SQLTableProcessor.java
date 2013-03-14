@@ -264,6 +264,12 @@ public class SQLTableProcessor<T extends FauxjoInterface> extends AbstractSQLPro
             }
         }
 
+        if ( whereClause.length() == 0 )
+        {
+            throw new FauxjoException( "At least one field must be identified as a primary key in order to update rows in the table [" +
+                getQualifiedName( tableName ) + "]" );
+        }
+
         updateSQL = String.format( "update %s set %s where %s", getQualifiedName( tableName ), setterClause, whereClause );
         PreparedStatement statement = prepareStatement( updateSQL );
 
@@ -362,6 +368,12 @@ public class SQLTableProcessor<T extends FauxjoInterface> extends AbstractSQLPro
                 whereClause.append( " and " );
             }
             whereClause.append( columnInfo.getRealName() + "=?" );
+        }
+
+        if ( whereClause.length() == 0 )
+        {
+            throw new FauxjoException( "At least one field must be identified as a primary key in order to delete from the table [" +
+                getQualifiedName( tableName ) + "]" );
         }
 
         deleteSQL = String.format( "delete from %s where %s", getQualifiedName( tableName ), whereClause );
