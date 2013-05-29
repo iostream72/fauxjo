@@ -23,8 +23,9 @@
 
 package net.jextra.fauxjo.coercer;
 
-import java.sql.*;
-import net.jextra.fauxjo.*;
+import net.jextra.fauxjo.FauxjoException;
+
+import java.sql.Timestamp;
 
 public class StringCoercer implements TypeCoercer<String>
 {
@@ -67,6 +68,9 @@ public class StringCoercer implements TypeCoercer<String>
         else if ( destClass.equals( Timestamp.class ) )
         {
             return Timestamp.valueOf( value );
+        }
+        else if (destClass.isEnum()) {
+            return Enum.valueOf((Class<? extends Enum>)destClass, value);
         }
 
         throw new FauxjoException( "The StringCoercer does not know how to convert to type " + destClass.getCanonicalName() );

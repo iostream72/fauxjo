@@ -23,8 +23,10 @@
 
 package net.jextra.fauxjo.beandef;
 
-import java.lang.reflect.*;
-import net.jextra.fauxjo.*;
+import net.jextra.fauxjo.FauxjoException;
+
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 
 public class FieldDef
 {
@@ -37,6 +39,7 @@ public class FieldDef
     private Method readMethod;
     private Class<?> valueClass;
     private boolean primaryKey;
+    private boolean defaultable;
 
     // ============================================================
     // Constructors
@@ -139,5 +142,13 @@ public class FieldDef
     public void setValueClass( Class<?> valueClass )
     {
         this.valueClass = valueClass;
+    }
+
+    public boolean isDefaultable() {
+        return defaultable;
+    }
+
+    public void setDefaultable(boolean defaultable) {
+        this.defaultable = defaultable;
     }
 }

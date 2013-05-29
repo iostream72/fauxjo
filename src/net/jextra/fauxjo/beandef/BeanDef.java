@@ -23,9 +23,12 @@
 
 package net.jextra.fauxjo.beandef;
 
-import java.lang.reflect.*;
-import java.util.*;
-import net.jextra.fauxjo.*;
+import net.jextra.fauxjo.FauxjoException;
+
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.util.Map;
+import java.util.TreeMap;
 
 /**
  * Represents the result of processing the annotations on the Fauxjo bean class. Processing the annotations is rather slow; therefore, this object
@@ -56,10 +59,12 @@ public class BeanDef
     // public
     // ----------
 
-    public void addField( String key, Field field )
+    public FieldDef addField( String key, Field field )
         throws FauxjoException
     {
-        getFieldDef( key ).setField( field );
+        final FieldDef fieldDef = getFieldDef(key);
+        fieldDef.setField(field);
+        return fieldDef;
     }
 
     public Field getField( String key )

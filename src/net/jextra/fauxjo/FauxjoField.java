@@ -27,7 +27,7 @@ import java.lang.annotation.*;
 
 /**
  * <p>
- * Annotation placed on a field of a Fauxjo beans that represents column in the database when creating an 
+ * Annotation placed on a field of a Fauxjo beans that represents column in the database when creating an
  * INSERT, UPDATE, and DELETE statement.
  * </p><p>
  * Note, this overrides any use of {@link FauxjoGetter}'s and {@link FauxjoSetter}'s.
@@ -39,4 +39,6 @@ public @interface FauxjoField
 {
     // Column in database.
     String value();
+
+    boolean defaultable() default false;
 }

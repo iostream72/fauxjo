@@ -57,8 +57,7 @@ public abstract class Schema
 
     /**
      * It is encouraged that Home objects use this method to prepareStatements and that the
-     * implementation of the Schema knows how to cache the PreparedStatements (probably via
-     * a {@link PreparedStatementCache}.
+     * implementation of the Schema knows how to cache the PreparedStatements.
      */
     public abstract PreparedStatement prepareStatement( String sql )
         throws SQLException;

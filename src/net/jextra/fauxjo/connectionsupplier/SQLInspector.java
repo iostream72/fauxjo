@@ -1,5 +1,5 @@
 //
-// ConnectionSupplier
+// SQLInspector
 //
 // Copyright (C) jextra.net.
 //
@@ -23,21 +23,13 @@
 
 package net.jextra.fauxjo.connectionsupplier;
 
-import java.sql.*;
+import java.util.regex.Pattern;
 
-/**
- * Recommended to be used to pass to {@link net.jextra.fauxjo.Schema}'s instead of passing Connection directly. This is so
- * that the connections can be managed external from fauxjo in a context appropriate manner. An example of this
- * is for connection caches in web-sites.
- */
-public interface ConnectionSupplier
-{
-    public Connection getConnection()
-        throws SQLException;
+final class SQLInspector {
 
-    public boolean closeConnection()
-        throws SQLException;
+    private static final Pattern INSERT_PATTERN = Pattern.compile("insert\\sinto", Pattern.CASE_INSENSITIVE);
 
-    public PreparedStatement prepareStatement( String sql )
-        throws SQLException;
+    public static boolean isInsertStatement(String sql) {
+        return INSERT_PATTERN.matcher(sql).find();
+    }
 }

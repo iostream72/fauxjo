@@ -23,10 +23,14 @@
 
 package net.jextra.fauxjo.beandef;
 
-import java.beans.*;
-import java.lang.reflect.*;
-import java.util.*;
 import net.jextra.fauxjo.*;
+
+import java.beans.BeanInfo;
+import java.beans.IntrospectionException;
+import java.beans.Introspector;
+import java.beans.PropertyDescriptor;
+import java.lang.reflect.Field;
+import java.util.*;
 
 public abstract class BeanDefCache
 {
@@ -138,14 +142,15 @@ public abstract class BeanDefCache
             FauxjoField ann = field.getAnnotation( FauxjoField.class );
             String key = ann.value();
 
-            beanDef.addField( key, field );
+            FieldDef fieldDef = beanDef.addField( key, field );
+            fieldDef.setDefaultable(ann.defaultable());
 
             //
             // Check if FauxjoPrimaryKey.
             //
             if ( field.isAnnotationPresent( FauxjoPrimaryKey.class ) )
             {
-                beanDef.getFieldDef( key ).setPrimaryKey( true );
+                fieldDef.setPrimaryKey( true );
             }
         }
 

@@ -23,9 +23,12 @@
 
 package net.jextra.fauxjo.connectionsupplier;
 
-import java.sql.*;
-import java.util.*;
-import javax.sql.*;
+import javax.sql.DataSource;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.HashMap;
 
 /**
  * <p>
@@ -134,24 +137,6 @@ public class PooledConnectionSupplier implements ConnectionSupplier
         this.dataSource = dataSource;
     }
 
-    // public void clear()
-    // {
-    // try
-    // {
-    // if ( closeConnectionOnClear && threadConnection.get() != null )
-    // {
-    // threadConnection.get().close();
-    // }
-    // }
-    // catch ( SQLException ignore )
-    // {
-    // }
-    // finally
-    // {
-    // threadConnection.set( null );
-    // }
-    // }
-
     @Override
     public PreparedStatement prepareStatement( String sql )
         throws SQLException
@@ -160,7 +145,12 @@ public class PooledConnectionSupplier implements ConnectionSupplier
 
         if ( statement == null || statement.get() == null || statement.get().isClosed() )
         {
-            PreparedStatement s = getConnection().prepareStatement( sql );
+            PreparedStatement s;
+            if (SQLInspector.isInsertStatement(sql)) {
+                s = getConnection().prepareStatement(sql, Statement.RETURN_GENERATED_KEYS );
+            } else {
+                s = getConnection().prepareStatement(sql );
+            }
             if ( statement == null )
             {
                 statement = new ThreadLocal<PreparedStatement>();
