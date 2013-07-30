@@ -24,32 +24,37 @@
 package net.jextra.fauxjo;
 
 import net.jextra.fauxjo.connectionsupplier.ConnectionSupplier;
-
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
-
-public abstract class ConnectionSupplierSchema extends Schema {
+public abstract class ConnectionSupplierSchema extends Schema
+{
     private ConnectionSupplier connSupplier;
 
-    public ConnectionSupplierSchema(String schemaName) {
-        setSchemaName(schemaName);
+    public ConnectionSupplierSchema( String schemaName )
+    {
+        setSchemaName( schemaName );
         initHomeObjects();
     }
 
     @Override
-    public Connection getConnection() throws SQLException {
-        return (connSupplier != null) ? connSupplier.getConnection() : null;
+    public Connection getConnection()
+        throws SQLException
+    {
+        return ( connSupplier != null ) ? connSupplier.getConnection() : null;
     }
 
-    public void setSchemaConnectionSupplier(ConnectionSupplier connSupplier) {
+    public void setSchemaConnectionSupplier( ConnectionSupplier connSupplier )
+    {
         this.connSupplier = connSupplier;
     }
 
     @Override
-    public PreparedStatement prepareStatement(String sql) throws SQLException {
-        return connSupplier.prepareStatement(sql);
+    public PreparedStatement prepareStatement( String sql )
+        throws SQLException
+    {
+        return connSupplier.prepareStatement( sql );
     }
 
     protected abstract void initHomeObjects();

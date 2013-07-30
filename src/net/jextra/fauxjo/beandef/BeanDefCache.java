@@ -24,7 +24,6 @@
 package net.jextra.fauxjo.beandef;
 
 import net.jextra.fauxjo.*;
-
 import java.beans.BeanInfo;
 import java.beans.IntrospectionException;
 import java.beans.Introspector;
@@ -143,7 +142,7 @@ public abstract class BeanDefCache
             String key = ann.value();
 
             FieldDef fieldDef = beanDef.addField( key, field );
-            fieldDef.setDefaultable(ann.defaultable());
+            fieldDef.setDefaultable( ann.defaultable() );
 
             //
             // Check if FauxjoPrimaryKey.

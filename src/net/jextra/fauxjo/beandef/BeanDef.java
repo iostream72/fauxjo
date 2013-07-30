@@ -24,7 +24,6 @@
 package net.jextra.fauxjo.beandef;
 
 import net.jextra.fauxjo.FauxjoException;
-
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.Map;
@@ -62,8 +61,8 @@ public class BeanDef
     public FieldDef addField( String key, Field field )
         throws FauxjoException
     {
-        final FieldDef fieldDef = getFieldDef(key);
-        fieldDef.setField(field);
+        final FieldDef fieldDef = getFieldDef( key );
+        fieldDef.setField( field );
         return fieldDef;
     }
 

@@ -123,7 +123,7 @@ public interface SQLProcessor<T extends FauxjoInterface>
     T convertResultSetRow( ResultSet rs )
         throws SQLException;
 
-    PreparedStatement getInsertStatement(T bean)
+    PreparedStatement getInsertStatement( T bean )
         throws SQLException;
 
     void setInsertValues( PreparedStatement statement, T bean )

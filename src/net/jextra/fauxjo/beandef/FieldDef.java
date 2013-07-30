@@ -24,7 +24,6 @@
 package net.jextra.fauxjo.beandef;
 
 import net.jextra.fauxjo.FauxjoException;
-
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 
@@ -144,11 +143,13 @@ public class FieldDef
         this.valueClass = valueClass;
     }
 
-    public boolean isDefaultable() {
+    public boolean isDefaultable()
+    {
         return defaultable;
     }
 
-    public void setDefaultable(boolean defaultable) {
+    public void setDefaultable( boolean defaultable )
+    {
         this.defaultable = defaultable;
     }
 }
