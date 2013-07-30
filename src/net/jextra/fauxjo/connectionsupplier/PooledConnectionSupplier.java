@@ -23,12 +23,9 @@
 
 package net.jextra.fauxjo.connectionsupplier;
 
-import javax.sql.DataSource;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.HashMap;
+import java.sql.*;
+import java.util.*;
+import javax.sql.*;
 
 /**
  * <p>
@@ -59,7 +56,7 @@ public class PooledConnectionSupplier implements ConnectionSupplier
 
     private DataSource dataSource;
     private ThreadLocal<Connection> threadConnection;
-    private HashMap<String, ThreadLocal<PreparedStatement>> preparedStatements;
+    private ThreadLocal<HashMap<String, PreparedStatement>> threadPreparedStatements;
 
     // ============================================================
     // Constructors
@@ -68,7 +65,7 @@ public class PooledConnectionSupplier implements ConnectionSupplier
     public PooledConnectionSupplier()
     {
         threadConnection = new ThreadLocal<Connection>();
-        preparedStatements = new HashMap<String, ThreadLocal<PreparedStatement>>();
+        threadPreparedStatements = new ThreadLocal<HashMap<String, PreparedStatement>>();
     }
 
     public PooledConnectionSupplier( DataSource ds )
@@ -104,19 +101,23 @@ public class PooledConnectionSupplier implements ConnectionSupplier
     public boolean closeConnection()
         throws SQLException
     {
-        for ( ThreadLocal<PreparedStatement> statement : preparedStatements.values() )
+        HashMap<String, PreparedStatement> map = threadPreparedStatements.get();
+        if ( map != null )
         {
-            if ( statement.get() == null )
+            for ( PreparedStatement statement : map.values() )
             {
-                continue;
+                if ( statement == null )
+                {
+                    continue;
+                }
+
+                if ( !statement.isClosed() )
+                {
+                    statement.close();
+                }
             }
 
-            if ( !statement.get().isClosed() )
-            {
-                statement.get().close();
-            }
-
-            statement.remove();
+            threadPreparedStatements.remove();
         }
 
         Connection cnx = null;
@@ -141,24 +142,29 @@ public class PooledConnectionSupplier implements ConnectionSupplier
     public PreparedStatement prepareStatement( String sql )
         throws SQLException
     {
-        ThreadLocal<PreparedStatement> statement = preparedStatements.get( sql );
-
-        if ( statement == null || statement.get() == null || statement.get().isClosed() )
+        HashMap<String, PreparedStatement> map = threadPreparedStatements.get();
+        if ( map == null )
         {
-            PreparedStatement s;
-            if (SQLInspector.isInsertStatement(sql)) {
-                s = getConnection().prepareStatement(sql, Statement.RETURN_GENERATED_KEYS );
-            } else {
-                s = getConnection().prepareStatement(sql );
-            }
-            if ( statement == null )
-            {
-                statement = new ThreadLocal<PreparedStatement>();
-                preparedStatements.put( sql, statement );
-            }
-            statement.set( s );
+            map = new HashMap<String, PreparedStatement>();
+            threadPreparedStatements.set( map );
         }
 
-        return statement.get();
+        PreparedStatement statement = map.get( sql );
+
+        if ( statement == null || statement.isClosed() )
+        {
+            if ( SQLInspector.isInsertStatement( sql ) )
+            {
+                statement = getConnection().prepareStatement( sql, Statement.RETURN_GENERATED_KEYS );
+            }
+            else
+            {
+                statement = getConnection().prepareStatement( sql );
+            }
+
+            map.put( sql, statement );
+        }
+
+        return statement;
     }
 }

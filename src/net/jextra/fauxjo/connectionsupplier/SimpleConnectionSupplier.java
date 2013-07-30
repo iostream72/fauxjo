@@ -125,10 +125,13 @@ public class SimpleConnectionSupplier implements ConnectionSupplier
         PreparedStatement statement = preparedStatements.get( sql );
         if ( statement == null || statement.isClosed() )
         {
-            if (SQLInspector.isInsertStatement(sql)) {
-                statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
-            } else {
-                statement = connection.prepareStatement(sql);
+            if ( SQLInspector.isInsertStatement( sql ) )
+            {
+                statement = connection.prepareStatement( sql, Statement.RETURN_GENERATED_KEYS );
+            }
+            else
+            {
+                statement = connection.prepareStatement( sql );
             }
             preparedStatements.put( sql, statement );
         }
