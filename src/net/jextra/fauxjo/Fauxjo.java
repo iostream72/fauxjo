@@ -230,6 +230,7 @@ public abstract class Fauxjo implements FauxjoInterface
                 {
                     if ( def.getField() != null )
                     {
+                        def.getField().setAccessible( true );
                         keys.put( key, def.getField().get( this ) );
                     }
                     else
