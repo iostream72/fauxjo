@@ -52,6 +52,7 @@ public class Build extends CrackBuild
 
         params = new AmirsysBasicParams();
         AmirsysBasicBuilder builder = new AmirsysBasicBuilder( params );
+        builder.setJavaVersion( "6" );
         builder.init( this );
     }
 }
