@@ -23,12 +23,9 @@
 
 package net.jextra.fauxjo.connectionsupplier;
 
-import javax.sql.DataSource;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.HashMap;
+import java.sql.*;
+import java.util.*;
+import javax.sql.*;
 
 /**
  * <p>
@@ -45,6 +42,7 @@ public class SimpleConnectionSupplier implements ConnectionSupplier
     // ============================================================
 
     private Connection connection;
+    private DataSource dataSource;
     private HashMap<String, PreparedStatement> preparedStatements;
 
     // ============================================================
@@ -59,14 +57,16 @@ public class SimpleConnectionSupplier implements ConnectionSupplier
     public SimpleConnectionSupplier( Connection conn )
     {
         this();
-        connection = conn;
+
+        setConnection( conn );
     }
 
     public SimpleConnectionSupplier( DataSource ds )
         throws SQLException
     {
         this();
-        connection = ds.getConnection();
+
+        setDataSource( ds );
     }
 
     // ============================================================
@@ -80,17 +80,22 @@ public class SimpleConnectionSupplier implements ConnectionSupplier
     public void setDataSource( DataSource ds )
         throws SQLException
     {
-        connection = ds.getConnection();
+        dataSource = ds;
+        connection = dataSource.getConnection();
     }
 
     public void setConnection( Connection conn )
     {
         connection = conn;
+        dataSource = null;
     }
 
     @Override
     public Connection getConnection()
+        throws SQLException
     {
+        validateConnection();
+
         return connection;
     }
 
@@ -112,7 +117,11 @@ public class SimpleConnectionSupplier implements ConnectionSupplier
             return false;
         }
 
-        connection.close();
+        if ( connection != null )
+        {
+            connection.close();
+        }
+
         connection = null;
 
         return true;
@@ -122,20 +131,37 @@ public class SimpleConnectionSupplier implements ConnectionSupplier
     public PreparedStatement prepareStatement( String sql )
         throws SQLException
     {
+        validateConnection();
+
         PreparedStatement statement = preparedStatements.get( sql );
         if ( statement == null || statement.isClosed() )
         {
             if ( SQLInspector.isInsertStatement( sql ) )
             {
-                statement = connection.prepareStatement( sql, Statement.RETURN_GENERATED_KEYS );
+                statement = getConnection().prepareStatement( sql, Statement.RETURN_GENERATED_KEYS );
             }
             else
             {
-                statement = connection.prepareStatement( sql );
+                statement = getConnection().prepareStatement( sql );
             }
             preparedStatements.put( sql, statement );
         }
 
         return statement;
+    }
+
+    public void validateConnection()
+        throws SQLException
+    {
+        if ( connection != null && !connection.isValid( 1000 ) )
+        {
+            closeConnection();
+
+            // If there is a dataSource, go get a new connection.
+            if ( dataSource != null )
+            {
+                connection = dataSource.getConnection();
+            }
+        }
     }
 }
