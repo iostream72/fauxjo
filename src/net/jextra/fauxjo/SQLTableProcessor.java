@@ -84,6 +84,7 @@ public class SQLTableProcessor<T extends FauxjoInterface> extends AbstractSQLPro
 
     /**
      * Convert the bean into an insert statement and execute it.
+     * TODO Consider changing the signature to return the number of rows updated.
      */
     @Override
     public boolean insert( T bean )
@@ -93,11 +94,11 @@ public class SQLTableProcessor<T extends FauxjoInterface> extends AbstractSQLPro
 
         setInsertValues( statement, bean );
 
-        boolean retVal = statement.execute();
+        int rows = statement.executeUpdate();
 
         retrieveGeneratedKeys( statement, bean );
 
-        return retVal;
+        return rows > 0;
     }
 
     /**
@@ -123,7 +124,7 @@ public class SQLTableProcessor<T extends FauxjoInterface> extends AbstractSQLPro
         PreparedStatement statement = getDeleteStatement();
         setDeleteValues( statement, bean );
 
-        return statement.execute();
+        return statement.executeUpdate() > 0;
     }
 
     @Override
