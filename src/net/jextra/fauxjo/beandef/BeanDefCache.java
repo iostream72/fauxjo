@@ -56,7 +56,7 @@ public abstract class BeanDefCache
     // public
     // ----------
 
-    public static Map<String, FieldDef> getFieldDefs( Class<? extends FauxjoInterface> fauxjoClass )
+    public static Map<String, FieldDef> getFieldDefs( Class<?> fauxjoClass )
         throws FauxjoException
     {
         try
@@ -122,7 +122,7 @@ public abstract class BeanDefCache
         }
     }
 
-    public static BeanDef getBeanDef( Class<? extends FauxjoInterface> fauxjoClass )
+    public static BeanDef getBeanDef( Class<?> fauxjoClass )
         throws FauxjoException, IntrospectionException
     {
         BeanDef beanDef = beanDefCache.get( fauxjoClass );
