@@ -25,6 +25,7 @@ package net.jextra.fauxjo.connectionsupplier;
 
 import java.sql.*;
 import java.util.*;
+import javax.sql.*;
 
 public class ThreadSafeConnectionSupplier implements ConnectionSupplier
 {
@@ -34,6 +35,7 @@ public class ThreadSafeConnectionSupplier implements ConnectionSupplier
 
     private ConnectionBuilder connectionBuilder;
     private ThreadLocal<Connection> threadConnection;
+    private DataSource dataSource;
     private HashMap<String, ThreadLocal<PreparedStatement>> preparedStatements;
 
     // ============================================================
@@ -53,6 +55,13 @@ public class ThreadSafeConnectionSupplier implements ConnectionSupplier
         connectionBuilder = builder;
     }
 
+    public ThreadSafeConnectionSupplier( DataSource dataSource )
+    {
+        this();
+
+        this.dataSource = dataSource;
+    }
+
     // ============================================================
     // Methods
     // ============================================================
@@ -68,7 +77,14 @@ public class ThreadSafeConnectionSupplier implements ConnectionSupplier
         Connection cnx = null;
         if ( threadConnection.get() == null )
         {
-            threadConnection.set( connectionBuilder.getConnection() );
+            if ( connectionBuilder != null )
+            {
+                threadConnection.set( connectionBuilder.getConnection() );
+            }
+            else
+            {
+                threadConnection.set( dataSource.getConnection() );
+            }
         }
 
         cnx = threadConnection.get();
