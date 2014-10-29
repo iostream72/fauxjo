@@ -4,7 +4,7 @@
     <artifactId>fauxjo</artifactId>
     <name>fauxjo</name>
     <packaging>jar</packaging>
-    <version>9.2.0-3</version>
+    <version>9.3.0-1</version>
 
     <properties>
         <test.excludes>**/*IntegrationTest.java</test.excludes>
