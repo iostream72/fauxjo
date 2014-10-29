@@ -72,6 +72,10 @@ public class StringCoercer implements TypeCoercer<String>
         {
             return Enum.valueOf( (Class<? extends Enum>) destClass, value );
         }
+        else if ( destClass.equals( Object.class ) )
+        {
+            return value;
+        }
 
         throw new FauxjoException( "The StringCoercer does not know how to convert to type " + destClass.getCanonicalName() );
     }
