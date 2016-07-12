@@ -76,6 +76,10 @@ public class StringCoercer implements TypeCoercer<String>
         {
             return value;
         }
+        else if ( destClass.equals( java.util.UUID.class ) )
+        {
+            return java.util.UUID.fromString( value );
+        }
 
         throw new FauxjoException( "The StringCoercer does not know how to convert to type " + destClass.getCanonicalName() );
     }
